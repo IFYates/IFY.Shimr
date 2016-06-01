@@ -58,6 +58,7 @@
     <Compile Include="IndexerShimTests.cs" />
     <Compile Include="MethodShimTests.cs" />
     <Compile Include="MissingMemberTests.cs" />
+    <Compile Include="PerformanceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyShimTests.cs" />
     <Compile Include="SignatureArrayChangeTests.cs" />

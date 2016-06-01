@@ -213,8 +213,6 @@ namespace Shimterface
 			var impl = constr.GetILGenerator();
 			impl.Emit(OpCodes.Ldarg_0); // this
 			impl.Emit(OpCodes.Call, typeof(object).GetConstructor(new Type[0])); // Call to base()
-			impl.Emit(OpCodes.Nop);
-			impl.Emit(OpCodes.Nop);
 			impl.Emit(OpCodes.Ldarg_0); // this
 			impl.Emit(OpCodes.Ldarg_1); // inst
 			impl.Emit(OpCodes.Stfld, instField);
@@ -252,13 +250,14 @@ namespace Shimterface
 				{
 					impl.Emit(OpCodes.Ldfld, instField);
 				}
+				resolveParameters(impl, methodInfo, interfaceMethod);
+				impl.Emit(OpCodes.Callvirt, methodInfo);
 			}
 			else
 			{
-				impl.Emit(OpCodes.Nop);
+				resolveParameters(impl, methodInfo, interfaceMethod);
+				impl.Emit(OpCodes.Call, methodInfo);
 			}
-			resolveParameters(impl, methodInfo, interfaceMethod);
-			impl.Emit(OpCodes.Call, methodInfo);
 			if (interfaceMethod.ReturnType != methodInfo.ReturnType && interfaceMethod.ReturnType != typeof(void))
 			{
 				if (methodInfo.ReturnType.IsValueType)

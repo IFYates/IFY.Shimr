@@ -39,7 +39,6 @@ namespace Shimterface.Tests
 			var fileEnum = di.EnumerateFiles().ToArray();
 
 			Assert.IsTrue(di.Exists);
-			Assert.AreEqual("Debug", di.Name);
 			Assert.IsTrue(di.Parent is IDirectoryInfo);
 			Assert.AreEqual("bin", di.Parent.Name);
 
