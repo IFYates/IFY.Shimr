@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -15,6 +14,25 @@ namespace Shimterface
 					&& m.GetParameters().Length == paramTypes.Length
 					&& m.GetParameters().Select(p => p.ParameterType).SequenceEqual(paramTypes))
 				.Single().MakeGenericMethod(genericArgs);
+		}
+
+		/// <summary>
+		/// Get attribute of method, including get/set for property
+		/// </summary>
+		public static TAttribute GetAttribute<TAttribute>(this MethodInfo methodInfo)
+			where TAttribute : Attribute
+		{
+			var attr = methodInfo.GetCustomAttribute<TAttribute>(false);
+			if (attr == null && (methodInfo.Attributes & MethodAttributes.SpecialName) > 0
+					&& (methodInfo.Name.StartsWith("get_") || methodInfo.Name.StartsWith("set_")))
+			{
+				var propInfo = methodInfo.ReflectedType.GetProperty(methodInfo.Name.Substring(4));
+				if (propInfo != null)
+				{
+					attr = propInfo.GetCustomAttribute<TAttribute>(false);
+				}
+			}
+			return attr;
 		}
 
 		public static bool IsArrayType(this Type type)

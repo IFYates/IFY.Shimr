@@ -48,6 +48,27 @@ The TypeShimAttribute on the parameter does the same, but in reverse - the inter
 
 These concepts can automatically be applied to arrays and direct IEnumerable<?> usages.
 
+## Factories (Static Proxies)
+For situations where you need to also proxy static members, Shimterface provides a StaticShimAttribute. This allows for using proxies around static methods at runtime, but creating instance mocks at test.
+A shim interface cannot contain a mix of static and instance member shims.
+
+	public class TestClass {
+		public static void Test() {
+			...
+		}
+
+		// Instance members
+	}
+	public interface IStaticTest {
+		[StaticShim(typeof(TestClass))]
+		void Test();
+	}
+
+	public void DoTest() {
+		IStaticTest factory = Shimterface.Create<IStaticTest>();
+		factory.Test();
+	}
+
 ## Examples
 ### DirectoryInfo and FileInfo
 Filesystem work is obviously extremely important in a lot of applications, but the standard System.IO classes are not mockable nor IoC-supportive.

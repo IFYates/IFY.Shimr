@@ -43,7 +43,8 @@
     <Compile Include="IShim.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Shimterface.cs" />
-    <Compile Include="TypeHelpers.cs" />
+    <Compile Include="Internal\TypeHelpers.cs" />
+    <Compile Include="StaticShimAttribute.cs" />
     <Compile Include="TypeShimAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

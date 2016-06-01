@@ -65,6 +65,7 @@
     <Compile Include="SignatureEnumerableChangeTests.cs" />
     <Compile Include="StructTests.cs" />
     <Compile Include="DateTimeExample.cs" />
+    <Compile Include="StaticMemberTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shimterface\Shimterface.csproj">

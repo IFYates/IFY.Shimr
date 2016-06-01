@@ -20,16 +20,23 @@ namespace Shimterface.Tests
             public string PropertyWithoutSet { get { return null; } }
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(InvalidCastException))]
-        public void All_interface_members_must_exist_in_object()
-        {
-            var obj = new TestClass();
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentNullException))]
+		public void Cannot_shim_null()
+		{
+			Shimterface.Shim<IUnknownMethodTest>(null);
+		}
 
-            Shimterface.Shim<IUnknownMethodTest>(obj);
-        }
+		[TestMethod]
+		[ExpectedException(typeof(InvalidCastException))]
+		public void All_interface_members_must_exist_in_object()
+		{
+			var obj = new TestClass();
 
-        [TestMethod]
+			Shimterface.Shim<IUnknownMethodTest>(obj);
+		}
+
+		[TestMethod]
         public void Can_choose_to_ignore_missing_members_on_creation()
         {
             var obj = new TestClass();

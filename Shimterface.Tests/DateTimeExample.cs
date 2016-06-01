@@ -19,6 +19,13 @@ namespace Shimterface.Tests
 			string ToString(string format);
 		}
 
+		public interface IDateTimeFactory
+		{
+			[StaticShim(typeof(DateTime))]
+			[TypeShim(typeof(DateTime))]
+			IDateTime Now { get; }
+		}
+
 		[TestMethod]
 		public void DateTime_shim_can_return_ITimeSpan()
 		{
@@ -31,6 +38,16 @@ namespace Shimterface.Tests
 
 			var res = shim.Subtract(DateTime.Today.Shim<IDateTime>());
 			Assert.AreEqual(shim.TimeOfDay.TotalSeconds, res.TotalSeconds);
+		}
+
+		[TestMethod]
+		public void Factory_can_redefine_Now()
+		{
+			var dt = Shimterface.Create<IDateTimeFactory>();
+			var now = dt.Now;
+			Assert.IsTrue(now is IDateTime);
+			Assert.IsTrue(now is IShim);
+			Assert.IsTrue(((IShim)now).Unshim() is DateTime);
 		}
 	}
 }
