@@ -113,3 +113,6 @@ Obviously, you'll still need to find a way to construct the concrete types prope
     public IDirectoryInfo GetDirectory(string path) {
         return new DirectoryInfo(path).Shim<IDirectoryInfo>();
     }
+
+## Known Issues
+* If the compilation of the proxy type fails but the application handles it, the Type-Interface combination is now not usable

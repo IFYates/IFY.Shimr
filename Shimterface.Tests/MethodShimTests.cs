@@ -100,15 +100,26 @@ namespace Shimterface.Tests
             var res = shim.StringMethodArgs("arg1", 2);
 
             Assert.AreEqual("arg1-2", res);
-        }
+		}
 
-        [TestMethod]
-        [ExpectedException(typeof(InvalidCastException))]
-        public void Method_signatures_must_match()
-        {
-            var obj = new TestClass();
+		[TestMethod]
+		[ExpectedException(typeof(InvalidCastException))]
+		public void Method_signatures_must_match()
+		{
+			var obj = new TestClass();
 
-            Shimterface.Shim<IDifferentMethodSig>(obj);
-        }
-    }
+			Shimterface.Shim<IDifferentMethodSig>(obj);
+		}
+
+		[TestMethod]
+		public void Multiple_calls_to_same_shim_returns_same_type()
+		{
+			var obj1 = new TestClass();
+			var shim1 = Shimterface.Shim<IStringMethodTest>(obj1);
+			var obj2 = new TestClass();
+			var shim2 = Shimterface.Shim<IStringMethodTest>(obj2);
+
+			Assert.AreSame(shim1.GetType(), shim2.GetType());
+		}
+	}
 }

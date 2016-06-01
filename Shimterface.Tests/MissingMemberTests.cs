@@ -20,6 +20,12 @@ namespace Shimterface.Tests
             public string PropertyWithoutSet { get { return null; } }
         }
 
+		[TestInitialize]
+		public void init()
+		{
+			Shimterface.ResetState();
+		}
+
 		[TestMethod]
 		[ExpectedException(typeof(ArgumentNullException))]
 		public void Cannot_shim_null()

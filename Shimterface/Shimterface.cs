@@ -32,12 +32,36 @@ namespace Shimterface
 			}
 		}
 
+		/// <summary>
+		/// Not needed during normal use.
+		/// Clears type cache to allow multiple testing.
+		/// </summary>
+		public static void ResetState()
+		{
+			// TODO: handle shim compilation failures by removing from dynamic assembly
+
+			_asm = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("Shimterface.dynamic"),
+				AssemblyBuilderAccess.Run);
+			_mod = _asm.DefineDynamicModule("Shimterface.dynamic");
+			//_mod = asm.DefineDynamicModule("Shimterface.dynamic", "Shimterface.dynamic.dll", true);
+			_dynamicTypeCache.Clear();
+			_IgnoreMissingMembers.Clear();
+		}
+
 		private static readonly List<Type> _IgnoreMissingMembers = new List<Type>();
+
+		private static AssemblyBuilder _asm;
+		private static ModuleBuilder _mod;
+		static Shimterface()
+		{
+			ResetState();
+		}
 
 		/// <summary>
 		/// Don't compile the type every time
 		/// </summary>
 		private static readonly Dictionary<string, Type> _dynamicTypeCache = new Dictionary<string, Type>();
+		private static readonly object _sync = 1;
 
 		#region Internal
 
@@ -46,36 +70,38 @@ namespace Shimterface
 			var className = instType.Name + "_" + instType.GetHashCode() + "_" + interfaceType.Name + "_" + interfaceType.GetHashCode();
 			if (!_dynamicTypeCache.ContainsKey(className))
 			{
-				var asm = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("Shimterface.dynamic"),
-					AssemblyBuilderAccess.Run);
-				var mod = asm.DefineDynamicModule("Shimterface.dynamic");
-				//var mod = asm.DefineDynamicModule("Shimterface.dynamic", "Shimterface.dynamic.dll", true);
-				var tb = mod.DefineType(className, TypeAttributes.Public
-					| TypeAttributes.Class
-					| TypeAttributes.AutoClass
-					| TypeAttributes.AnsiClass
-					| TypeAttributes.BeforeFieldInit
-					| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType });
-
-				var instField = tb.DefineField("_inst", instType, FieldAttributes.Private | FieldAttributes.InitOnly);
-
-				addConstructor(tb, instField);
-				addUnshimMethod(tb, instField);
-
-				// Proxy all methods (including events, properties, and indexers)
-				foreach (var interfaceMethod in interfaceType.GetMethods())
+				lock (_sync)
 				{
-					// Must not implement unsupported attributes
-					var attr = interfaceMethod.GetCustomAttribute<StaticShimAttribute>(false);
-					if (attr != null)
+					if (!_dynamicTypeCache.ContainsKey(className))
 					{
-						throw new InvalidCastException("Instance shim cannot implement static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
+						var tb = _mod.DefineType(className, TypeAttributes.Public
+							| TypeAttributes.Class
+							| TypeAttributes.AutoClass
+							| TypeAttributes.AnsiClass
+							| TypeAttributes.BeforeFieldInit
+							| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType });
+
+						var instField = tb.DefineField("_inst", instType, FieldAttributes.Private | FieldAttributes.InitOnly);
+
+						addConstructor(tb, instField);
+						addUnshimMethod(tb, instField);
+
+						// Proxy all methods (including events, properties, and indexers)
+						foreach (var interfaceMethod in interfaceType.GetMethods())
+						{
+							// Must not implement unsupported attributes
+							var attr = interfaceMethod.GetCustomAttribute<StaticShimAttribute>(false);
+							if (attr != null)
+							{
+								throw new InvalidCastException("Instance shim cannot implement static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
+							}
+
+							shimMember(tb, instField, instType, interfaceType, interfaceMethod);
+						}
+
+						_dynamicTypeCache.Add(className, tb.CreateType());
 					}
-
-					shimMember(tb, instField, instType, interfaceType, interfaceMethod);
 				}
-
-				_dynamicTypeCache[className] = tb.CreateType();
 			}
 			return _dynamicTypeCache[className];
 		}
@@ -85,31 +111,33 @@ namespace Shimterface
 			var className = interfaceType.Name + "_" + interfaceType.GetHashCode();
 			if (!_dynamicTypeCache.ContainsKey(className))
 			{
-				var asm = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("Shimterface.dynamic"),
-					AssemblyBuilderAccess.Run);
-				var mod = asm.DefineDynamicModule("Shimterface.dynamic");
-				//var mod = asm.DefineDynamicModule("Shimterface.dynamic", "Shimterface.dynamic.dll", true);
-				var tb = mod.DefineType(className, TypeAttributes.Public
-					| TypeAttributes.Class
-					| TypeAttributes.AutoClass
-					| TypeAttributes.AnsiClass
-					| TypeAttributes.BeforeFieldInit
-					| TypeAttributes.AutoLayout, null, new[] { interfaceType });
-
-				// Proxy all methods (including events, properties, and indexers)
-				foreach (var interfaceMethod in interfaceType.GetMethods())
+				lock (_sync)
 				{
-					// Must define static source
-					var attr = interfaceMethod.GetAttribute<StaticShimAttribute>();
-					if (attr == null)
+					if (!_dynamicTypeCache.ContainsKey(className))
 					{
-						throw new InvalidCastException("Instance shim cannot implement non-static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
+						var tb = _mod.DefineType(className, TypeAttributes.Public
+							| TypeAttributes.Class
+							| TypeAttributes.AutoClass
+							| TypeAttributes.AnsiClass
+							| TypeAttributes.BeforeFieldInit
+							| TypeAttributes.AutoLayout, null, new[] { interfaceType });
+
+						// Proxy all methods (including events, properties, and indexers)
+						foreach (var interfaceMethod in interfaceType.GetMethods())
+						{
+							// Must define static source
+							var attr = interfaceMethod.GetAttribute<StaticShimAttribute>();
+							if (attr == null)
+							{
+								throw new InvalidCastException("Instance shim cannot implement non-static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
+							}
+
+							shimMember(tb, null, attr.TargetType, interfaceType, interfaceMethod);
+						}
+
+						_dynamicTypeCache.Add(className, tb.CreateType());
 					}
-
-					shimMember(tb, null, attr.TargetType, interfaceType, interfaceMethod);
 				}
-
-				_dynamicTypeCache[className] = tb.CreateType();
 			}
 			return _dynamicTypeCache[className];
 		}
