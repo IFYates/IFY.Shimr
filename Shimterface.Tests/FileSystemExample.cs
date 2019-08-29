@@ -33,14 +33,14 @@ namespace Shimterface.Tests
 		[TestMethod]
 		public void Test_file_system_shims()
 		{
-			var path = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-			var di = new DirectoryInfo(path).Shim<IDirectoryInfo>();
-			var files = di.GetFiles();
-			var fileEnum = di.EnumerateFiles().ToArray();
+            var bin = new FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
+			var shim = bin.Directory.Shim<IDirectoryInfo>();
+			var files = shim.GetFiles();
+			var fileEnum = shim.EnumerateFiles().ToArray();
 
-			Assert.IsTrue(di.Exists);
-			Assert.IsTrue(di.Parent is IDirectoryInfo);
-			Assert.AreEqual("bin", di.Parent.Name);
+			Assert.IsTrue(shim.Exists);
+			Assert.IsTrue(shim.Parent is IDirectoryInfo);
+			Assert.AreEqual(bin.Directory.Parent.Name, shim.Parent.Name);
 
 			Assert.IsTrue(files.Length > 0);
 			CollectionAssert.AreEqual(files.Select(f => f.FullName).OrderBy(f => f).ToArray(), fileEnum.Select(f => f.FullName).OrderBy(f => f).ToArray());

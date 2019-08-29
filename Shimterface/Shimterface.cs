@@ -40,8 +40,7 @@ namespace Shimterface
 		{
 			// TODO: handle shim compilation failures by removing from dynamic assembly
 
-			_asm = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("Shimterface.dynamic"),
-				AssemblyBuilderAccess.Run);
+			_asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Shimterface.dynamic"), AssemblyBuilderAccess.Run);
 			_mod = _asm.DefineDynamicModule("Shimterface.dynamic");
 			//_mod = asm.DefineDynamicModule("Shimterface.dynamic", "Shimterface.dynamic.dll", true);
 			_dynamicTypeCache.Clear();
