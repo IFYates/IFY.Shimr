@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>netcoreapp2.2</TargetFramework>
+        <TargetFramework>netstandard2.1</TargetFramework>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <Authors>Ian Yates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -8,10 +8,13 @@
         <PackageProjectUrl>https://github.com/IanYates83/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IanYates83/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>v1.0.0.0
+        <PackageReleaseNotes>v1.0.0.1
+Rebuilt for .NET Standard 2.1
+
+v1.0.0.0
 Original release for .NET Core</PackageReleaseNotes>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+        <PackageReference Include="System.Reflection.Emit" Version="4.6.0" />
     </ItemGroup>
 </Project>

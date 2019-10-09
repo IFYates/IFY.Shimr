@@ -9,6 +9,6 @@
       <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\Shimterface\Shimterface.csproj" />
+      <ProjectReference Include="..\Shimterface\Shimterface.Core.csproj" />
     </ItemGroup>
 </Project>

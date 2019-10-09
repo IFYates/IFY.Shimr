@@ -32,9 +32,9 @@ namespace Shimterface.Tests
 		{
 			private readonly Impl _obj;
 
-			public long Count { get { return _obj.Count; } }
+            public long Count => _obj.Count;
 
-			public ImplProxy(Impl obj)
+            public ImplProxy(Impl obj)
 			{
 				_obj = obj;
 			}

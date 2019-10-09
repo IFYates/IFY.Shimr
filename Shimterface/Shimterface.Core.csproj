@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>netcoreapp2.2</TargetFramework>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <Authors>Ian Yates</Authors>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Version>1.0.0</Version>
+        <PackageProjectUrl>https://github.com/IanYates83/Shimterface</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/IanYates83/Shimterface</RepositoryUrl>
+        <RepositoryType>GitHub</RepositoryType>
+        <PackageReleaseNotes>v1.0.0.0
+Original release for .NET Core</PackageReleaseNotes>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="System.Reflection.Emit" Version="4.6.0" />
+    </ItemGroup>
+</Project>
