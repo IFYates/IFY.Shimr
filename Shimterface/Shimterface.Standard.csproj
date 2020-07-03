@@ -4,7 +4,7 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Ian Yates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.0.0</Version>
+        <Version>1.0.0.1</Version>
         <PackageProjectUrl>https://github.com/IanYates83/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IanYates83/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
@@ -16,6 +16,7 @@ Original release for .NET Core</PackageReleaseNotes>
         <Copyright>(c) Ian Yates</Copyright>
         <AssemblyVersion>1.0.0.1</AssemblyVersion>
         <FileVersion>1.0.0.1</FileVersion>
+        <Description>Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.</Description>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="System.Reflection.Emit" Version="4.6.0" />
