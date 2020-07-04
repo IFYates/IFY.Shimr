@@ -4,9 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-// TODO: Could use it to produce a binary of all shims
-// TODO: Could have ability to specify a factory type that can implement constructor methods for real types
-// TODO: Attribute to rename member?
 namespace Shimterface
 {
     /// <summary>
@@ -191,7 +188,6 @@ namespace Shimterface
 				}
 				else
 				{
-					// TODO: Could support default/custom functionality
 					throw new InvalidCastException($"Cannot shim {instType.FullName} as {interfaceType.FullName}; missing method: {interfaceMethod.Name}");
 				}
 			}

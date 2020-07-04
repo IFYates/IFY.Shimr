@@ -57,7 +57,7 @@ namespace Shimterface.Tests
 			CollectionAssert.AreEqual(obj.GetArray(), arr);
 		}
 
-		//TODO: can shim, cannot set
+		// TODO: can shim, cannot set
 		[TestMethod]
 		public void Can_set_array_parameter_as_appropriate_shims()
 		{
