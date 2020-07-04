@@ -74,7 +74,7 @@ public interface IStaticTest {
 }
 
 public void DoTest() {
-	IStaticTest factory = Shimterface.Create<IStaticTest>();
+	IStaticTest factory = ShimBuilder.Create<IStaticTest>();
 	factory.Test();
 }
 ```
