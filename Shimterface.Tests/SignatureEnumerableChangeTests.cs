@@ -39,7 +39,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = (IShim)Shimterface.Shim<ICoveredEnumMethodTest>(obj);
+			var shim = (IShim)ShimBuilder.Shim<ICoveredEnumMethodTest>(obj);
 
 			Assert.AreSame(obj, shim.Unshim());
 		}
@@ -49,7 +49,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = Shimterface.Shim<ICoveredEnumMethodTest>(obj);
+			var shim = ShimBuilder.Shim<ICoveredEnumMethodTest>(obj);
 			var res = shim.GetEnum();
 
 			Assert.AreEqual(3, res.Count());
@@ -64,8 +64,8 @@ namespace Shimterface.Tests
 			var obj = new ReturnTypeTest();
 			var data = (IEnumerable<string>)new[] { "1", "2", "3" };
 
-			var shim = Shimterface.Shim<ICoveredEnumSetMethodTest>(obj);
-			var arr = Shimterface.Shim<IToString>(data);
+			var shim = ShimBuilder.Shim<ICoveredEnumSetMethodTest>(obj);
+			var arr = ShimBuilder.Shim<IToString>(data);
 			shim.SetEnum(arr);
 
 			var res = obj.GetEnum();

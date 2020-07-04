@@ -15,7 +15,7 @@ namespace Shimterface.Tests
 		public void Can_unshim_Int32()
 		{
 			var num = 12345;
-			var shim = Shimterface.Shim<IToString>(num);
+			var shim = ShimBuilder.Shim<IToString>(num);
 			var sh2 = (IShim)shim;
 			var num2 = (Int32)sh2.Unshim();
 			Assert.AreEqual(num, num2);
@@ -25,7 +25,7 @@ namespace Shimterface.Tests
 		public void Can_shim_Int32()
 		{
 			var num = 12345;
-			var shim = Shimterface.Shim<IToString>(num);
+			var shim = ShimBuilder.Shim<IToString>(num);
 			Assert.AreEqual(num.ToString(), shim.ToString());
 		}
 	}

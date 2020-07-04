@@ -62,7 +62,7 @@ namespace Shimterface.Tests
             var obj = new TestClass();
             Assert.IsFalse(obj.VoidMethodCalled);
 
-            var shim = Shimterface.Shim<IVoidMethodTest>(obj);
+            var shim = ShimBuilder.Shim<IVoidMethodTest>(obj);
             shim.VoidMethod();
 
             Assert.IsTrue(obj.VoidMethodCalled);
@@ -74,7 +74,7 @@ namespace Shimterface.Tests
             var obj = new TestClass();
             Assert.IsNull(obj.VoidMethodArgsCalled);
 
-            var shim = Shimterface.Shim<IVoidMethodArgsTest>(obj);
+            var shim = ShimBuilder.Shim<IVoidMethodArgsTest>(obj);
             shim.VoidMethodArgs("arg1", 2);
 
             CollectionAssert.AreEquivalent(new object[] { "arg1", 2 }, obj.VoidMethodArgsCalled);
@@ -85,7 +85,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IStringMethodTest>(obj);
+            var shim = ShimBuilder.Shim<IStringMethodTest>(obj);
             var res = shim.StringMethod();
 
             Assert.AreEqual("result", res);
@@ -96,7 +96,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IStringMethodArgsTest>(obj);
+            var shim = ShimBuilder.Shim<IStringMethodArgsTest>(obj);
             var res = shim.StringMethodArgs("arg1", 2);
 
             Assert.AreEqual("arg1-2", res);
@@ -108,16 +108,16 @@ namespace Shimterface.Tests
 		{
 			var obj = new TestClass();
 
-			Shimterface.Shim<IDifferentMethodSig>(obj);
+			ShimBuilder.Shim<IDifferentMethodSig>(obj);
 		}
 
 		[TestMethod]
 		public void Multiple_calls_to_same_shim_returns_same_type()
 		{
 			var obj1 = new TestClass();
-			var shim1 = Shimterface.Shim<IStringMethodTest>(obj1);
+			var shim1 = ShimBuilder.Shim<IStringMethodTest>(obj1);
 			var obj2 = new TestClass();
-			var shim2 = Shimterface.Shim<IStringMethodTest>(obj2);
+			var shim2 = ShimBuilder.Shim<IStringMethodTest>(obj2);
 
 			Assert.AreSame(shim1.GetType(), shim2.GetType());
 		}

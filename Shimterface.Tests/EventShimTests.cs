@@ -40,7 +40,7 @@ namespace Shimterface.Tests
             obj.FireEvent();
             Assert.AreEqual(1, obj._EventCount);
 
-            var shim = Shimterface.Shim<IEventTest>(obj);
+            var shim = ShimBuilder.Shim<IEventTest>(obj);
 
             bool eventFired = false;
             shim.ConsoleCancelEvent += (s, a) =>

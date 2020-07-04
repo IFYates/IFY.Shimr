@@ -51,7 +51,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = (IShim)Shimterface.Shim<ICoveredPropertyTest>(obj);
+			var shim = (IShim)ShimBuilder.Shim<ICoveredPropertyTest>(obj);
 
 			Assert.AreSame(obj, shim.Unshim());
 		}
@@ -61,7 +61,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = (IShim)Shimterface.Shim<ICoveredMethodTest>(obj);
+			var shim = (IShim)ShimBuilder.Shim<ICoveredMethodTest>(obj);
 
 			Assert.AreSame(obj, shim.Unshim());
 		}
@@ -71,7 +71,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = (IShim)Shimterface.Shim<ICoveredParametersTest>(obj);
+			var shim = (IShim)ShimBuilder.Shim<ICoveredParametersTest>(obj);
 
 			Assert.AreSame(obj, shim.Unshim());
 		}
@@ -82,7 +82,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			Shimterface.Shim<IBadCoveredMethodTest>(obj);
+			ShimBuilder.Shim<IBadCoveredMethodTest>(obj);
 		}
 
 		[TestMethod]
@@ -90,7 +90,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = Shimterface.Shim<ICoveredMethodTest>(obj);
+			var shim = ShimBuilder.Shim<ICoveredMethodTest>(obj);
 			var res = shim.GetValue();
 
 			Assert.AreEqual("Test", ((IShim)res).Unshim());
@@ -101,8 +101,8 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = Shimterface.Shim<ICoveredParametersTest>(obj);
-			var res = Shimterface.Shim<IToString>("abc123");
+			var shim = ShimBuilder.Shim<ICoveredParametersTest>(obj);
+			var res = ShimBuilder.Shim<IToString>("abc123");
 
 			shim.SetValue(res);
 			Assert.AreEqual("abc123", obj.GetValue());
@@ -114,8 +114,8 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = Shimterface.Shim<ICoveredParametersTest>(obj);
-			var res = Shimterface.Shim<IToString>(45876);
+			var shim = ShimBuilder.Shim<ICoveredParametersTest>(obj);
+			var res = ShimBuilder.Shim<IToString>(45876);
 
 			shim.SetValue(res);
 		}
@@ -126,7 +126,7 @@ namespace Shimterface.Tests
 			var obj = new ReturnTypeTest();
 			obj.Value = 12345;
 
-			var shim = Shimterface.Shim<ICoveredPropertyTest>(obj);
+			var shim = ShimBuilder.Shim<ICoveredPropertyTest>(obj);
 			var res = shim.Value;
 
 			Assert.AreEqual("12345", res.ToString());
@@ -138,8 +138,8 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = Shimterface.Shim<ICoveredPropertyTest>(obj);
-			var shim2 = Shimterface.Shim<IToString>(12345);
+			var shim = ShimBuilder.Shim<ICoveredPropertyTest>(obj);
+			var shim2 = ShimBuilder.Shim<IToString>(12345);
 			shim.Value = shim2;
 
 			Assert.AreEqual(12345, obj.Value);
@@ -151,8 +151,8 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = Shimterface.Shim<ICoveredPropertyTest>(obj);
-			var shim2 = Shimterface.Shim<IToString>("test");
+			var shim = ShimBuilder.Shim<ICoveredPropertyTest>(obj);
+			var shim2 = ShimBuilder.Shim<IToString>("test");
 			shim.Value = shim2;
 		}
 	}

@@ -34,7 +34,7 @@ namespace Shimterface.Tests
         {
             var obj = new PrivateTestClass();
 
-            Shimterface.Shim<IPrivateInterface>(obj);
+            ShimBuilder.Shim<IPrivateInterface>(obj);
         }
 
         [TestMethod]
@@ -43,7 +43,7 @@ namespace Shimterface.Tests
         {
             var obj = new PrivateTestClass();
 
-            var shim = Shimterface.Shim<IPublicInterface>(obj);
+            var shim = ShimBuilder.Shim<IPublicInterface>(obj);
             shim.Test();
         }
 
@@ -53,7 +53,7 @@ namespace Shimterface.Tests
         {
             var obj = new PublicTestClass();
 
-            Shimterface.Shim<IPublicInterface>(obj);
+            ShimBuilder.Shim<IPublicInterface>(obj);
         }
 
         [TestMethod]
@@ -61,7 +61,7 @@ namespace Shimterface.Tests
         {
             var obj = new PrivateTestClass();
 
-            var shim = Shimterface.Shim<IPublicInterface>(obj);
+            var shim = ShimBuilder.Shim<IPublicInterface>(obj);
 
             Assert.IsTrue(shim is IShim);
         }
@@ -71,7 +71,7 @@ namespace Shimterface.Tests
         {
             var obj = new PrivateTestClass();
 
-            var shim = Shimterface.Shim<IPublicInterface>(obj);
+            var shim = ShimBuilder.Shim<IPublicInterface>(obj);
 
             Assert.AreSame(obj, ((IShim)shim).Unshim());
         }

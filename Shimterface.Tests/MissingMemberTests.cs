@@ -23,14 +23,14 @@ namespace Shimterface.Tests
 		[TestInitialize]
 		public void init()
 		{
-			Shimterface.ResetState();
+			ShimBuilder.ResetState();
 		}
 
 		[TestMethod]
 		[ExpectedException(typeof(ArgumentNullException))]
 		public void Cannot_shim_null()
 		{
-			Shimterface.Shim<IUnknownMethodTest>(null);
+			ShimBuilder.Shim<IUnknownMethodTest>(null);
 		}
 
 		[TestMethod]
@@ -39,7 +39,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new TestClass();
 
-			Shimterface.Shim<IUnknownMethodTest>(obj);
+			ShimBuilder.Shim<IUnknownMethodTest>(obj);
 		}
 
 		[TestMethod]
@@ -47,8 +47,8 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            Shimterface.IgnoreMissingMembers<IUnknownMethodTest>();
-            Shimterface.Shim<IUnknownMethodTest>(obj);
+            ShimBuilder.IgnoreMissingMembers<IUnknownMethodTest>();
+            ShimBuilder.Shim<IUnknownMethodTest>(obj);
         }
 
         [TestMethod]
@@ -57,8 +57,8 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            Shimterface.IgnoreMissingMembers<IUnknownMethodTest>();
-            var shim = Shimterface.Shim<IUnknownMethodTest>(obj);
+            ShimBuilder.IgnoreMissingMembers<IUnknownMethodTest>();
+            var shim = ShimBuilder.Shim<IUnknownMethodTest>(obj);
 
             shim.UnknownMethod();
         }
@@ -69,7 +69,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            Shimterface.Shim<IPropertyWithoutSetTest>(obj);
+            ShimBuilder.Shim<IPropertyWithoutSetTest>(obj);
         }
     }
 }

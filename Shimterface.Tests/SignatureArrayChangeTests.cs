@@ -39,7 +39,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = (IShim)Shimterface.Shim<ICoveredArrayMethodTest>(obj);
+			var shim = (IShim)ShimBuilder.Shim<ICoveredArrayMethodTest>(obj);
 
 			Assert.AreSame(obj, shim.Unshim());
 		}
@@ -49,7 +49,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = Shimterface.Shim<ICoveredArrayMethodTest>(obj);
+			var shim = ShimBuilder.Shim<ICoveredArrayMethodTest>(obj);
 			var res = shim.GetArray();
 
 			Assert.AreEqual(3, res.Length);
@@ -64,8 +64,8 @@ namespace Shimterface.Tests
 			var obj = new ReturnTypeTest();
 			var data = new[] { "1", "2", "3" };
 
-			var shim = Shimterface.Shim<ICoveredArraySetMethodTest>(obj);
-			var arr = Shimterface.Shim<IToString>(data);
+			var shim = ShimBuilder.Shim<ICoveredArraySetMethodTest>(obj);
+			var arr = ShimBuilder.Shim<IToString>(data);
 			shim.SetArray(arr);
 
 			var res = obj.GetArray();

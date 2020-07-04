@@ -9,10 +9,10 @@ using System.Reflection.Emit;
 // TODO: Attribute to rename member?
 namespace Shimterface
 {
-	/// <summary>
-	/// Provides facility to create a shim that guarantees an object can be treated as the specified interface type.
-	/// </summary>
-	public static class Shimterface
+    /// <summary>
+    /// Provides facility to create a shim that guarantees an object can be treated as the specified interface type.
+    /// </summary>
+    public static class ShimBuilder
 	{
 		private static void resolveParameters(ILGenerator impl, MethodInfo methodInfo, MethodInfo interfaceMethod)
 		{
@@ -26,7 +26,7 @@ namespace Shimterface
 				{
 					var valType = pars1[i].ParameterType.ResolveType();
 					var paramType = pars1[i].ParameterType.IsArrayType() ? typeof(object[]) : typeof(object);
-					var unshimMethod = typeof(Shimterface).BindStaticMethod(nameof(Unshim), new[] { valType }, new[] { paramType });
+					var unshimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(Unshim), new[] { valType }, new[] { paramType });
 					impl.Emit(OpCodes.Call, unshimMethod);
 				}
 			}
@@ -44,14 +44,14 @@ namespace Shimterface
 			_mod = _asm.DefineDynamicModule("Shimterface.dynamic");
 			//_mod = asm.DefineDynamicModule("Shimterface.dynamic", "Shimterface.dynamic.dll", true);
 			_dynamicTypeCache.Clear();
-			_IgnoreMissingMembers.Clear();
+			_ignoreMissingMembers.Clear();
 		}
 
-		private static readonly List<Type> _IgnoreMissingMembers = new List<Type>();
+		private static readonly List<Type> _ignoreMissingMembers = new List<Type>();
 
 		private static AssemblyBuilder _asm;
 		private static ModuleBuilder _mod;
-		static Shimterface()
+		static ShimBuilder()
 		{
 			ResetState();
 		}
@@ -66,14 +66,14 @@ namespace Shimterface
 
 		private static Type getShimType(Type interfaceType, Type instType)
 		{
-			var className = instType.Name + "_" + instType.GetHashCode() + "_" + interfaceType.Name + "_" + interfaceType.GetHashCode();
+			var className = $"{instType.Name}_{instType.GetHashCode()}_{interfaceType.Name}_{interfaceType.GetHashCode()}";
 			if (!_dynamicTypeCache.ContainsKey(className))
 			{
 				lock (_sync)
 				{
 					if (!_dynamicTypeCache.ContainsKey(className))
 					{
-						var tb = _mod.DefineType(className, TypeAttributes.Public
+						var tb = _mod.DefineType("Shim_" + className, TypeAttributes.Public
 							| TypeAttributes.Class
 							| TypeAttributes.AutoClass
 							| TypeAttributes.AnsiClass
@@ -185,14 +185,14 @@ namespace Shimterface
 			var methodInfo = instType.GetMethod(interfaceMethod.Name, paramTypes);
 			if (methodInfo == null)
 			{
-				if (_IgnoreMissingMembers.Contains(interfaceType))
+				if (_ignoreMissingMembers.Contains(interfaceType))
 				{
-					dontImplementMethod(tb, instField, interfaceMethod);
+					dontImplementMethod(tb, interfaceMethod);
 				}
 				else
 				{
 					// TODO: Could support default/custom functionality
-					throw new InvalidCastException(String.Format("Cannot shim {0} as {1}; missing method: {2}", instType.FullName, interfaceType.FullName, interfaceMethod.Name));
+					throw new InvalidCastException($"Cannot shim {instType.FullName} as {interfaceType.FullName}; missing method: {interfaceMethod.Name}");
 				}
 			}
 			else
@@ -265,13 +265,13 @@ namespace Shimterface
 				}
 				var valType = interfaceMethod.ReturnType.IsArrayType() ? typeof(object[]) : typeof(object);
 				var shimType = interfaceMethod.ReturnType.ResolveType();
-				var shimMethod = typeof(Shimterface).BindStaticMethod(nameof(Shim), new[] { shimType }, new[] { valType });
+				var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(Shim), new[] { shimType }, new[] { valType });
 				impl.Emit(OpCodes.Call, shimMethod);
 			}
 			impl.Emit(OpCodes.Ret);
 		}
 
-		private static void dontImplementMethod(TypeBuilder tb, FieldBuilder instField, MethodInfo methodInfo)
+		private static void dontImplementMethod(TypeBuilder tb, MethodInfo methodInfo)
 		{
 			var method = tb.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
 				methodInfo.ReturnType, methodInfo.GetParameters().Select(p => p.ParameterType).ToArray());
@@ -286,21 +286,21 @@ namespace Shimterface
 		#endregion Internal
 
 		/// <summary>
-		/// Gets or sets the creation-time assertion that all TInterface members must exist in the shimmed type.
-		/// Execution of such members will throw NotImplementedException.
+		/// Sets the creation-time assertion that all <typeparamref name="TInterface"/> members must exist in the shimmed type.
+		/// Execution of such members will throw <see cref="NotImplementedException"/>.
 		/// Once set, cannot be reversed.
 		/// </summary>
 		public static void IgnoreMissingMembers<TInterface>()
 			where TInterface : class
 		{
-			_IgnoreMissingMembers.Add(typeof(TInterface));
+			_ignoreMissingMembers.Add(typeof(TInterface));
 		}
 
 		#region Create
 
 		/// <summary>
 		/// Create a factory proxy.
-		/// TInterface must only implement StaticShim methods.
+		/// <typeparamref name="TInterface"/> must only implement methods decorated with <see cref="StaticShimAttribute"/>.
 		/// </summary>
 		public static TInterface Create<TInterface>()
 			where TInterface : class
@@ -369,31 +369,27 @@ namespace Shimterface
 
 		/// <summary>
 		/// Recast shim to original type.
-		/// No type-safety checks. Must already be T or be IShim of T.
+		/// No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="IShim"/> of <typeparamref name="T"/>.
 		/// </summary>
 		public static T Unshim<T>(object shim)
 		{
-			if (shim is T)
-			{
-				return (T)shim;
-			}
-			return (T)((IShim)shim).Unshim();
-		}
-		/// <summary>
-		/// Recast shims to original type.
-		/// No type-safety checks. Must already be T or be IShim of T.
-		/// </summary>
-		public static T[] Unshim<T>(object[] shims)
+            return shim is T obj ? obj : (T)((IShim)shim).Unshim();
+        }
+        /// <summary>
+        /// Recast shims to original type.
+        /// No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="IShim"/> of <typeparamref name="T"/>.
+        /// </summary>
+        public static T[] Unshim<T>(object[] shims)
 		{
-			return (T[])Unshim<T>((IEnumerable<object>)shims);
+			return Unshim<T>((IEnumerable<object>)shims).ToArray();
 		}
 		/// <summary>
 		/// Recast shims to original type.
-		/// No type-safety checks. Must already be T or be IShim of T.
+		/// No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="IShim"/> of <typeparamref name="T"/>.
 		/// </summary>
 		public static IEnumerable<T> Unshim<T>(IEnumerable<object> shims)
 		{
-			return shims.Select(s => Shimterface.Unshim<T>(s)).ToArray();
+			return shims.Select(s => Unshim<T>(s)).ToArray();
 		}
 
 		#endregion Unshim
