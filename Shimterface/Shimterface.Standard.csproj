@@ -8,11 +8,18 @@
         <PackageProjectUrl>https://github.com/IanYates83/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IanYates83/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>v1.0.0.1
+        <PackageReleaseNotes>v1.1.0.0
+Renamed Shimterface class to ShimBuilder, to fix namespace collision.
+
+v1.0.0.1
 Rebuilt for .NET Standard 2.1
 
 v1.0.0.0
 Original release for .NET Core</PackageReleaseNotes>
+        <SignAssembly>false</SignAssembly>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <DocumentationFile>C:\dev\ian\Shimterface\Shimterface\Shimterface.Standard.xml</DocumentationFile>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="System.Reflection.Emit" Version="4.6.0" />
