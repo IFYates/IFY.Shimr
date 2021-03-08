@@ -73,10 +73,27 @@ public interface IFacadeClass {
 }
 ```
 
-## Factories (Static Proxies)
-For situations where you need to also proxy static members, Shimterface provides a `StaticShimAttribute`. This allows for using proxies around static methods at runtime, but creating instance mocks at test.
-A shim interface cannot contain a mix of static and instance member shims.
+## Fields
+Shimterface will allow you to define a property in your proxy to cover a field in the implementation:
+```C#
+public class TestClass {
+    public string Name;
+}
+public interface ITest {
+    string Name { get; set; }
+}
+// Use: new TestClass().Shim<ITest>().Name
+```
 
+If the underlying field is readonly, defining the `set` will not fail on shim, but will fail on use.
+
+The `ShimAttribute` works here for renaming and auto-shimming in the way you'd expect.
+
+## Factories
+For situations where you need to also proxy static members, Shimterface provides a `StaticShimAttribute`. This allows for using proxies around static methods at runtime, but creating instance mocks at test.
+A shim interface cannot contain a mix of static and instance member shims, but can contain static methods proxied from many different types.
+
+### Static Methods
 ```C#
 public class TestClass {
 	public static void Test() {
@@ -96,25 +113,34 @@ public void DoTest() {
 }
 ```
 
-## Fields
-Shimterface will allow you to define a property in your proxy to cover a field in the implementation:
+### Constructors
+As with static methods, Shimterface allows you to call instance constructors from a static factory, where the name of the factory method is unchecked and the return type is assumed to be the constructor provider or a shim of it.
+
 ```C#
 public class TestClass {
-    public string Name;
+	public TestClass(string arg1) {
+		...
+	}
+
+	// Instance members
+}
+public interface ITestFactory {
+	[StaticShim(typeof(TestClass), IsConstructor = true)]
+	ITestClass CreateNew(string arg1);
 }
 public interface ITest {
-    string Name { get; set; }
+	// Instance members
 }
-// Use: new TestClass().Shim<ITest>().Name
+
+public void DoTest() {
+	ITestFactory factory = ShimBuilder.Create<ITestFactory>();
+	ITestFactory = factory.CreateNew();
+}
 ```
-
-If the underlying field is readonly, defining the `set` will not fail on shim, but will fail on use.
-
-The `ShimAttribute` works here for renaming and auto-shimming in the way you'd expect.
 
 ## Examples
 ### DirectoryInfo and FileInfo
-Filesystem work is obviously extremely important in a lot of applications, but the standard `System.IO` classes are not mockable nor IoC-supportive.
+File-system work is obviously extremely important in a lot of applications, but the standard `System.IO` classes are not mockable nor IoC-supportive.
 If we were searching for all text files in a directory, but wanted to be able to mock the implementation for testing, we could approach it as such:
 
 ```C#
@@ -122,6 +148,7 @@ If we were searching for all text files in a directory, but wanted to be able to
 public interface IFileSystem
 {
 	[StaticShim(typeof(Directory))]
+	[Shim(typeof(DirectoryInfo))]
 	IDirectoryInfo GetParent(string path);
 }
 
@@ -155,7 +182,7 @@ public void Test_file_system_shims()
 	var assemblyFile = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
 	// We'll need to use the filesystem shim factory
-	var fileSystem = ShimBuilder.Create<IFileSystem>(); // In tests, this will be a mock
+	IFileSystem fileSystem = ShimBuilder.Create<IFileSystem>(); // In tests, this will be a mock
 
 	// Make use of various shimmed methods
 	IDirectoryInfo dir = fileSystem.GetParent(assemblyFile);
@@ -177,7 +204,6 @@ public void Test_file_system_shims()
 
 ## Future Ideas
 * Generate assembly of compiled shims for direct reference
-* Use shim factory to call constructor of target type (e.g., static "New" methods)
 * Provide default functionality to shimmed method missing from target type
 * Add concrete functionality to shimmed type (similar to extension methods)
 * Combine multiple target types to single shim
