@@ -10,6 +10,7 @@
         <RepositoryType>GitHub</RepositoryType>
         <PackageReleaseNotes>v1.2.1
 Support for shim of static fields.
+Shim supports heirarchical definitions (e.g., IDisposable).
 
 v1.2.0
 Added support to shim implementation fields using properties.

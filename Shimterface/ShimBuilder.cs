@@ -66,7 +66,9 @@ namespace Shimterface
 						tb.MethodUnshim(instField);
 
 						// Proxy all methods (including events, properties, and indexers)
-						foreach (var interfaceMethod in interfaceType.GetMethods())
+						var methods = interfaceType.GetMethods()
+							.Union(interfaceType.GetInterfaces().SelectMany(i => i.GetMethods())).ToArray();
+						foreach (var interfaceMethod in methods)
 						{
 							// Must not implement unsupported attributes
 							var attr = interfaceMethod.GetCustomAttribute<StaticShimAttribute>(false);
