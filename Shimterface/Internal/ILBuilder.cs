@@ -19,7 +19,7 @@ namespace Shimterface.Standard.Internal
 			impl.Emit(instField.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld, instField);
 			return true;
 		}
-		private static void resolveParameters(ILGenerator impl, MethodInfo methodInfo, MethodInfo interfaceMethod)
+		private static void resolveParameters(ILGenerator impl, MethodBase methodInfo, MethodInfo interfaceMethod)
 		{
 			// Pass each parameter from the method call to the implementation
 			var pars1 = methodInfo.GetParameters();
@@ -118,6 +118,18 @@ namespace Shimterface.Standard.Internal
 				impl.EmitTypeUnshim(args[0].ParameterType, fieldInfo.FieldType);
 				impl.Emit(fieldInfo.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, fieldInfo);
 			}
+			impl.Emit(OpCodes.Ret);
+		}
+
+		public static void MethodCall(this TypeBuilder tb, MethodInfo interfaceMethod, ConstructorInfo constrInfo)
+		{
+			var method = tb.DefinePublicMethod(interfaceMethod.Name, interfaceMethod.ReturnType, interfaceMethod.GetParameters().Select(p => p.ParameterType));
+			var impl = method.GetILGenerator();
+
+			resolveParameters(impl, constrInfo, interfaceMethod);
+			impl.Emit(OpCodes.Newobj, constrInfo);
+			var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { interfaceMethod.ReturnType }, new[] { typeof(object) });
+			impl.Emit(OpCodes.Call, shimMethod);
 			impl.Emit(OpCodes.Ret);
 		}
 

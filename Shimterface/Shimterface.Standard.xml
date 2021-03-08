@@ -107,6 +107,16 @@
             Mark property/field or method as being static within another type.
             </summary>
         </member>
+        <member name="P:Shimterface.StaticShimAttribute.TargetType">
+            <summary>
+            The type that implements this member.
+            </summary>
+        </member>
+        <member name="P:Shimterface.StaticShimAttribute.IsConstructor">
+            <summary>
+            True if this member calls a constructor on the target type.
+            </summary>
+        </member>
         <member name="T:Shimterface.TypeShimAttribute">
             <summary>
             Mark signature type as being automatically shimmed from real implementation type
