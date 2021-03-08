@@ -30,7 +30,7 @@ namespace Shimterface.Tests
 		public void DateTime_shim_can_return_ITimeSpan()
 		{
 			var dt = DateTime.UtcNow;
-			var shim = Shimterface.Shim<IDateTime>(dt);
+			var shim = ShimBuilder.Shim<IDateTime>(dt);
 
 			var fmt1 = dt.ToString("yyyy-MM-dd HH:mm");
 			var fmt2 = shim.ToString("yyyy-MM-dd HH:mm");
@@ -43,7 +43,7 @@ namespace Shimterface.Tests
 		[TestMethod]
 		public void Factory_can_redefine_Now()
 		{
-			var dt = Shimterface.Create<IDateTimeFactory>();
+			var dt = ShimBuilder.Create<IDateTimeFactory>();
 			var now = dt.Now;
 			Assert.IsTrue(now is IDateTime);
 			Assert.IsTrue(now is IShim);

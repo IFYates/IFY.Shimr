@@ -1,6 +1,8 @@
 # Shimterface
 Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement
 
+[Available on nuget.](https://www.nuget.org/packages/Shimterface.Standard/)
+
 ## Description
 I'm sure we've all been in the situation where we've had to make use of a class from an external library (including mscorlib) that either doesn't implement any interface or doesn't implement one that can be used for any kind of Inversion of Control usage.
 One approach is to implement a series of proxy objects that handle all of the required functionality, including proxies around returned values, and this can even be scripted (Powershell, T4, etc.) to prevent the arduous task of proxying every class you need.
@@ -74,7 +76,7 @@ public interface IStaticTest {
 }
 
 public void DoTest() {
-	IStaticTest factory = Shimterface.Create<IStaticTest>();
+	IStaticTest factory = ShimBuilder.Create<IStaticTest>();
 	factory.Test();
 }
 ```
@@ -101,48 +103,67 @@ Filesystem work is obviously extremely important in a lot of applications, but t
 If we were searching for all text files in a directory, but wanted to be able to mock the implementation for testing, we could approach it as such:
 
 ```C#
-// Shim types
-public interface IFileInfo {
-    string FullName { get; }
+// Static filesystem-related methods as a "factory"
+public interface IFileSystem
+{
+	[StaticShim(typeof(Directory))]
+	IDirectoryInfo GetParent(string path);
 }
-public interface IDirectoryInfo {
-    [TypeShim(typeof(FileInfo[]))]
-    IFileInfo[] GetFiles(string searchPattern);
+
+// The bits we want from DirectoryInfo
+public interface IDirectoryInfo
+{
+	bool Exists { get; }
+	string FullName { get; }
+	[TypeShim(typeof(DirectoryInfo))]
+	IDirectoryInfo Parent { get; }
+	[TypeShim(typeof(IEnumerable<FileInfo>))]
+	IEnumerable<IFileInfo> EnumerateFiles();
+	[TypeShim(typeof(FileInfo[]))]
+	IFileInfo[] GetFiles();
+	string ToString();
 }
-    
-// Implementation
-public string[] GetAllTextFiles(IDirectoryInfo dir) {
-    IFileInfo[] files = dir.GetFiles("*.txt");
-    string[] fileNames = files.Select(f => f.FullName).ToArray();
-    return fileNames;
+
+// The bits we want from FileInfo
+public interface IFileInfo
+{
+	bool Exists { get; }
+	string FullName { get; }
+	string Name { get; }
+	[TypeShim(typeof(DirectoryInfo))]
+	IDirectoryInfo Directory { get; }
 }
-    
-// Test
+
 [TestMethod]
-public void Test_can_get_all_text_files() {
-    var fileMock = new Mock<IFileInfo>();
-    fileMock.SetupPropertyGet(m => m.FullName).Returns("test");
-    IFileInfo[] files = new [] {
-        fileMock.Object
-    };
-        
-    var dirMock = new Mock<IDirectoryInfo>(MockBehavior.Strict);
-    dirMock.Setup(m => m.GetFiles("*.txt")).Returns(files);
-    
-    string[] result = impl.GetAllTextFiles(dirMock.Object);
-    
-    Assert.AreEqual(1, result.Length);
-    Assert.AreEqual("test", result[0]);
-}
-```
+public void Test_file_system_shims()
+{
+	var assemblyFile = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
-Obviously, you'll still need to find a way to construct the concrete types properly during implementation. For this example, the factory will likely look something like:
+	// We'll need to use the filesystem shim factory
+	var fileSystem = ShimBuilder.Create<IFileSystem>(); // In tests, this will be a mock
 
-```C#
-public IDirectoryInfo GetDirectory(string path) {
-    return new DirectoryInfo(path).Shim<IDirectoryInfo>();
+	// Make use of various shimmed methods
+	IDirectoryInfo dir = fileSystem.GetParent(assemblyFile);
+	IFileInfo[] files = dir.GetFiles();
+	IFileInfo[] fileEnum = dir.EnumerateFiles().ToArray();
+
+	// Check it returns what we expect
+	Assert.IsTrue(dir.Exists);
+	Assert.IsTrue(dir.Parent is IDirectoryInfo);
+	Assert.AreEqual(Directory.GetParent(assemblyFile).FullName, dir.FullName);
+
+	Assert.IsTrue(files.Length > 0);
+	CollectionAssert.AreEqual(files.Select(f => f.FullName).OrderBy(f => f).ToArray(), fileEnum.Select(f => f.FullName).OrderBy(f => f).ToArray());
 }
 ```
 
 ## Known Issues
 * If the compilation of the proxy type fails but the application handles it, the Type-Interface combination is now not usable
+
+## Future Ideas
+* Generate assembly of compiled shims for direct reference
+* Use shim factory to call constructor of target type (e.g., static "New" methods)
+* Rename of shimmed member
+* Provide default functionality to shimmed method missing from target type
+* Add concrete functionality to shimmed type (similar to extension methods)
+* Combine multiple target types to single shim

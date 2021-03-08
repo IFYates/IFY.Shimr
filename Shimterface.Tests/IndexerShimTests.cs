@@ -41,7 +41,7 @@ namespace Shimterface.Tests
             var obj = new GetIndexerTest();
             obj._Values[0] = "test0";
 
-            var shim = Shimterface.Shim<IGetIndexerTest>(obj);
+            var shim = ShimBuilder.Shim<IGetIndexerTest>(obj);
 
             Assert.AreEqual("test0", shim[0]);
         }
@@ -51,7 +51,7 @@ namespace Shimterface.Tests
         {
             var obj = new SetIndexerTest();
 
-            var shim = Shimterface.Shim<ISetIndexerTest>(obj);
+            var shim = ShimBuilder.Shim<ISetIndexerTest>(obj);
             shim[0] = "test0";
 
             Assert.AreEqual("test0", obj._Values[0]);
@@ -62,7 +62,7 @@ namespace Shimterface.Tests
         {
             var obj = new GetSetIndexerTest();
 
-            var shim = Shimterface.Shim<IGetSetIndexerTest>(obj);
+            var shim = ShimBuilder.Shim<IGetSetIndexerTest>(obj);
             shim[0] = "test0";
 
             Assert.AreEqual("test0", shim[0]);
@@ -74,7 +74,7 @@ namespace Shimterface.Tests
             var obj = new GetSetIndexerTest();
             obj[0] = "test0";
 
-            var shim = Shimterface.Shim<IGetIndexerTest>(obj);
+            var shim = ShimBuilder.Shim<IGetIndexerTest>(obj);
 
             Assert.AreEqual("test0", shim[0]);
         }
@@ -84,7 +84,7 @@ namespace Shimterface.Tests
         {
             var obj = new GetSetIndexerTest();
 
-            var shim = Shimterface.Shim<ISetIndexerTest>(obj);
+            var shim = ShimBuilder.Shim<ISetIndexerTest>(obj);
             shim[0] = "test0";
 
             Assert.AreEqual("test0", obj[0]);

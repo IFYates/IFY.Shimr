@@ -44,7 +44,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IGetFieldTest>(obj);
+            var shim = ShimBuilder.Shim<IGetFieldTest>(obj);
 
             var res = shim.Value;
             Assert.AreEqual("value", res);
@@ -55,7 +55,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<ISetFieldTest>(obj);
+            var shim = ShimBuilder.Shim<ISetFieldTest>(obj);
             shim.Value = "new_value";
 
             var res = obj.Value;
@@ -67,7 +67,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IGetSetFieldTest>(obj);
+            var shim = ShimBuilder.Shim<IGetSetFieldTest>(obj);
             shim.Value = "new_value";
 
             Assert.AreEqual(shim.Value, obj.Value);
@@ -78,7 +78,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IReadonlyFieldTest>(obj);
+            var shim = ShimBuilder.Shim<IReadonlyFieldTest>(obj);
 
             var res = shim.Immutable;
             Assert.AreEqual("readonly", res);
@@ -89,7 +89,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IReadonlyFieldTest>(obj);
+            var shim = ShimBuilder.Shim<IReadonlyFieldTest>(obj);
 
             Assert.ThrowsException<Exception>(() =>
             {
@@ -102,7 +102,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IGetFieldTest>(obj);
+            var shim = ShimBuilder.Shim<IGetFieldTest>(obj);
 
             var res = shim.Value;
             Assert.AreEqual("value", res);
@@ -113,7 +113,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IGetFieldTest>(obj);
+            var shim = ShimBuilder.Shim<IGetFieldTest>(obj);
 
             var res = shim.Value;
             Assert.AreEqual("value", res);

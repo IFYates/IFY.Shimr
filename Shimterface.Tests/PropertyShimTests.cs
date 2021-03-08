@@ -41,7 +41,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IGetPropertyTest>(obj);
+            var shim = ShimBuilder.Shim<IGetPropertyTest>(obj);
 
             var res = shim.GetProperty;
             Assert.AreEqual("value", res);
@@ -53,7 +53,7 @@ namespace Shimterface.Tests
             var obj = new TestClass();
             Assert.IsNull(obj._SetPropertyValue);
 
-            var shim = Shimterface.Shim<ISetPropertyTest>(obj);
+            var shim = ShimBuilder.Shim<ISetPropertyTest>(obj);
             shim.SetProperty = "test";
 
             Assert.AreEqual("test", obj._SetPropertyValue);
@@ -65,7 +65,7 @@ namespace Shimterface.Tests
             var obj = new TestClass();
             Assert.IsNull(obj.GetSetProperty);
 
-            var shim = Shimterface.Shim<ISetPropertyWithGetTest>(obj);
+            var shim = ShimBuilder.Shim<ISetPropertyWithGetTest>(obj);
             shim.GetSetProperty = "test";
 
             Assert.AreEqual("test", obj.GetSetProperty);
@@ -76,7 +76,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IGetPropertyWithSetTest>(obj);
+            var shim = ShimBuilder.Shim<IGetPropertyWithSetTest>(obj);
             Assert.IsNull(shim.GetSetProperty);
             obj.GetSetProperty = "test";
             Assert.AreEqual("test", shim.GetSetProperty);
@@ -87,7 +87,7 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = Shimterface.Shim<IGetSetPropertyTest>(obj);
+            var shim = ShimBuilder.Shim<IGetSetPropertyTest>(obj);
 
             Assert.IsNull(obj.GetSetProperty);
             shim.GetSetProperty = "test_getset";

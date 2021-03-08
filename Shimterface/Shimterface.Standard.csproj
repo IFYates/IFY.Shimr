@@ -1,17 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Ian Yates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.0.0</Version>
+        <Version>1.1.0</Version>
         <PackageProjectUrl>https://github.com/IanYates83/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IanYates83/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>v1.2.0.0
+        <PackageReleaseNotes>v1.2.0
 Added support to shim implementation fields using properties.
 
-v1.1.0.0
+v1.1.0
 Renamed Shimterface class to ShimBuilder, to fix namespace collision.
 
 v1.0.0.1
@@ -19,10 +19,13 @@ Rebuilt for .NET Standard 2.1
 
 v1.0.0.0
 Original release for .NET Core</PackageReleaseNotes>
-        <SignAssembly>false</SignAssembly>
+        <Copyright>(c) Ian Yates</Copyright>
+        <AssemblyVersion>1.1.0.0</AssemblyVersion>
+        <FileVersion>1.1.0.0</FileVersion>
+        <Description>Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.</Description>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-      <DocumentationFile>C:\dev\ian\Shimterface\Shimterface\Shimterface.Standard.xml</DocumentationFile>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+      <DocumentationFile>Shimterface.Standard.xml</DocumentationFile>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="System.Reflection.Emit" Version="4.6.0" />

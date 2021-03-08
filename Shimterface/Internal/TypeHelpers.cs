@@ -35,26 +35,31 @@ namespace Shimterface
             return attr;
         }
 
-        public static bool IsArrayType(this Type type)
-        {
-            // TODO: Better way to determine is underived IEnumerable<?>
-            return type.IsArray
-                || type.Namespace + "." + type.Name == "System.Collections.Generic.IEnumerable`1";
-        }
+		// Close enough estimation that we're looking at an IEnumerable<T> implementation
+		private static bool isIEnumerableGeneric(Type type)
+		{
+			return type.IsInterface
+				&& type.IsGenericType
+				&& typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
+		}
+
+		public static bool IsArrayType(this Type type)
+		{
+			return type.IsArray || isIEnumerableGeneric(type);
+		}
 
         public static bool IsInterfaceType(this Type type)
         {
             return type.ResolveType().IsInterface;
         }
 
-        public static Type ResolveType(this Type type)
-        {
-            // TODO: Better way to determine is underived IEnumerable<?>
-            if (type.Namespace + "." + type.Name == "System.Collections.Generic.IEnumerable`1")
-            {
-                return type.GenericTypeArguments[0];
-            }
-            return type.IsArray ? type.GetElementType() : type;
-        }
-    }
+		public static Type ResolveType(this Type type)
+		{
+			if (isIEnumerableGeneric(type))
+			{
+				return type.GenericTypeArguments[0];
+			}
+			return type.IsArray ? type.GetElementType() : type;
+		}
+	}
 }

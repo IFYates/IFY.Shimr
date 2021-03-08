@@ -37,7 +37,7 @@ namespace Shimterface.Tests
 		[TestMethod]
 		public void Can_define_static_method()
 		{
-			var factory = Shimterface.Create<IStaticMethod>();
+			var factory = ShimBuilder.Create<IStaticMethod>();
 
 			Assert.IsFalse(StaticMemberClass._HasCalled);
 			factory.Test();
@@ -47,7 +47,7 @@ namespace Shimterface.Tests
 		[TestMethod]
 		public void Can_define_static_property()
 		{
-			var factory = Shimterface.Create<IStaticProperty>();
+			var factory = ShimBuilder.Create<IStaticProperty>();
 
 			Assert.IsNull(StaticMemberClass.Value);
 			Assert.IsNull(factory.Value);
@@ -61,14 +61,14 @@ namespace Shimterface.Tests
 		[ExpectedException(typeof(InvalidCastException))]
 		public void Must_only_define_static_methods()
 		{
-			Shimterface.Create<IBadStaticMethod>();
+			ShimBuilder.Create<IBadStaticMethod>();
 		}
 
 		[TestMethod]
 		[ExpectedException(typeof(InvalidCastException))]
 		public void Normal_shims_cannot_use_StaticShimAttribute()
 		{
-			Shimterface.Shim<IStaticMethod>(new object());
+			ShimBuilder.Shim<IStaticMethod>(new object());
 		}
 	}
 }
