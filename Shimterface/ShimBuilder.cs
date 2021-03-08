@@ -77,7 +77,7 @@ namespace Shimterface
 								throw new InvalidCastException("Instance shim cannot implement static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
 							}
 
-							shimMember(tb, instField, instType, interfaceMethod);
+							shimMember(tb, instField, instType, interfaceMethod, false);
 						}
 
 						_dynamicTypeCache.Add(className, tb.CreateType());
@@ -113,14 +113,7 @@ namespace Shimterface
 								throw new InvalidCastException("Factory shim cannot implement non-static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
 							}
 
-							if (attr.IsConstructor)
-							{
-								shimConstructor(tb, attr.TargetType, interfaceMethod);
-							}
-							else
-							{
-								shimMember(tb, null, attr.TargetType, interfaceMethod);
-							}
+							shimMember(tb, null, attr.TargetType, interfaceMethod, attr.IsConstructor);
 						}
 
 						_dynamicTypeCache.Add(className, tb.CreateType());
@@ -130,136 +123,117 @@ namespace Shimterface
 			return _dynamicTypeCache[className];
 		}
 
-		private static void resolveMemberDetails(MethodInfo interfaceMethod, out string implMemberName, out Type implReturnType, out bool isPropertyShim)
+		private static MemberInfo resolveImplementation(Type implType, MethodInfo interfaceMethod, bool isStatic, bool isConstructor)
 		{
-			implMemberName = interfaceMethod.Name;
-			var shimReturnType = interfaceMethod.ReturnType;
+			// Workout real parameter types
+			var paramTypes = interfaceMethod.GetParameters()
+				.Select(p =>
+				{
+					var paramAttr = p.GetCustomAttribute<TypeShimAttribute>();
+					if (paramAttr != null && !p.ParameterType.IsInterfaceType())
+					{
+						throw new NotSupportedException("Shimmed parameter type must be an interface: " + interfaceMethod.DeclaringType.FullName);
+					}
+					return paramAttr?.RealType ?? p.ParameterType;
+				}).ToArray();
 
-			// If really a property, will need to use the PropertyInfo
-			MemberInfo interfaceMember = interfaceMethod;
-			isPropertyShim = interfaceMethod.IsSpecialName
-				&& (interfaceMethod.Name.StartsWith("get_") || interfaceMethod.Name.StartsWith("set_"));
-			if (isPropertyShim)
+			// Constructors don't provide other functionality
+			if (isConstructor)
 			{
-				var propInfo = interfaceMethod.DeclaringType.GetProperty(implMemberName[4..]);
-				shimReturnType = propInfo.PropertyType;
-				interfaceMember = propInfo;
+				return implType.GetConstructor(paramTypes);
 			}
 
-			implReturnType = shimReturnType;
+			// If really a property, will need to get attributes from PropertyInfo
+			var isPropertySetShim = interfaceMethod.IsSpecialName && interfaceMethod.Name.StartsWith("set_");
+			var isPropertyShim = isPropertySetShim || (interfaceMethod.IsSpecialName && interfaceMethod.Name.StartsWith("get_"));
+			MemberInfo reflectMember = interfaceMethod;
+			if (isPropertyShim)
+			{
+				reflectMember = interfaceMethod.DeclaringType.GetProperty(interfaceMethod.Name[4..]);
+			}
 
-			var attr = interfaceMember.GetCustomAttribute<ShimAttribute>(false);
+			// Look for overrides
+			Type implReturnType = null;
+			string implMemberName = null;
+			var attr = reflectMember.GetCustomAttribute<ShimAttribute>(false);
 			if (attr != null)
 			{
-				implReturnType = attr.ReturnType ?? implReturnType;
-				implMemberName = attr.ImplementationName ?? implMemberName;
+				implMemberName = attr.ImplementationName;
+				implReturnType = attr.ReturnType;
 
-				if (isPropertyShim && attr.ImplementationName != null)
+				if (isPropertyShim && implMemberName != null)
 				{
 					implMemberName = interfaceMethod.Name[0..4] + implMemberName;
 				}
 			}
-			else
+
+			// TEMP: Obsolete
+			if (implReturnType == null)
 			{
-				// TEMP: Obsolete
-				var attr2 = interfaceMethod.GetCustomAttribute<TypeShimAttribute>(false);
+				var attr2 = reflectMember.GetCustomAttribute<TypeShimAttribute>(false);
 				if (attr2 != null)
 				{
-					implReturnType = attr2.RealType ?? implReturnType;
+					implReturnType = attr2.RealType;
 				}
 			}
 
+			// Property set arg may need to be unshimmed
+			if (isPropertySetShim && implReturnType != null)
+			{
+				paramTypes[^1] = implReturnType;
+				implReturnType = null;
+			}
+
 			// Can only override with an interface
-			if (implReturnType != shimReturnType && !shimReturnType.IsInterfaceType())
+			if (implReturnType != null && !interfaceMethod.ReturnType.IsInterfaceType())
 			{
-				throw new NotSupportedException($"Shimmed return type ({shimReturnType.FullName}) must be an interface on member: {interfaceMethod.DeclaringType.FullName}.{interfaceMethod.Name}");
-			}
-		}
-
-		private static void shimConstructor(TypeBuilder tb, Type instType, MethodInfo interfaceMethod)
-		{
-			resolveMemberDetails(interfaceMethod, out var implMemberName, out var implPropType, out var isPropertyShim);
-
-			// Workout real parameter types
-			var paramTypes = interfaceMethod.GetParameters()
-				.Select(p =>
-				{
-					var paramAttr = p.GetCustomAttribute<TypeShimAttribute>();
-					if (paramAttr != null && !p.ParameterType.IsInterfaceType())
-					{
-						throw new NotSupportedException("Shimmed parameter type must be an interface: " + interfaceMethod.DeclaringType.FullName);
-					}
-					return paramAttr == null ? p.ParameterType : paramAttr.RealType;
-				}).ToArray();
-
-			// Match real constructor
-			var constrInfo = instType.GetConstructor(paramTypes);
-			if (constrInfo != null)
-			{
-				tb.MethodCall(interfaceMethod, constrInfo);
-				return;
-			}
-
-			if (_ignoreMissingMembers.Contains(interfaceMethod.DeclaringType))
-			{
-				ILBuilder.MethodThrowException<NotImplementedException>(tb, interfaceMethod);
-			}
-			else
-			{
-				// TODO: Could support default/custom functionality
-				throw new InvalidCastException($"Cannot shim {instType.FullName} as {interfaceMethod.DeclaringType.FullName}; missing method: {interfaceMethod.Name}");
-			}
-		}
-
-		private static void shimMember(TypeBuilder tb, FieldBuilder instField, Type instType, MethodInfo interfaceMethod)
-		{
-			resolveMemberDetails(interfaceMethod, out var implMemberName, out var implPropType, out var isPropertyShim);
-
-			// Workout real parameter types
-			var paramTypes = interfaceMethod.GetParameters()
-				.Select(p =>
-				{
-					var paramAttr = p.GetCustomAttribute<TypeShimAttribute>();
-					if (paramAttr != null && !p.ParameterType.IsInterfaceType())
-					{
-						throw new NotSupportedException("Shimmed parameter type must be an interface: " + interfaceMethod.DeclaringType.FullName);
-					}
-					return paramAttr == null ? p.ParameterType : paramAttr.RealType;
-				}).ToArray();
-
-			// If really a property, set arg may need to be unshimmed
-			if (isPropertyShim && interfaceMethod.Name.StartsWith("set_"))
-			{
-				paramTypes[^1] = implPropType;
+				throw new NotSupportedException($"Shimmed return type ({interfaceMethod.ReturnType.FullName}) must be an interface, on member: {interfaceMethod.DeclaringType.FullName}.{reflectMember.Name}");
 			}
 
 			// Check if this is a property wrapping a field
 			if (isPropertyShim)
 			{
-				var fieldInfo = instType.GetField(implMemberName[4..]);
-				if (fieldInfo != null)
+				var fieldInfo = implType.GetField((implMemberName ?? interfaceMethod.Name)[4..]);
+				if (fieldInfo?.FieldType != null)
 				{
-					tb.FieldWrap(instField, interfaceMethod, fieldInfo);
-					return;
+					return fieldInfo;
 				}
 			}
 
-			// Match real method
-			var methodInfo = instType.GetMethod(implMemberName, paramTypes);
-			if (methodInfo != null)
-			{
-				tb.MethodCall(instField, interfaceMethod, methodInfo);
-				return;
-			}
+			// Find method
+			return implType.GetMethod(implMemberName ?? interfaceMethod.Name, paramTypes);
+		}
 
-			if (_ignoreMissingMembers.Contains(interfaceMethod.DeclaringType))
+		private static void shimMember(TypeBuilder tb, FieldBuilder instField, Type instType, MethodInfo interfaceMethod, bool isConstructor)
+		{
+			// Match real member
+			var memberInfo = resolveImplementation(instType, interfaceMethod, instField == null, isConstructor);
+			if (memberInfo == null)
 			{
-				ILBuilder.MethodThrowException<NotImplementedException>(tb, interfaceMethod);
-			}
-			else
-			{
+				if (_ignoreMissingMembers.Contains(interfaceMethod.DeclaringType))
+				{
+					ILBuilder.MethodThrowException<NotImplementedException>(tb, interfaceMethod);
+					return;
+				}
+
 				// TODO: Could support default/custom functionality
 				throw new InvalidCastException($"Cannot shim {instType.FullName} as {interfaceMethod.DeclaringType.FullName}; missing method: {interfaceMethod.Name}");
+			}
+
+			// Generate proxy
+			switch (memberInfo)
+			{
+				case ConstructorInfo constrInfo:
+					tb.MethodCall(interfaceMethod, constrInfo);
+					return;
+				case FieldInfo fieldInfo:
+					tb.FieldWrap(instField, interfaceMethod, fieldInfo);
+					return;
+				case MethodInfo methodInfo:
+					tb.MethodCall(instField, interfaceMethod, methodInfo);
+					return;
+				default:
+					throw new InvalidOperationException();
 			}
 		}
 

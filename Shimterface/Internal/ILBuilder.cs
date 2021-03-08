@@ -37,7 +37,8 @@ namespace Shimterface.Standard.Internal
 			var constr = tb.DefineConstructor(MethodAttributes.Public
 				| MethodAttributes.HideBySig
 				| MethodAttributes.SpecialName
-				| MethodAttributes.RTSpecialName, CallingConventions.Standard, new[] { instField.FieldType });
+				| MethodAttributes.RTSpecialName,
+				CallingConventions.Standard, new[] { instField.FieldType });
 			constr.DefineParameter(1, ParameterAttributes.None, "inst");
 			var impl = constr.GetILGenerator();
 
@@ -55,9 +56,12 @@ namespace Shimterface.Standard.Internal
 
 		public static MethodBuilder DefinePublicMethod(this TypeBuilder tb, string name, Type returnType, IEnumerable<Type> typeParams = null)
 		{
-			return tb.DefineMethod(name, MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual, returnType, typeParams?.ToArray() ?? Array.Empty<Type>());
+			return tb.DefineMethod(name, MethodAttributes.Public
+				| MethodAttributes.HideBySig
+				| MethodAttributes.Virtual,
+				returnType, typeParams?.ToArray() ?? Array.Empty<Type>());
 		}
-		
+
 		public static bool EmitTypeShim(this ILGenerator impl, Type fromType, Type resultType)
 		{
 			if (fromType == resultType || fromType == typeof(void) || resultType == typeof(void))
@@ -138,11 +142,9 @@ namespace Shimterface.Standard.Internal
 			var method = tb.DefinePublicMethod(interfaceMethod.Name, interfaceMethod.ReturnType, interfaceMethod.GetParameters().Select(p => p.ParameterType));
 			var impl = method.GetILGenerator();
 
-			var callType = OpCodes.Call; // Static
-			if (resolveIfInstance(impl, instField))
-			{
-				callType = OpCodes.Callvirt;
-			}
+			var callType = !resolveIfInstance(impl, instField)
+				? OpCodes.Call // Static
+				: OpCodes.Callvirt;
 
 			resolveParameters(impl, methodInfo, interfaceMethod);
 			impl.Emit(callType, methodInfo);

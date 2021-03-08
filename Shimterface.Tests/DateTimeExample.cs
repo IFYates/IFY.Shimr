@@ -12,9 +12,9 @@ namespace Shimterface.Tests
 		}
 		public interface IDateTime
 		{
-			[TypeShim(typeof(TimeSpan))]
+			[Shim(typeof(TimeSpan))]
 			ITimeSpan Subtract([TypeShim(typeof(DateTime))] IDateTime value);
-			[TypeShim(typeof(TimeSpan))]
+			[Shim(typeof(TimeSpan))]
 			ITimeSpan TimeOfDay { get; }
 			string ToString(string format);
 		}
@@ -22,19 +22,27 @@ namespace Shimterface.Tests
 		public interface IDateTimeFactory
 		{
 			[StaticShim(typeof(DateTime))]
-			[TypeShim(typeof(DateTime))]
+			[Shim(typeof(DateTime))]
 			IDateTime Now { get; }
+		}
+		
+		[TestMethod]
+		public void DateTime_can_be_wrapped()
+		{
+			DateTime dt = DateTime.UtcNow;
+			string exp = dt.ToString("o");
+
+			IDateTime shim = ShimBuilder.Shim<IDateTime>(dt);
+
+			string res = shim.ToString("o");
+			Assert.AreEqual(exp, res);
 		}
 
 		[TestMethod]
 		public void DateTime_shim_can_return_ITimeSpan()
 		{
-			var dt = DateTime.UtcNow;
-			var shim = ShimBuilder.Shim<IDateTime>(dt);
-
-			var fmt1 = dt.ToString("yyyy-MM-dd HH:mm");
-			var fmt2 = shim.ToString("yyyy-MM-dd HH:mm");
-			Assert.AreEqual(fmt1, fmt2);
+			DateTime dt = DateTime.UtcNow;
+			IDateTime shim = ShimBuilder.Shim<IDateTime>(dt);
 
 			var res = shim.Subtract(DateTime.Today.Shim<IDateTime>());
 			Assert.AreEqual(shim.TimeOfDay.TotalSeconds, res.TotalSeconds);
@@ -43,8 +51,10 @@ namespace Shimterface.Tests
 		[TestMethod]
 		public void Factory_can_redefine_Now()
 		{
-			var dt = ShimBuilder.Create<IDateTimeFactory>();
-			var now = dt.Now;
+			IDateTimeFactory dt = ShimBuilder.Create<IDateTimeFactory>();
+			IDateTime now = dt.Now;
+
+			Assert.IsFalse(now is DateTime);
 			Assert.IsTrue(now is IDateTime);
 			Assert.IsTrue(now is IShim);
 			Assert.IsTrue(((IShim)now).Unshim() is DateTime);

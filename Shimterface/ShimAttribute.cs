@@ -19,10 +19,10 @@ namespace Shimterface
 		{
 			ReturnType = returnType;
 		}
-		public ShimAttribute(string name, Type returnType)
+		public ShimAttribute(Type returnType, string name)
 		{
-			ImplementationName = name;
 			ReturnType = returnType;
+			ImplementationName = name;
 		}
 	}
 }
