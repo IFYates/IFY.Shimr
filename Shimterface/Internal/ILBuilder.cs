@@ -108,7 +108,7 @@ namespace Shimterface.Standard.Internal
 			if (args.Length == 0)
 			{
 				// Get
-				impl.Emit(fieldInfo.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld, fieldInfo);
+				impl.Emit(fieldInfo.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld, fieldInfo);
 				impl.EmitTypeShim(fieldInfo.FieldType, interfaceMethod.ReturnType);
 			}
 			else
@@ -116,7 +116,7 @@ namespace Shimterface.Standard.Internal
 				// Set
 				impl.Emit(OpCodes.Ldarg, 1);
 				impl.EmitTypeUnshim(args[0].ParameterType, fieldInfo.FieldType);
-				impl.Emit(OpCodes.Stfld, fieldInfo);
+				impl.Emit(fieldInfo.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld, fieldInfo);
 			}
 			impl.Emit(OpCodes.Ret);
 		}

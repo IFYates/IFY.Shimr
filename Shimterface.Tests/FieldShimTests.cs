@@ -3,125 +3,156 @@ using System;
 
 namespace Shimterface.Tests
 {
-    [TestClass]
-    public class FieldShimTests
-    {
-        // TODO: static
+	[TestClass]
+	public class FieldShimTests
+	{
+		public interface IGetFieldTest
+		{
+			long LValue { get; }
+			string RValue { get; }
+		}
+		public interface ISetFieldTest
+		{
+			long LValue { set; }
+			string RValue { set; }
+		}
+		public interface IGetSetFieldTest
+		{
+			long LValue { get; set; }
+			string RValue { get; set; }
+		}
+		public interface IReadonlyFieldTest
+		{
+			string Immutable { get; set; }
+		}
 
-        public interface IGetFieldTest
-        {
-            string Value { get; }
-        }
-        public interface ISetFieldTest
-        {
-            string Value { set; }
-        }
-        public interface IGetSetFieldTest
-        {
-            string Value { get; set; }
-        }
-        public interface IReadonlyFieldTest
-        {
-            string Immutable { get; set; }
-        }
+		public interface IOverrideFieldTest
+		{
+			[TypeShim(typeof(TestClass))]
+			IGetSetFieldTest Child { get; set; }
+		}
 
-        public interface IOverrideFieldTest
-        {
-            [TypeShim(typeof(TestClass))]
-            IGetSetFieldTest Child { get; set; }
-        }
+		public class TestClass
+		{
+			public long LValue = 12345L;
+			public string RValue = "value";
+			public readonly string Immutable = "readonly";
 
-        public class TestClass
-        {
-            public string Value = "value";
-            public readonly string Immutable = "readonly";
+			public TestClass Child;
+		}
 
-            public TestClass Child;
-        }
+		[TestMethod]
+		public void Can_shim_a_value_field_as_a_get_property()
+		{
+			var obj = new TestClass();
 
-        [TestMethod]
-        public void Can_shim_a_field_as_a_get_property()
-        {
-            var obj = new TestClass();
+			var shim = ShimBuilder.Shim<IGetFieldTest>(obj);
 
-            var shim = ShimBuilder.Shim<IGetFieldTest>(obj);
+			Assert.AreEqual(12345L, shim.LValue);
+		}
 
-            var res = shim.Value;
-            Assert.AreEqual("value", res);
-        }
+		[TestMethod]
+		public void Can_shim_a_value_field_as_a_set_property()
+		{
+			var obj = new TestClass();
 
-        [TestMethod]
-        public void Can_shim_a_field_as_a_set_property()
-        {
-            var obj = new TestClass();
+			var shim = ShimBuilder.Shim<ISetFieldTest>(obj);
+			shim.LValue = 98765L;
 
-            var shim = ShimBuilder.Shim<ISetFieldTest>(obj);
-            shim.Value = "new_value";
+			Assert.AreEqual(98765L, obj.LValue);
+		}
 
-            var res = obj.Value;
-            Assert.AreEqual("new_value", res);
-        }
+		[TestMethod]
+		public void Can_shim_a_value_field_as_a_get_set_property()
+		{
+			var obj = new TestClass();
 
-        [TestMethod]
-        public void Can_shim_a_field_as_a_get_set_property()
-        {
-            var obj = new TestClass();
+			var shim = ShimBuilder.Shim<IGetSetFieldTest>(obj);
+			shim.LValue = 98765L;
 
-            var shim = ShimBuilder.Shim<IGetSetFieldTest>(obj);
-            shim.Value = "new_value";
+			Assert.AreEqual(shim.LValue, obj.LValue);
+		}
 
-            Assert.AreEqual(shim.Value, obj.Value);
-        }
+		[TestMethod]
+		public void Can_shim_a_ref_field_as_a_get_property()
+		{
+			var obj = new TestClass();
 
-        [TestMethod]
-        public void Can_shim_a_readonly_field_as_a_getset_property()
-        {
-            var obj = new TestClass();
+			var shim = ShimBuilder.Shim<IGetFieldTest>(obj);
 
-            var shim = ShimBuilder.Shim<IReadonlyFieldTest>(obj);
+			Assert.AreEqual("value", shim.RValue);
+		}
 
-            var res = shim.Immutable;
-            Assert.AreEqual("readonly", res);
-        }
+		[TestMethod]
+		public void Can_shim_a_ref_field_as_a_set_property()
+		{
+			var obj = new TestClass();
 
-        [TestMethod]
-        public void Cannot_set_a_readonly_field_shimmed_as_a_set_property()
-        {
-            var obj = new TestClass();
+			var shim = ShimBuilder.Shim<ISetFieldTest>(obj);
+			shim.RValue = "new_value";
 
-            var shim = ShimBuilder.Shim<IReadonlyFieldTest>(obj);
+			Assert.AreEqual("new_value", obj.RValue);
+		}
 
-            Assert.ThrowsException<InvalidOperationException>(() =>
-            {
-                shim.Immutable = "new_value";
-            });
-        }
+		[TestMethod]
+		public void Can_shim_a_ref_field_as_a_get_set_property()
+		{
+			var obj = new TestClass();
 
-        [TestMethod]
-        public void Shim_field_with_changed_return_type()
-        {
-            var obj = new TestClass
-            {
-                Child = new TestClass()
-            };
+			var shim = ShimBuilder.Shim<IGetSetFieldTest>(obj);
+			shim.RValue = "new_value";
 
-            var shim = ShimBuilder.Shim<IOverrideFieldTest>(obj);
+			Assert.AreEqual(shim.RValue, obj.RValue);
+		}
 
-            Assert.AreSame(obj.Child, ((IShim)shim.Child).Unshim());
-        }
+		[TestMethod]
+		public void Can_shim_a_readonly_field_as_a_getset_property()
+		{
+			var obj = new TestClass();
 
-        [TestMethod]
-        public void Shim_field_with_changed_set_type()
-        {
-            var obj = new TestClass();
+			var shim = ShimBuilder.Shim<IReadonlyFieldTest>(obj);
 
-            var newChild = new TestClass();
-            var newChildShim = newChild.Shim<IGetSetFieldTest>();
+			Assert.AreEqual("readonly", shim.Immutable);
+		}
 
-            var shim = ShimBuilder.Shim<IOverrideFieldTest>(obj);
-            shim.Child = newChildShim;
+		[TestMethod]
+		public void Cannot_set_a_readonly_field_shimmed_as_a_set_property()
+		{
+			var obj = new TestClass();
 
-            Assert.AreSame(newChild, obj.Child);
-        }
-    }
+			var shim = ShimBuilder.Shim<IReadonlyFieldTest>(obj);
+
+			Assert.ThrowsException<InvalidOperationException>(() =>
+			{
+				shim.Immutable = "new_value";
+			});
+		}
+
+		[TestMethod]
+		public void Shim_field_with_changed_return_type()
+		{
+			var obj = new TestClass
+			{
+				Child = new TestClass()
+			};
+
+			var shim = ShimBuilder.Shim<IOverrideFieldTest>(obj);
+
+			Assert.AreSame(obj.Child, ((IShim)shim.Child).Unshim());
+		}
+
+		[TestMethod]
+		public void Shim_field_with_changed_set_type()
+		{
+			var obj = new TestClass();
+
+			var newChild = new TestClass();
+			var newChildShim = newChild.Shim<IGetSetFieldTest>();
+
+			var shim = ShimBuilder.Shim<IOverrideFieldTest>(obj);
+			shim.Child = newChildShim;
+
+			Assert.AreSame(newChild, obj.Child);
+		}
+	}
 }
