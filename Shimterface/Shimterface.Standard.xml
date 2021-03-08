@@ -26,6 +26,11 @@
             Return the original object that has been shimmed.
             </summary>
         </member>
+        <member name="T:Shimterface.ShimAttribute">
+            <summary>
+            Mark a member type as explicitly shimming an item with a different name or return type.
+            </summary>
+        </member>
         <member name="T:Shimterface.ShimBuilder">
             <summary>
             Provides facility to create a shim that guarantees an object can be treated as the specified interface type.
@@ -99,13 +104,14 @@
         </member>
         <member name="T:Shimterface.StaticShimAttribute">
             <summary>
-            Mark property or method as being static within another type.
+            Mark property/field or method as being static within another type.
             </summary>
         </member>
         <member name="T:Shimterface.TypeShimAttribute">
             <summary>
             Mark signature type as being automatically shimmed from real implementation type
             </summary>
+            <remarks>For methods and properties/fields, use <see cref="T:Shimterface.ShimAttribute"/> instead.</remarks>
         </member>
     </members>
 </doc>

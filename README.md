@@ -59,7 +59,7 @@ The `TypeShimAttribute` on the parameter does the same, but in reverse - the int
 These concepts can automatically be applied to arrays and direct `IEnumerable<?>` usages.
 
 ## Renaming Members
-The proxy/facade patterns can also make it easier to unify different implementations. Shimterface can help be enabling renaming of implementation members using the `ShimAttribute`.
+The proxy/facade patterns can also make it easier to unify different implementations. Shimterface can help by enabling renaming of implementation members using the `ShimAttribute`.
 
 ```C#
 public class TestClass {
