@@ -79,6 +79,22 @@ public void DoTest() {
 }
 ```
 
+## Fields
+Shimterface will allow you to define a property in your proxy to cover a field in the implementation:
+```C#
+public class TestClass {
+    public string Name;
+}
+public interface ITest {
+    string Name { get; set; }
+}
+// Use: new TestClass().Shim<ITest>().Name
+```
+
+If the underlying field is readonly, defining the `set` will not fail on shim, but will fail on use.
+
+The `TypeShimAttribute` works here in the way you'd expect.
+
 ## Examples
 ### DirectoryInfo and FileInfo
 Filesystem work is obviously extremely important in a lot of applications, but the standard `System.IO` classes are not mockable nor IoC-supportive.

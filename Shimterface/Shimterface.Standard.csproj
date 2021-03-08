@@ -8,7 +8,10 @@
         <PackageProjectUrl>https://github.com/IanYates83/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IanYates83/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>v1.1.0.0
+        <PackageReleaseNotes>v1.2.0.0
+Added support to shim implementation fields using properties.
+
+v1.1.0.0
 Renamed Shimterface class to ShimBuilder, to fix namespace collision.
 
 v1.0.0.1
