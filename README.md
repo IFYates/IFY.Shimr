@@ -37,9 +37,9 @@ If you ever needed the original back again, then you simply unshim it:
 TestClass originalObject = (TestClass)((IShim)forcedCast).Unshim();
 ```
 
-## Overiding Types
-For simple class methods, this will be enough to decouple from the concrete class; however, if the method returns or takes other concrete types, Inversion of Control and unit testability are not hugely improved.
-The `TypeShimAttribute` is used here to put auto shim and unshim logic around the proxy implementation.
+## Overiding Return/Parameter Types
+For simple class methods, the above will be enough to decouple from the concrete class; however, if the method returns or takes other concrete types, Inversion of Control and unit testability are not hugely improved.
+The `ShimAttribute` and `TypeShimAttribute` types can be used here to put auto shim and unshim logic around the proxy implementation.
 
 ```C#
 public class TestClass {
@@ -48,15 +48,30 @@ public class TestClass {
     }
 }
 public interface IClassConverter {
-    [TypeShim(typeof(OtherTestClass))]
+    [Shim(typeof(OtherTestClass))]
     IOtherTestClass Convert([TypeShim(typeof(AnotherTestClass))] IAnotherTestClass from);
 }
 ```
 
-The `TypeShimAttribute` on the member (method or property) specifies the true return type of the method being proxied, with the return type of the interface member being the target shim type (code not shown) that will be used to proxy it to.
+The `ShimAttribute` on the member (method or property) specifies the true return type of the method being proxied, with the return type of the interface member being the target shim type (code not shown) that will be used to proxy it to.
 The `TypeShimAttribute` on the parameter does the same, but in reverse - the interface type will be unshimmed to the original type. Note that the passed in object must also implement IShim in order to be returned to the original class parameter type.
 
 These concepts can automatically be applied to arrays and direct `IEnumerable<?>` usages.
+
+## Renaming Members
+The proxy/facade patterns can also make it easier to unify different implementations. Shimterface can help be enabling renaming of implementation members using the `ShimAttribute`.
+
+```C#
+public class TestClass {
+    public string LibrarySpecificName() {
+        ...
+    }
+}
+public interface IFacadeClass {
+    [Shim(nameof(TestClass.LibrarySpecificName))]
+    string CommonName();
+}
+```
 
 ## Factories (Static Proxies)
 For situations where you need to also proxy static members, Shimterface provides a `StaticShimAttribute`. This allows for using proxies around static methods at runtime, but creating instance mocks at test.
@@ -95,7 +110,7 @@ public interface ITest {
 
 If the underlying field is readonly, defining the `set` will not fail on shim, but will fail on use.
 
-The `TypeShimAttribute` works here in the way you'd expect.
+The `ShimAttribute` works here for renaming and auto-shimming in the way you'd expect.
 
 ## Examples
 ### DirectoryInfo and FileInfo
@@ -115,11 +130,11 @@ public interface IDirectoryInfo
 {
 	bool Exists { get; }
 	string FullName { get; }
-	[TypeShim(typeof(DirectoryInfo))]
+	[Shim(typeof(DirectoryInfo))]
 	IDirectoryInfo Parent { get; }
-	[TypeShim(typeof(IEnumerable<FileInfo>))]
+	[Shim(typeof(IEnumerable<FileInfo>))]
 	IEnumerable<IFileInfo> EnumerateFiles();
-	[TypeShim(typeof(FileInfo[]))]
+	[Shim(typeof(FileInfo[]))]
 	IFileInfo[] GetFiles();
 	string ToString();
 }
@@ -130,7 +145,7 @@ public interface IFileInfo
 	bool Exists { get; }
 	string FullName { get; }
 	string Name { get; }
-	[TypeShim(typeof(DirectoryInfo))]
+	[Shim(typeof(DirectoryInfo))]
 	IDirectoryInfo Directory { get; }
 }
 
@@ -163,7 +178,6 @@ public void Test_file_system_shims()
 ## Future Ideas
 * Generate assembly of compiled shims for direct reference
 * Use shim factory to call constructor of target type (e.g., static "New" methods)
-* Rename of shimmed member
 * Provide default functionality to shimmed method missing from target type
 * Add concrete functionality to shimmed type (similar to extension methods)
 * Combine multiple target types to single shim

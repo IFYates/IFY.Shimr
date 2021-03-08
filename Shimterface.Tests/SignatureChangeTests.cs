@@ -26,17 +26,17 @@ namespace Shimterface.Tests
 		}
 		public interface ICoveredPropertyTest
 		{
-			[TypeShim(typeof(int))]
+			[Shim(typeof(int))]
 			IToString Value { get; set; }
 		}
 		public interface ICoveredMethodTest
 		{
-			[TypeShim(typeof(string))]
+			[Shim(typeof(string))]
 			IToString GetValue();
 		}
 		public interface IBadCoveredMethodTest
 		{
-			[TypeShim(typeof(string))]
+			[Shim(typeof(string))]
 			object GetValue();
 		}
 		public interface ICoveredParametersTest

@@ -3,7 +3,7 @@
 namespace Shimterface
 {
     /// <summary>
-    /// Mark property or method as being static within another type.
+    /// Mark property/field or method as being static within another type.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = false)]
     public class StaticShimAttribute : Attribute
