@@ -25,7 +25,6 @@ namespace Shimterface.Tests
 		}
 		public interface ICoveredEnumMethodTest
 		{
-			[Shim(typeof(IEnumerable<string>))]
 			IEnumerable<IToString> GetEnum();
 		}
 		public interface ICoveredEnumSetMethodTest

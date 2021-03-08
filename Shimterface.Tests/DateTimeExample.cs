@@ -12,9 +12,7 @@ namespace Shimterface.Tests
 		}
 		public interface IDateTime
 		{
-			[Shim(typeof(TimeSpan))]
 			ITimeSpan Subtract([TypeShim(typeof(DateTime))] IDateTime value);
-			[Shim(typeof(TimeSpan))]
 			ITimeSpan TimeOfDay { get; }
 			string ToString(string format);
 		}
@@ -22,7 +20,6 @@ namespace Shimterface.Tests
 		public interface IDateTimeFactory
 		{
 			[StaticShim(typeof(DateTime))]
-			[Shim(typeof(DateTime))]
 			IDateTime Now { get; }
 		}
 		

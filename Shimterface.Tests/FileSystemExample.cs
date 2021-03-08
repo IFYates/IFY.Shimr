@@ -12,7 +12,6 @@ namespace Shimterface.Tests
         public interface IFileSystem
         {
             [StaticShim(typeof(Directory))]
-            [Shim(typeof(DirectoryInfo))]
             IDirectoryInfo GetParent(string path);
         }
 
@@ -21,11 +20,8 @@ namespace Shimterface.Tests
         {
             bool Exists { get; }
             string FullName { get; }
-            [Shim(typeof(DirectoryInfo))]
             IDirectoryInfo Parent { get; }
-            [Shim(typeof(IEnumerable<FileInfo>))]
             IEnumerable<IFileInfo> EnumerateFiles();
-            [Shim(typeof(FileInfo[]))]
             IFileInfo[] GetFiles();
             string ToString();
         }
@@ -36,7 +32,6 @@ namespace Shimterface.Tests
             bool Exists { get; }
             string FullName { get; }
             string Name { get; }
-            [Shim(typeof(DirectoryInfo))]
             IDirectoryInfo Directory { get; }
         }
 

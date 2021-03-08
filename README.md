@@ -3,6 +3,10 @@ Utility for creating a dynamic object facade/proxy to allow for using an object 
 
 [Available on nuget.](https://www.nuget.org/packages/Shimterface.Standard/)
 
+## Breaking changes
+**v1.4.0** drops the `ShimAttribute` and limits `TypeShimAttribute` to parameters only.
+If the return type of a shimmed member does not match the implementation member, it must be an interface that can be auto-shimmed.
+
 ## Description
 I'm sure we've all been in the situation where we've had to make use of a class from an external library (including mscorlib) that either doesn't implement any interface or doesn't implement one that can be used for any kind of Inversion of Control usage.
 One approach is to implement a series of proxy objects that handle all of the required functionality, including proxies around returned values, and this can even be scripted (Powershell, T4, etc.) to prevent the arduous task of proxying every class you need.
@@ -39,7 +43,7 @@ TestClass originalObject = (TestClass)((IShim)forcedCast).Unshim();
 
 ## Overiding Return/Parameter Types
 For simple class methods, the above will be enough to decouple from the concrete class; however, if the method returns or takes other concrete types, Inversion of Control and unit testability are not hugely improved.
-The `ShimAttribute` and `TypeShimAttribute` types can be used here to put auto shim and unshim logic around the proxy implementation.
+The `TypeShimAttribute` can be used here to put auto shim and unshim logic around the proxy parameter implementation.
 
 ```C#
 public class TestClass {
@@ -48,13 +52,12 @@ public class TestClass {
     }
 }
 public interface IClassConverter {
-    [Shim(typeof(OtherTestClass))]
     IOtherTestClass Convert([TypeShim(typeof(AnotherTestClass))] IAnotherTestClass from);
 }
 ```
 
-The `ShimAttribute` on the member (method or property) specifies the true return type of the method being proxied, with the return type of the interface member being the target shim type (code not shown) that will be used to proxy it to.
-The `TypeShimAttribute` on the parameter does the same, but in reverse - the interface type will be unshimmed to the original type. Note that the passed in object must also implement IShim in order to be returned to the original class parameter type.
+If the return type of the interface member is not the true return type of the method being proxied, it must be an interface that the return value will be auto-shimmed to.
+The `TypeShimAttribute` on the parameter specifies the true type of the parameter in the method being proxied. The interface type will be unshimmed to the original type when passed in. Note that the passed in object must also implement `IShim` (all Shimterface shims will do this) in order to be returned to the original class parameter type.
 
 These concepts can automatically be applied to arrays and direct `IEnumerable<?>` usages.
 
@@ -68,7 +71,6 @@ public class TestClass {
     }
 }
 public interface IFacadeClass {
-    [Shim(nameof(TestClass.LibrarySpecificName))]
     string CommonName();
 }
 ```
@@ -148,7 +150,6 @@ If we were searching for all text files in a directory, but wanted to be able to
 public interface IFileSystem
 {
 	[StaticShim(typeof(Directory))]
-	[Shim(typeof(DirectoryInfo))]
 	IDirectoryInfo GetParent(string path);
 }
 
@@ -157,11 +158,8 @@ public interface IDirectoryInfo
 {
 	bool Exists { get; }
 	string FullName { get; }
-	[Shim(typeof(DirectoryInfo))]
 	IDirectoryInfo Parent { get; }
-	[Shim(typeof(IEnumerable<FileInfo>))]
 	IEnumerable<IFileInfo> EnumerateFiles();
-	[Shim(typeof(FileInfo[]))]
 	IFileInfo[] GetFiles();
 	string ToString();
 }
@@ -172,7 +170,6 @@ public interface IFileInfo
 	bool Exists { get; }
 	string FullName { get; }
 	string Name { get; }
-	[Shim(typeof(DirectoryInfo))]
 	IDirectoryInfo Directory { get; }
 }
 

@@ -28,7 +28,6 @@ namespace Shimterface.Tests
 
 		public interface IOverrideFieldTest
 		{
-			[TypeShim(typeof(TestClass))]
 			IGetSetFieldTest Child { get; set; }
 		}
 

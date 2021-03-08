@@ -28,7 +28,7 @@
         </member>
         <member name="T:Shimterface.ShimAttribute">
             <summary>
-            Mark a member type as explicitly shimming an item with a different name or return type.
+            Mark a member type as explicitly shimming an item with a different name.
             </summary>
         </member>
         <member name="T:Shimterface.ShimBuilder">
@@ -121,7 +121,6 @@
             <summary>
             Mark signature type as being automatically shimmed from real implementation type
             </summary>
-            <remarks>For methods and properties/fields, use <see cref="T:Shimterface.ShimAttribute"/> instead.</remarks>
         </member>
     </members>
 </doc>

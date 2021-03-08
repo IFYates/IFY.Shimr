@@ -24,7 +24,6 @@ namespace Shimterface.Tests
 		}
 		public interface ICoveredArrayMethodTest
 		{
-			[Shim(typeof(string[]))]
 			IToString[] GetArray();
 		}
 		public interface ICoveredArraySetMethodTest

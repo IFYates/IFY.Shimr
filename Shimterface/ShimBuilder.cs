@@ -152,56 +152,53 @@ namespace Shimterface
 				reflectMember = interfaceMethod.DeclaringType.GetProperty(interfaceMethod.Name[4..]);
 			}
 
-			// Look for overrides
-			Type implReturnType = null;
-			string implMemberName = null;
+			// Look for name override
+			var implMemberName = interfaceMethod.Name;
 			var attr = reflectMember.GetCustomAttribute<ShimAttribute>(false);
-			if (attr != null)
+			if (attr?.ImplementationName != null)
 			{
-				implMemberName = attr.ImplementationName;
-				implReturnType = attr.ReturnType;
-
-				if (isPropertyShim && implMemberName != null)
-				{
-					implMemberName = interfaceMethod.Name[0..4] + implMemberName;
-				}
+				implMemberName = (isPropertyShim ? implMemberName[0..4] : string.Empty)
+					+ attr.ImplementationName;
 			}
 
-			// TEMP: Obsolete
-			if (implReturnType == null)
-			{
-				var attr2 = reflectMember.GetCustomAttribute<TypeShimAttribute>(false);
-				if (attr2 != null)
-				{
-					implReturnType = attr2.RealType;
-				}
-			}
-
-			// Property set arg may need to be unshimmed
-			if (isPropertySetShim && implReturnType != null)
-			{
-				paramTypes[^1] = implReturnType;
-				implReturnType = null;
-			}
-
-			// Can only override with an interface
-			if (implReturnType != null && !interfaceMethod.ReturnType.IsInterfaceType())
-			{
-				throw new NotSupportedException($"Shimmed return type ({interfaceMethod.ReturnType.FullName}) must be an interface, on member: {interfaceMethod.DeclaringType.FullName}.{reflectMember.Name}");
-			}
-
-			// Check if this is a property wrapping a field
+			// Find implementation return type
+			Type implReturnType = null;
+			MemberInfo implMember = null;
 			if (isPropertyShim)
 			{
-				var fieldInfo = implType.GetField((implMemberName ?? interfaceMethod.Name)[4..]);
-				if (fieldInfo?.FieldType != null)
+				var propInfo = implType.GetProperty(implMemberName[4..]);
+				implReturnType = propInfo?.PropertyType;
+				if (implReturnType == null)
 				{
-					return fieldInfo;
+					// Check if this is a property wrapping a field
+					var fieldInfo = implType.GetField(implMemberName[4..]);
+					implReturnType = fieldInfo?.FieldType;
+					implMember = fieldInfo;
+				}
+
+				// Property set arg will need to be unshimmed
+				if (isPropertySetShim)
+				{
+					paramTypes[^1] = implReturnType ?? paramTypes[^1];
+					implReturnType = null;
 				}
 			}
 
 			// Find method
-			return implType.GetMethod(implMemberName ?? interfaceMethod.Name, paramTypes);
+			if (implMember == null)
+			{
+				var methodInfo = implType.GetMethod(implMemberName, paramTypes);
+				implReturnType = methodInfo?.ReturnType;
+				implMember = methodInfo;
+			}
+
+			// Can only override with an interface
+			if (implReturnType != null && implReturnType != interfaceMethod.ReturnType && !interfaceMethod.ReturnType.IsInterfaceType())
+			{
+				throw new NotSupportedException($"Shimmed return type ({interfaceMethod.ReturnType.FullName}) must be an interface, on member: {interfaceMethod.DeclaringType.FullName}.{reflectMember.Name}");
+			}
+
+			return implMember;
 		}
 
 		private static void shimMember(TypeBuilder tb, FieldBuilder instField, Type instType, MethodInfo interfaceMethod, bool isConstructor)
