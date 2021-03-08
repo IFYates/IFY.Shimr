@@ -10,6 +10,7 @@
         <RepositoryType>GitHub</RepositoryType>
         <PackageReleaseNotes>v1.4.0
 Can shim factory methods to provide constructors for concrete type.
+Removed need to specify the underlying return type when auto-shimming.
 
 v1.3.0
 Support renaming underlying members in shims.
