@@ -28,8 +28,8 @@ ITest forcedCast = (ITest)new TestClass();
 
 Given that `TestClass` implements all of `ITest` members, logically this would be a lovely language feature. Instead, we get a runtime InvalidCastException.
 
-Shimterface solves and takes the effort out of this problem by compiling dynamic proxies to convert classes to the requested interface.
-The above example can be fixed using Shimterface by doing:
+_Shimterface_ solves and takes the effort out of this problem by compiling dynamic proxies to convert classes to the requested interface.
+The above example can be fixed using _Shimterface_ by doing:
 
 ```C#
 ITest forcedCast = new TestClass().Shim<ITest>();
@@ -57,12 +57,12 @@ public interface IClassConverter {
 ```
 
 If the return type of the interface member is not the true return type of the method being proxied, it must be an interface that the return value will be auto-shimmed to.
-The `TypeShimAttribute` on the parameter specifies the true type of the parameter in the method being proxied. The interface type will be unshimmed to the original type when passed in. Note that the passed in object must also implement `IShim` (all Shimterface shims will do this) in order to be returned to the original class parameter type.
+The `TypeShimAttribute` on the parameter specifies the true type of the parameter in the method being proxied. The interface type will be unshimmed to the original type when passed in. Note that the passed in object must also implement `IShim` (all _Shimterface_ shims will do this) in order to be returned to the original class parameter type.
 
 These concepts can automatically be applied to arrays and direct `IEnumerable<?>` usages.
 
 ## Renaming Members
-The proxy/facade patterns can also make it easier to unify different implementations. Shimterface can help by enabling renaming of implementation members using the `ShimAttribute`.
+The proxy/facade patterns can also make it easier to unify different implementations. _Shimterface_ can help by enabling renaming of implementation members using the `ShimAttribute`.
 
 ```C#
 public class TestClass {
@@ -76,7 +76,7 @@ public interface IFacadeClass {
 ```
 
 ## Fields
-Shimterface will allow you to define a property in your proxy to cover a field in the implementation:
+_Shimterface_ will allow you to define a property in your proxy to cover a field in the implementation:
 ```C#
 public class TestClass {
     public string Name;
@@ -92,7 +92,7 @@ If the underlying field is readonly, defining the `set` will not fail on shim, b
 The `ShimAttribute` works here for renaming and auto-shimming in the way you'd expect.
 
 ## Factories
-For situations where you need to also proxy static members, Shimterface provides a `StaticShimAttribute`. This allows for using proxies around static methods at runtime, but creating instance mocks at test.
+For situations where you need to also proxy static members, _Shimterface_ provides a `ShimBuilder.Create<>()` method and the `StaticShimAttribute`. This allows for using proxies around static methods at runtime, but creating instance mocks at test.
 A shim interface cannot contain a mix of static and instance member shims, but can contain static methods proxied from many different types.
 
 ### Static Methods
@@ -116,7 +116,7 @@ public void DoTest() {
 ```
 
 ### Constructors
-As with static methods, Shimterface allows you to call instance constructors from a static factory, where the name of the factory method is unchecked and the return type is assumed to be the constructor provider or a shim of it.
+As with static methods, _Shimterface_ allows you to call instance constructors from a static factory, where the name of the factory method is unchecked and the return type is assumed to be the constructor provider or a shim of it.
 
 ```C#
 public class TestClass {
@@ -136,7 +136,7 @@ public interface ITest {
 
 public void DoTest() {
 	ITestFactory factory = ShimBuilder.Create<ITestFactory>();
-	ITestFactory = factory.CreateNew();
+	ITest inst = factory.CreateNew();
 }
 ```
 
