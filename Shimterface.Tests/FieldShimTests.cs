@@ -27,8 +27,8 @@ namespace Shimterface.Tests
 
         public interface IOverrideFieldTest
         {
-            [TypeShim(typeof(IGetSetFieldTest))]
-            TestClass Child { get; set; }
+            [TypeShim(typeof(TestClass))]
+            IGetSetFieldTest Child { get; set; }
         }
 
         public class TestClass
@@ -36,7 +36,7 @@ namespace Shimterface.Tests
             public string Value = "value";
             public readonly string Immutable = "readonly";
 
-            public TestClass Child = new TestClass();
+            public TestClass Child;
         }
 
         [TestMethod]
@@ -91,7 +91,7 @@ namespace Shimterface.Tests
 
             var shim = ShimBuilder.Shim<IReadonlyFieldTest>(obj);
 
-            Assert.ThrowsException<Exception>(() =>
+            Assert.ThrowsException<InvalidOperationException>(() =>
             {
                 shim.Immutable = "new_value";
             });
@@ -100,12 +100,14 @@ namespace Shimterface.Tests
         [TestMethod]
         public void Shim_field_with_changed_return_type()
         {
-            var obj = new TestClass();
+            var obj = new TestClass
+            {
+                Child = new TestClass()
+            };
 
-            var shim = ShimBuilder.Shim<IGetFieldTest>(obj);
+            var shim = ShimBuilder.Shim<IOverrideFieldTest>(obj);
 
-            var res = shim.Value;
-            Assert.AreEqual("value", res);
+            Assert.AreSame(obj.Child, ((IShim)shim.Child).Unshim());
         }
 
         [TestMethod]
@@ -113,10 +115,13 @@ namespace Shimterface.Tests
         {
             var obj = new TestClass();
 
-            var shim = ShimBuilder.Shim<IGetFieldTest>(obj);
+            var newChild = new TestClass();
+            var newChildShim = newChild.Shim<IGetSetFieldTest>();
 
-            var res = shim.Value;
-            Assert.AreEqual("value", res);
+            var shim = ShimBuilder.Shim<IOverrideFieldTest>(obj);
+            shim.Child = newChildShim;
+
+            Assert.AreSame(newChild, obj.Child);
         }
     }
 }

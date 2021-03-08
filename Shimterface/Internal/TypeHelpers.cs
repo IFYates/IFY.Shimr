@@ -53,6 +53,11 @@ namespace Shimterface
             return type.ResolveType().IsInterface;
         }
 
+        /// <summary>
+        /// Resolves array or <see cref="IEnumerable&lt;&gt;"/> types to the internal element type, or return the given type.
+        /// </summary>
+        /// <param name="type">A type or collection of a type.</param>
+        /// <returns>A singular type.</returns>
 		public static Type ResolveType(this Type type)
 		{
 			if (isIEnumerableGeneric(type))
