@@ -4,11 +4,14 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Ian Yates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.4.0</Version>
+        <Version>1.4.1</Version>
         <PackageProjectUrl>https://github.com/IanYates83/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IanYates83/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>v1.4.0
+        <PackageReleaseNotes>v1.4.1
+Updated packages
+
+v1.4.0
 Can shim factory methods to provide constructors for concrete type.
 Removed need to specify the underlying return type when auto-shimming.
 
@@ -31,14 +34,14 @@ Rebuilt for .NET Standard 2.1
 v1.0.0.0
 Original release for .NET Core</PackageReleaseNotes>
         <Copyright>(c) Ian Yates</Copyright>
-        <AssemblyVersion>1.4.0</AssemblyVersion>
-        <FileVersion>1.4.0</FileVersion>
+        <AssemblyVersion>1.4.1</AssemblyVersion>
+        <FileVersion>1.4.1</FileVersion>
         <Description>Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.</Description>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
       <DocumentationFile>Shimterface.Standard.xml</DocumentationFile>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="System.Reflection.Emit" Version="4.6.0" />
+        <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     </ItemGroup>
 </Project>
