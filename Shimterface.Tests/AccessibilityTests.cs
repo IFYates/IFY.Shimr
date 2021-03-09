@@ -10,7 +10,7 @@ namespace Shimterface.Tests
         {
             void Test();
         }
-        public interface IPublicInterface
+        public interface IPublicInterface : IShim
         {
             void Test();
         }
@@ -73,7 +73,7 @@ namespace Shimterface.Tests
 
             var shim = ShimBuilder.Shim<IPublicInterface>(obj);
 
-            Assert.AreSame(obj, ((IShim)shim).Unshim());
+            Assert.AreSame(obj, shim.Unshim());
         }
     }
 }

@@ -54,6 +54,20 @@ namespace Shimterface.Standard.Internal
 			impl.Emit(OpCodes.Ret);
 		}
 
+		public static void AddUnshimMethod(this TypeBuilder tb, FieldBuilder instField)
+		{
+			// object Unshim()
+			var unshimMethod = tb.DefinePublicMethod("Unshim", typeof(object));
+			var impl = unshimMethod.GetILGenerator();
+			impl.Emit(OpCodes.Ldarg_0); // this
+			impl.Emit(OpCodes.Ldfld, instField);
+			if (instField.FieldType.IsValueType)
+			{
+				impl.Emit(OpCodes.Box, instField.FieldType);
+			}
+			impl.Emit(OpCodes.Ret);
+		}
+
 		public static MethodBuilder DefinePublicMethod(this TypeBuilder tb, string name, Type returnType, IEnumerable<Type> typeParams = null)
 		{
 			return tb.DefineMethod(name, MethodAttributes.Public
@@ -162,20 +176,6 @@ namespace Shimterface.Standard.Internal
 			var notImplementedConstr = typeof(T).GetConstructor(new Type[0]);
 			impl.Emit(OpCodes.Newobj, notImplementedConstr);
 			impl.Emit(OpCodes.Throw);
-		}
-
-		public static void MethodUnshim(this TypeBuilder tb, FieldBuilder instField)
-		{
-			// object Unshim()
-			var unshimMethod = tb.DefinePublicMethod("Unshim", typeof(object));
-			var impl = unshimMethod.GetILGenerator();
-			impl.Emit(OpCodes.Ldarg_0); // this
-			impl.Emit(OpCodes.Ldfld, instField);
-			if (instField.FieldType.IsValueType)
-			{
-				impl.Emit(OpCodes.Box, instField.FieldType);
-			}
-			impl.Emit(OpCodes.Ret);
 		}
 	}
 }

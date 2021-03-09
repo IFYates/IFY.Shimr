@@ -44,9 +44,9 @@ namespace Shimterface
 
 		#region Internal
 
-		private static Type getShimType(Type interfaceType, Type instType)
+		private static Type getShimType(Type interfaceType, Type implType)
 		{
-			var className = $"{instType.Name}_{instType.GetHashCode()}_{interfaceType.Name}_{interfaceType.GetHashCode()}";
+			var className = $"{implType.Name}_{implType.GetHashCode()}_{interfaceType.Name}_{interfaceType.GetHashCode()}";
 			if (!_dynamicTypeCache.ContainsKey(className))
 			{
 				lock (_sync)
@@ -60,16 +60,22 @@ namespace Shimterface
 							| TypeAttributes.BeforeFieldInit
 							| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType });
 
-						var instField = tb.DefineField("_inst", instType, FieldAttributes.Private | FieldAttributes.InitOnly);
+						var instField = tb.DefineField("_inst", implType, FieldAttributes.Private | FieldAttributes.InitOnly);
 
 						tb.AddConstructor(instField);
-						tb.MethodUnshim(instField);
+						tb.AddUnshimMethod(instField);
 
 						// Proxy all methods (including events, properties, and indexers)
 						var methods = interfaceType.GetMethods()
 							.Union(interfaceType.GetInterfaces().SelectMany(i => i.GetMethods())).ToArray();
 						foreach (var interfaceMethod in methods)
 						{
+							// Don't try to implement IShim
+							if (interfaceMethod.DeclaringType == typeof(IShim))
+							{
+								continue;
+							}
+
 							// Must not implement unsupported attributes
 							var attr = interfaceMethod.GetCustomAttribute<StaticShimAttribute>(false);
 							if (attr != null)
@@ -77,7 +83,7 @@ namespace Shimterface
 								throw new InvalidCastException("Instance shim cannot implement static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
 							}
 
-							shimMember(tb, instField, instType, interfaceMethod, false);
+							shimMember(tb, instField, implType, interfaceMethod, false);
 						}
 
 						_dynamicTypeCache.Add(className, tb.CreateType());
@@ -201,10 +207,10 @@ namespace Shimterface
 			return implMember;
 		}
 
-		private static void shimMember(TypeBuilder tb, FieldBuilder instField, Type instType, MethodInfo interfaceMethod, bool isConstructor)
+		private static void shimMember(TypeBuilder tb, FieldBuilder instField, Type implType, MethodInfo interfaceMethod, bool isConstructor)
 		{
 			// Match real member
-			var memberInfo = resolveImplementation(instType, interfaceMethod, instField == null, isConstructor);
+			var memberInfo = resolveImplementation(implType, interfaceMethod, instField == null, isConstructor);
 			if (memberInfo == null)
 			{
 				if (_ignoreMissingMembers.Contains(interfaceMethod.DeclaringType))
@@ -214,7 +220,7 @@ namespace Shimterface
 				}
 
 				// TODO: Could support default/custom functionality
-				throw new InvalidCastException($"Cannot shim {instType.FullName} as {interfaceMethod.DeclaringType.FullName}; missing method: {interfaceMethod.Name}");
+				throw new InvalidCastException($"Cannot shim {implType.FullName} as {interfaceMethod.DeclaringType.FullName}; missing method: {interfaceMethod.Name}");
 			}
 
 			// Generate proxy
