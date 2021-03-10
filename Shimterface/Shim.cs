@@ -16,8 +16,5 @@
 		object IShim.Unshim() => _inst;
         
         T IShim<T>.Unshim() => _inst;
-
-		// No effect unless you cast the shim Shim<T>
-        public static explicit operator T(Shim<T> s) => s._inst;
 	}
 }

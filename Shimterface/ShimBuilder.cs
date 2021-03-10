@@ -54,6 +54,7 @@ namespace Shimterface
 					if (!_dynamicTypeCache.ContainsKey(className))
 					{
 						var baseType = typeof(Shim<>).MakeGenericType(implType);
+						var shimInterfaceType = typeof(IShim<>).MakeGenericType(implType);
 
 						var tb = _mod.DefineType("Shim_" + className, TypeAttributes.Public
 							| TypeAttributes.Class
@@ -72,7 +73,8 @@ namespace Shimterface
 						foreach (var interfaceMethod in methods)
 						{
 							// Don't try to implement IShim
-							if (interfaceMethod.DeclaringType == typeof(IShim))
+							if (interfaceMethod.DeclaringType == typeof(IShim)
+								|| interfaceMethod.DeclaringType == shimInterfaceType)
 							{
 								continue;
 							}
