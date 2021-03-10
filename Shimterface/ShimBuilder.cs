@@ -16,7 +16,7 @@ namespace Shimterface
 		/// Not needed during normal use.
 		/// Clears type cache to allow multiple testing.
 		/// </summary>
-		public static void ResetState()
+		internal static void ResetState()
 		{
 			// TODO: handle shim compilation failures by removing from dynamic assembly
 
@@ -53,17 +53,18 @@ namespace Shimterface
 				{
 					if (!_dynamicTypeCache.ContainsKey(className))
 					{
+						var baseType = typeof(Shim<>).MakeGenericType(implType);
+
 						var tb = _mod.DefineType("Shim_" + className, TypeAttributes.Public
 							| TypeAttributes.Class
 							| TypeAttributes.AutoClass
 							| TypeAttributes.AnsiClass
 							| TypeAttributes.BeforeFieldInit
-							| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType });
+							| TypeAttributes.AutoLayout, baseType, new[] { typeof(IShim), interfaceType });
 
-						var instField = tb.DefineField("_inst", implType, FieldAttributes.Private | FieldAttributes.InitOnly);
+						var instField = baseType.GetField("_inst", BindingFlags.Instance | BindingFlags.NonPublic);
 
 						tb.AddConstructor(instField);
-						tb.AddUnshimMethod(instField);
 
 						// Proxy all methods (including events, properties, and indexers)
 						var methods = interfaceType.GetMethods()
@@ -207,7 +208,7 @@ namespace Shimterface
 			return implMember;
 		}
 
-		private static void shimMember(TypeBuilder tb, FieldBuilder instField, Type implType, MethodInfo interfaceMethod, bool isConstructor)
+		private static void shimMember(TypeBuilder tb, FieldInfo instField, Type implType, MethodInfo interfaceMethod, bool isConstructor)
 		{
 			// Match real member
 			var memberInfo = resolveImplementation(implType, interfaceMethod, instField == null, isConstructor);

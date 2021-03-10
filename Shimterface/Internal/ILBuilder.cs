@@ -8,7 +8,7 @@ namespace Shimterface.Standard.Internal
 {
 	internal static class ILBuilder
 	{
-		private static bool resolveIfInstance(ILGenerator impl, FieldBuilder instField)
+		private static bool resolveIfInstance(ILGenerator impl, FieldInfo instField)
 		{
 			if (instField == null)
 			{
@@ -31,7 +31,7 @@ namespace Shimterface.Standard.Internal
 			}
 		}
 
-		public static void AddConstructor(this TypeBuilder tb, FieldBuilder instField)
+		public static void AddConstructor(this TypeBuilder tb, FieldInfo instField)
 		{
 			// .constr(object inst)
 			var constr = tb.DefineConstructor(MethodAttributes.Public
@@ -42,29 +42,11 @@ namespace Shimterface.Standard.Internal
 			constr.DefineParameter(1, ParameterAttributes.None, "inst");
 			var impl = constr.GetILGenerator();
 
-			// Call to base()
-			impl.Emit(OpCodes.Ldarg_0); // this
-			impl.Emit(OpCodes.Call, typeof(object).GetConstructor(new Type[0]));
-
-			// Set this._inst to the parameter
+			// Call to base(inst)
 			impl.Emit(OpCodes.Ldarg_0); // this
 			impl.Emit(OpCodes.Ldarg_1); // inst
-			impl.Emit(OpCodes.Stfld, instField);
+			impl.Emit(OpCodes.Call, tb.BaseType.GetConstructor(new [] { instField.FieldType }));
 
-			impl.Emit(OpCodes.Ret);
-		}
-
-		public static void AddUnshimMethod(this TypeBuilder tb, FieldBuilder instField)
-		{
-			// object Unshim()
-			var unshimMethod = tb.DefinePublicMethod("Unshim", typeof(object));
-			var impl = unshimMethod.GetILGenerator();
-			impl.Emit(OpCodes.Ldarg_0); // this
-			impl.Emit(OpCodes.Ldfld, instField);
-			if (instField.FieldType.IsValueType)
-			{
-				impl.Emit(OpCodes.Box, instField.FieldType);
-			}
 			impl.Emit(OpCodes.Ret);
 		}
 
@@ -108,7 +90,7 @@ namespace Shimterface.Standard.Internal
 			return true;
 		}
 
-		public static void FieldWrap(this TypeBuilder tb, FieldBuilder instField, MethodInfo interfaceMethod, FieldInfo fieldInfo)
+		public static void FieldWrap(this TypeBuilder tb, FieldInfo instField, MethodInfo interfaceMethod, FieldInfo fieldInfo)
 		{
 			var args = interfaceMethod.GetParameters();
 			if (args.Length > 0 && (fieldInfo.Attributes & FieldAttributes.InitOnly) > 0)
@@ -151,7 +133,7 @@ namespace Shimterface.Standard.Internal
 			impl.Emit(OpCodes.Ret);
 		}
 
-		public static void MethodCall(this TypeBuilder tb, FieldBuilder instField, MethodInfo interfaceMethod, MethodInfo methodInfo)
+		public static void MethodCall(this TypeBuilder tb, FieldInfo instField, MethodInfo interfaceMethod, MethodInfo methodInfo)
 		{
 			var method = tb.DefinePublicMethod(interfaceMethod.Name, interfaceMethod.ReturnType, interfaceMethod.GetParameters().Select(p => p.ParameterType));
 			var impl = method.GetILGenerator();

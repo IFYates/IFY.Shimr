@@ -21,25 +21,37 @@ namespace Shimterface.Tests
             {
             }
         }
-        public class PublicTestClass
+        public class PrivateMemberTestClass
         {
             private void Test()
             {
             }
+        }
+        public class PublicTestClass
+        {
+            public void Test()
+            {
+            }
+        }
+
+        [TestInitialize]
+        public void init()
+        {
+            ShimBuilder.ResetState();
         }
 
         [TestMethod]
         [ExpectedException(typeof(TypeLoadException))]
         public void Cannot_shim_to_private_interface()
         {
-            var obj = new PrivateTestClass();
+            var obj = new PublicTestClass();
 
             ShimBuilder.Shim<IPrivateInterface>(obj);
         }
 
         [TestMethod]
-        [ExpectedException(typeof(MethodAccessException))]
-        public void Cannot_use_shim_of_private_class()
+        [ExpectedException(typeof(TypeLoadException))]
+        public void Cannot_shim_private_class()
         {
             var obj = new PrivateTestClass();
 
@@ -51,29 +63,9 @@ namespace Shimterface.Tests
         [ExpectedException(typeof(InvalidCastException))]
         public void Cannot_shim_class_with_private_interface_member()
         {
-            var obj = new PublicTestClass();
+            var obj = new PrivateMemberTestClass();
 
             ShimBuilder.Shim<IPublicInterface>(obj);
-        }
-
-        [TestMethod]
-        public void Result_is_IShim()
-        {
-            var obj = new PrivateTestClass();
-
-            var shim = ShimBuilder.Shim<IPublicInterface>(obj);
-
-            Assert.IsTrue(shim is IShim);
-        }
-
-        [TestMethod]
-        public void Can_unshim_original_object()
-        {
-            var obj = new PrivateTestClass();
-
-            var shim = ShimBuilder.Shim<IPublicInterface>(obj);
-
-            Assert.AreSame(obj, shim.Unshim());
         }
     }
 }
