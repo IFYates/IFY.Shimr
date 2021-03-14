@@ -1,7 +1,5 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace Shimterface.Tests
 {
@@ -28,17 +26,14 @@ namespace Shimterface.Tests
 		}
 		public interface ICoveredPropertyTest
 		{
-			[TypeShim(typeof(int))]
 			IToString Value { get; set; }
 		}
 		public interface ICoveredMethodTest
 		{
-			[TypeShim(typeof(string))]
 			IToString GetValue();
 		}
 		public interface IBadCoveredMethodTest
 		{
-			[TypeShim(typeof(string))]
 			object GetValue();
 		}
 		public interface ICoveredParametersTest
@@ -123,8 +118,10 @@ namespace Shimterface.Tests
 		[TestMethod]
 		public void Can_get_result_of_covered_property()
 		{
-			var obj = new ReturnTypeTest();
-			obj.Value = 12345;
+			var obj = new ReturnTypeTest
+			{
+				Value = 12345
+			};
 
 			var shim = ShimBuilder.Shim<ICoveredPropertyTest>(obj);
 			var res = shim.Value;

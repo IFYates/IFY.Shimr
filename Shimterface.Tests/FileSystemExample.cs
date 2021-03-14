@@ -20,11 +20,8 @@ namespace Shimterface.Tests
         {
             bool Exists { get; }
             string FullName { get; }
-            [TypeShim(typeof(DirectoryInfo))]
             IDirectoryInfo Parent { get; }
-            [TypeShim(typeof(IEnumerable<FileInfo>))]
             IEnumerable<IFileInfo> EnumerateFiles();
-            [TypeShim(typeof(FileInfo[]))]
             IFileInfo[] GetFiles();
             string ToString();
         }
@@ -35,7 +32,6 @@ namespace Shimterface.Tests
             bool Exists { get; }
             string FullName { get; }
             string Name { get; }
-            [TypeShim(typeof(DirectoryInfo))]
             IDirectoryInfo Directory { get; }
         }
 
@@ -45,7 +41,7 @@ namespace Shimterface.Tests
             var assemblyFile = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
             // We'll need to use the filesystem shim factory
-            var fileSystem = ShimBuilder.Create<IFileSystem>(); // In tests, this will be a mock
+            IFileSystem fileSystem = ShimBuilder.Create<IFileSystem>(); // In tests, this will be a mock
 
             // Make use of various shimmed methods
             IDirectoryInfo dir = fileSystem.GetParent(assemblyFile);

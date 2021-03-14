@@ -1,7 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
 
 namespace Shimterface.Tests
 {
@@ -26,7 +24,6 @@ namespace Shimterface.Tests
 		}
 		public interface ICoveredArrayMethodTest
 		{
-			[TypeShim(typeof(string[]))]
 			IToString[] GetArray();
 		}
 		public interface ICoveredArraySetMethodTest

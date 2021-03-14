@@ -1,7 +1,6 @@
-﻿using System;
-using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Shimterface.Tests
 {
@@ -26,7 +25,6 @@ namespace Shimterface.Tests
 		}
 		public interface ICoveredEnumMethodTest
 		{
-			[TypeShim(typeof(IEnumerable<string>))]
 			IEnumerable<IToString> GetEnum();
 		}
 		public interface ICoveredEnumSetMethodTest

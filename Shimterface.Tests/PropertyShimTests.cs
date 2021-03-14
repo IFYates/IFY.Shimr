@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Shimterface.Tests
 {
@@ -12,7 +11,7 @@ namespace Shimterface.Tests
         }
         public interface IGetPropertyWithSetTest
         {
-            string GetPropertyWithSet { get; }
+            string GetSetProperty { get; }
         }
         public interface ISetPropertyTest
         {
@@ -20,7 +19,7 @@ namespace Shimterface.Tests
         }
         public interface ISetPropertyWithGetTest
         {
-            string SetPropertyWithGet { set; }
+            string GetSetProperty { set; }
         }
         public interface IGetSetPropertyTest
         {
@@ -29,11 +28,9 @@ namespace Shimterface.Tests
 
         public class TestClass
         {
-            public string GetProperty { get { return "value"; } }
-            public string GetPropertyWithSet { get; set; }
+            public string GetProperty => "value";
 
-            public string SetPropertyWithGet { get; set; }
-            public string SetProperty { set { _SetPropertyValue = value; } }
+            public string SetProperty { set => _SetPropertyValue = value; }
             public string _SetPropertyValue = null;
 
             public string GetSetProperty { get; set; }
@@ -66,12 +63,12 @@ namespace Shimterface.Tests
         public void Can_use_a_set_property_with_real_get()
         {
             var obj = new TestClass();
-            Assert.IsNull(obj.SetPropertyWithGet);
+            Assert.IsNull(obj.GetSetProperty);
 
             var shim = ShimBuilder.Shim<ISetPropertyWithGetTest>(obj);
-            shim.SetPropertyWithGet = "test";
+            shim.GetSetProperty = "test";
 
-            Assert.AreEqual("test", obj.SetPropertyWithGet);
+            Assert.AreEqual("test", obj.GetSetProperty);
         }
 
         [TestMethod]
@@ -80,9 +77,9 @@ namespace Shimterface.Tests
             var obj = new TestClass();
 
             var shim = ShimBuilder.Shim<IGetPropertyWithSetTest>(obj);
-            Assert.IsNull(shim.GetPropertyWithSet);
-            obj.GetPropertyWithSet = "test";
-            Assert.AreEqual("test", shim.GetPropertyWithSet);
+            Assert.IsNull(shim.GetSetProperty);
+            obj.GetSetProperty = "test";
+            Assert.AreEqual("test", shim.GetSetProperty);
         }
 
         [TestMethod]

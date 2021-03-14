@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Shimterface.Standard.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -6,29 +7,11 @@ using System.Reflection.Emit;
 
 namespace Shimterface
 {
-    /// <summary>
-    /// Provides facility to create a shim that guarantees an object can be treated as the specified interface type.
-    /// </summary>
-    public static class ShimBuilder
+	/// <summary>
+	/// Provides facility to create a shim that guarantees an object can be treated as the specified interface type.
+	/// </summary>
+	public static class ShimBuilder
 	{
-		private static void resolveParameters(ILGenerator impl, MethodInfo methodInfo, MethodInfo interfaceMethod)
-		{
-			var pars1 = methodInfo.GetParameters();
-			var pars2 = interfaceMethod.GetParameters();
-			for (var i = 0; i < pars1.Length; ++i)
-			{
-				impl.Emit(OpCodes.Ldarg, i + 1);
-
-				if (pars1[i].ParameterType != pars2[i].ParameterType)
-				{
-					var valType = pars1[i].ParameterType.ResolveType();
-					var paramType = pars1[i].ParameterType.IsArrayType() ? typeof(object[]) : typeof(object);
-					var unshimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(Unshim), new[] { valType }, new[] { paramType });
-					impl.Emit(OpCodes.Call, unshimMethod);
-				}
-			}
-		}
-
 		/// <summary>
 		/// Not needed during normal use.
 		/// Clears type cache to allow multiple testing.
@@ -61,9 +44,9 @@ namespace Shimterface
 
 		#region Internal
 
-		private static Type getShimType(Type interfaceType, Type instType)
+		private static Type getShimType(Type interfaceType, Type implType)
 		{
-			var className = $"{instType.Name}_{instType.GetHashCode()}_{interfaceType.Name}_{interfaceType.GetHashCode()}";
+			var className = $"{implType.Name}_{implType.GetHashCode()}_{interfaceType.Name}_{interfaceType.GetHashCode()}";
 			if (!_dynamicTypeCache.ContainsKey(className))
 			{
 				lock (_sync)
@@ -77,14 +60,22 @@ namespace Shimterface
 							| TypeAttributes.BeforeFieldInit
 							| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType });
 
-						var instField = tb.DefineField("_inst", instType, FieldAttributes.Private | FieldAttributes.InitOnly);
+						var instField = tb.DefineField("_inst", implType, FieldAttributes.Private | FieldAttributes.InitOnly);
 
-						addConstructor(tb, instField);
-						addUnshimMethod(tb, instField);
+						tb.AddConstructor(instField);
+						tb.AddUnshimMethod(instField);
 
 						// Proxy all methods (including events, properties, and indexers)
-						foreach (var interfaceMethod in interfaceType.GetMethods())
+						var methods = interfaceType.GetMethods()
+							.Union(interfaceType.GetInterfaces().SelectMany(i => i.GetMethods())).ToArray();
+						foreach (var interfaceMethod in methods)
 						{
+							// Don't try to implement IShim
+							if (interfaceMethod.DeclaringType == typeof(IShim))
+							{
+								continue;
+							}
+
 							// Must not implement unsupported attributes
 							var attr = interfaceMethod.GetCustomAttribute<StaticShimAttribute>(false);
 							if (attr != null)
@@ -92,7 +83,7 @@ namespace Shimterface
 								throw new InvalidCastException("Instance shim cannot implement static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
 							}
 
-							shimMember(tb, instField, instType, interfaceType, interfaceMethod);
+							shimMember(tb, instField, implType, interfaceMethod, false);
 						}
 
 						_dynamicTypeCache.Add(className, tb.CreateType());
@@ -125,10 +116,10 @@ namespace Shimterface
 							var attr = interfaceMethod.GetAttribute<StaticShimAttribute>();
 							if (attr == null)
 							{
-								throw new InvalidCastException("Instance shim cannot implement non-static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
+								throw new InvalidCastException("Factory shim cannot implement non-static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
 							}
 
-							shimMember(tb, null, attr.TargetType, interfaceType, interfaceMethod);
+							shimMember(tb, null, attr.TargetType, interfaceMethod, attr.IsConstructor);
 						}
 
 						_dynamicTypeCache.Add(className, tb.CreateType());
@@ -138,15 +129,8 @@ namespace Shimterface
 			return _dynamicTypeCache[className];
 		}
 
-		private static void shimMember(TypeBuilder tb, FieldBuilder instField, Type instType, Type interfaceType, MethodInfo interfaceMethod)
+		private static MemberInfo resolveImplementation(Type implType, MethodInfo interfaceMethod, bool isStatic, bool isConstructor)
 		{
-			// Is return type shimmed?
-			var attr = interfaceMethod.GetCustomAttribute<TypeShimAttribute>(false);
-			if (attr != null && !interfaceMethod.ReturnType.IsInterfaceType())
-			{
-				throw new NotSupportedException("Shimmed return type must be an interface: " + interfaceType.FullName);
-			}
-
 			// Workout real parameter types
 			var paramTypes = interfaceMethod.GetParameters()
 				.Select(p =>
@@ -154,129 +138,106 @@ namespace Shimterface
 					var paramAttr = p.GetCustomAttribute<TypeShimAttribute>();
 					if (paramAttr != null && !p.ParameterType.IsInterfaceType())
 					{
-						throw new NotSupportedException("Shimmed parameter type must be an interface: " + interfaceType.FullName);
+						throw new NotSupportedException("Shimmed parameter type must be an interface: " + interfaceMethod.DeclaringType.FullName);
 					}
-					return paramAttr == null ? p.ParameterType : paramAttr.RealType;
+					return paramAttr?.RealType ?? p.ParameterType;
 				}).ToArray();
 
-			// If really a property, will need to get attr from PropertyInfo
-			if ((interfaceMethod.Attributes & MethodAttributes.SpecialName) > 0
-				&& (interfaceMethod.Name.StartsWith("get_") || interfaceMethod.Name.StartsWith("set_")))
+			// Constructors don't provide other functionality
+			if (isConstructor)
 			{
-				var propInfo = interfaceType.GetProperty(interfaceMethod.Name.Substring(4));
-				if (propInfo != null)
+				return implType.GetConstructor(paramTypes);
+			}
+
+			// If really a property, will need to get attributes from PropertyInfo
+			var isPropertySetShim = interfaceMethod.IsSpecialName && interfaceMethod.Name.StartsWith("set_");
+			var isPropertyShim = isPropertySetShim || (interfaceMethod.IsSpecialName && interfaceMethod.Name.StartsWith("get_"));
+			MemberInfo reflectMember = interfaceMethod;
+			if (isPropertyShim)
+			{
+				reflectMember = interfaceMethod.DeclaringType.GetProperty(interfaceMethod.Name[4..]);
+			}
+
+			// Look for name override
+			var implMemberName = interfaceMethod.Name;
+			var attr = reflectMember.GetCustomAttribute<ShimAttribute>(false);
+			if (attr?.ImplementationName != null)
+			{
+				implMemberName = (isPropertyShim ? implMemberName[0..4] : string.Empty)
+					+ attr.ImplementationName;
+			}
+
+			// Find implementation return type
+			Type implReturnType = null;
+			MemberInfo implMember = null;
+			if (isPropertyShim)
+			{
+				var propInfo = implType.GetProperty(implMemberName[4..]);
+				implReturnType = propInfo?.PropertyType;
+				if (implReturnType == null)
 				{
-					attr = propInfo.GetCustomAttribute<TypeShimAttribute>(false);
-					if (attr != null && !propInfo.PropertyType.IsInterfaceType())
-					{
-						throw new NotSupportedException("Shimmed property type must be an interface: " + interfaceType.FullName);
-					}
-					if (attr != null && interfaceMethod.Name.StartsWith("set_"))
-					{
-						paramTypes[paramTypes.Length - 1] = attr.RealType;
-					}
+					// Check if this is a property wrapping a field
+					var fieldInfo = implType.GetField(implMemberName[4..]);
+					implReturnType = fieldInfo?.FieldType;
+					implMember = fieldInfo;
+				}
+
+				// Property set arg will need to be unshimmed
+				if (isPropertySetShim)
+				{
+					paramTypes[^1] = implReturnType ?? paramTypes[^1];
+					implReturnType = null;
 				}
 			}
 
-			// Match real method
-			var methodInfo = instType.GetMethod(interfaceMethod.Name, paramTypes);
-			if (methodInfo == null)
+			// Find method
+			if (implMember == null)
 			{
-				if (_ignoreMissingMembers.Contains(interfaceType))
-				{
-					dontImplementMethod(tb, interfaceMethod);
-				}
-				else
-				{
-					throw new InvalidCastException($"Cannot shim {instType.FullName} as {interfaceType.FullName}; missing method: {interfaceMethod.Name}");
-				}
+				var methodInfo = implType.GetMethod(implMemberName, paramTypes);
+				implReturnType = methodInfo?.ReturnType;
+				implMember = methodInfo;
 			}
-			else
+
+			// Can only override with an interface
+			if (implReturnType != null && implReturnType != interfaceMethod.ReturnType && !interfaceMethod.ReturnType.IsInterfaceType())
 			{
-				shimMethod(tb, instField, interfaceMethod, methodInfo);
+				throw new NotSupportedException($"Shimmed return type ({interfaceMethod.ReturnType.FullName}) must be an interface, on member: {interfaceMethod.DeclaringType.FullName}.{reflectMember.Name}");
 			}
+
+			return implMember;
 		}
 
-		private static void addConstructor(TypeBuilder tb, FieldBuilder instField)
+		private static void shimMember(TypeBuilder tb, FieldBuilder instField, Type implType, MethodInfo interfaceMethod, bool isConstructor)
 		{
-			// .constr(object inst)
-			var constr = tb.DefineConstructor(MethodAttributes.Public
-				| MethodAttributes.HideBySig
-				| MethodAttributes.SpecialName
-				| MethodAttributes.RTSpecialName, CallingConventions.Standard, new[] { instField.FieldType });
-			constr.DefineParameter(1, ParameterAttributes.None, "inst");
-			var impl = constr.GetILGenerator();
-			impl.Emit(OpCodes.Ldarg_0); // this
-			impl.Emit(OpCodes.Call, typeof(object).GetConstructor(new Type[0])); // Call to base()
-			impl.Emit(OpCodes.Ldarg_0); // this
-			impl.Emit(OpCodes.Ldarg_1); // inst
-			impl.Emit(OpCodes.Stfld, instField);
-			impl.Emit(OpCodes.Ret);
-		}
-
-		private static void addUnshimMethod(TypeBuilder tb, FieldBuilder instField)
-		{
-			// object Unshim()
-			var unshimMethod = tb.DefineMethod("Unshim", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual, typeof(object), new Type[0]);
-			var impl = unshimMethod.GetILGenerator();
-			impl.Emit(OpCodes.Ldarg_0); // this
-			impl.Emit(OpCodes.Ldfld, instField);
-			if (instField.FieldType.IsValueType)
+			// Match real member
+			var memberInfo = resolveImplementation(implType, interfaceMethod, instField == null, isConstructor);
+			if (memberInfo == null)
 			{
-				impl.Emit(OpCodes.Box, instField.FieldType);
-			}
-			impl.Emit(OpCodes.Ret);
-		}
-
-		private static void shimMethod(TypeBuilder tb, FieldBuilder instField, MethodInfo interfaceMethod, MethodInfo methodInfo)
-		{
-			var attrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual;
-			var method = tb.DefineMethod(interfaceMethod.Name, attrs,
-				interfaceMethod.ReturnType, interfaceMethod.GetParameters().Select(p => p.ParameterType).ToArray());
-			var impl = method.GetILGenerator();
-			if (instField != null)
-			{
-				impl.Emit(OpCodes.Ldarg_0); // this
-				if (instField.FieldType.IsValueType)
+				if (_ignoreMissingMembers.Contains(interfaceMethod.DeclaringType))
 				{
-					impl.Emit(OpCodes.Ldflda, instField);
+					ILBuilder.MethodThrowException<NotImplementedException>(tb, interfaceMethod);
+					return;
 				}
-				else
-				{
-					impl.Emit(OpCodes.Ldfld, instField);
-				}
-				resolveParameters(impl, methodInfo, interfaceMethod);
-				impl.Emit(OpCodes.Callvirt, methodInfo);
-			}
-			else
-			{
-				resolveParameters(impl, methodInfo, interfaceMethod);
-				impl.Emit(OpCodes.Call, methodInfo);
-			}
-			if (interfaceMethod.ReturnType != methodInfo.ReturnType && interfaceMethod.ReturnType != typeof(void))
-			{
-				if (methodInfo.ReturnType.IsValueType)
-				{
-					impl.Emit(OpCodes.Box, methodInfo.ReturnType);
-				}
-				var valType = interfaceMethod.ReturnType.IsArrayType() ? typeof(object[]) : typeof(object);
-				var shimType = interfaceMethod.ReturnType.ResolveType();
-				var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(Shim), new[] { shimType }, new[] { valType });
-				impl.Emit(OpCodes.Call, shimMethod);
-			}
-			impl.Emit(OpCodes.Ret);
-		}
 
-		private static void dontImplementMethod(TypeBuilder tb, MethodInfo methodInfo)
-		{
-			var method = tb.DefineMethod(methodInfo.Name, MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual,
-				methodInfo.ReturnType, methodInfo.GetParameters().Select(p => p.ParameterType).ToArray());
-			var impl = method.GetILGenerator();
-			impl.Emit(OpCodes.Ldarg_0); // this
+				// TODO: Could support default/custom functionality
+				throw new InvalidCastException($"Cannot shim {implType.FullName} as {interfaceMethod.DeclaringType.FullName}; missing method: {interfaceMethod.Name}");
+			}
 
-			var notImplementedConstr = typeof(NotImplementedException).GetConstructor(new Type[0]);
-			impl.Emit(OpCodes.Newobj, notImplementedConstr);
-			impl.Emit(OpCodes.Throw);
+			// Generate proxy
+			switch (memberInfo)
+			{
+				case ConstructorInfo constrInfo:
+					tb.MethodCall(interfaceMethod, constrInfo);
+					return;
+				case FieldInfo fieldInfo:
+					tb.FieldWrap(instField, interfaceMethod, fieldInfo);
+					return;
+				case MethodInfo methodInfo:
+					tb.MethodCall(instField, interfaceMethod, methodInfo);
+					return;
+				default:
+					throw new InvalidOperationException();
+			}
 		}
 
 		#endregion Internal
@@ -369,13 +330,13 @@ namespace Shimterface
 		/// </summary>
 		public static T Unshim<T>(object shim)
 		{
-            return shim is T obj ? obj : (T)((IShim)shim).Unshim();
-        }
-        /// <summary>
-        /// Recast shims to original type.
-        /// No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="IShim"/> of <typeparamref name="T"/>.
-        /// </summary>
-        public static T[] Unshim<T>(object[] shims)
+			return shim is T obj ? obj : (T)((IShim)shim).Unshim();
+		}
+		/// <summary>
+		/// Recast shims to original type.
+		/// No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="IShim"/> of <typeparamref name="T"/>.
+		/// </summary>
+		public static T[] Unshim<T>(object[] shims)
 		{
 			return Unshim<T>((IEnumerable<object>)shims).ToArray();
 		}
