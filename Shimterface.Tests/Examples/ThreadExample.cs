@@ -87,7 +87,7 @@ namespace Shimterface.Standard.Tests.Examples
     public interface IThreadingFactory
     {
         [StaticShim(typeof(Thread), IsConstructor = true)]
-        IThread NewThread(Action action);
+        IThread NewThread(ThreadStart action);
 
         [StaticShim(typeof(CancellationTokenSource), IsConstructor = true)]
         ICancellationTokenSource NewTokenSource();
@@ -163,9 +163,9 @@ namespace Shimterface.Standard.Tests.Examples
 
             var inst = new IntervalAction(threadFactoryMock.Object);
 
-            Action? threadAction = null;
-            threadFactoryMock.Setup(m => m.NewThread(It.IsAny<Action>()))
-                .Returns<Action>((a) =>
+            ThreadStart? threadAction = null;
+            threadFactoryMock.Setup(m => m.NewThread(It.IsAny<ThreadStart>()))
+                .Returns<ThreadStart>((a) =>
                 {
                     threadAction = a;
                     return threadMock.Object;
