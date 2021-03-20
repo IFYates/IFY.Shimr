@@ -8,7 +8,7 @@ namespace Shimterface
     [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
     public class TypeShimAttribute : Attribute
     {
-        public Type RealType { get; private set; }
+        public Type RealType { get; }
 
         public TypeShimAttribute(Type realType)
         {
