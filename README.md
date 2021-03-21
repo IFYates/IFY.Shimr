@@ -101,12 +101,22 @@ public class TestClass {
 	public static void Test() {
 		...
 	}
+	public static void Test2() {
+		...
+	}
 
 	// Instance members
+}
+public class AnotherTestClass {
+	public static void AnotherTest() {
+		...
+	}
 }
 public interface IStaticTest {
 	[StaticShim(typeof(TestClass))]
 	void Test();
+	[StaticShim(typeof(AnotherTestClass))]
+	void AnotherTest();
 }
 
 public void DoTest() {
@@ -115,8 +125,19 @@ public void DoTest() {
 }
 ```
 
+The attribute can be placed on the interface, to reduce usages:
+```C#
+[StaticShim(typeof(TestClass))]
+public interface IStaticTest {
+	void Test();
+	void Test2();
+	[StaticShim(typeof(AnotherTestClass))]
+	void AnotherTest();
+}
+```
+
 ### Constructors
-As with static methods, _Shimterface_ allows you to call instance constructors from a static factory, where the name of the factory method is unchecked and the return type is assumed to be the constructor provider or a shim of it.
+As with static methods, _Shimterface_ allows you to call instance constructors from a static factory based on arguments, where the name of the factory method is unchecked and the return type is assumed to be the constructor provider or a shim of it.
 
 ```C#
 public class TestClass {
@@ -127,16 +148,16 @@ public class TestClass {
 	// Instance members
 }
 public interface ITestFactory {
-	[StaticShim(typeof(TestClass), IsConstructor = true)]
+	[ConstructorShim(typeof(TestClass))]
 	ITestClass CreateNew(string arg1);
 }
-public interface ITest {
+public interface ITestClass {
 	// Instance members
 }
 
 public void DoTest() {
 	ITestFactory factory = ShimBuilder.Create<ITestFactory>();
-	ITest inst = factory.CreateNew();
+	ITestClass inst = factory.CreateNew();
 }
 ```
 

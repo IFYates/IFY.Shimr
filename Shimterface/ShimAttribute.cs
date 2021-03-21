@@ -8,7 +8,7 @@ namespace Shimterface
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = false)]
 	public class ShimAttribute : Attribute
 	{
-		public string ImplementationName { get; internal set; }
+		public string ImplementationName { get; }
 
 		public ShimAttribute(string name)
 		{

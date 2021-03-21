@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace Shimterface.Tests
 {
@@ -13,7 +14,7 @@ namespace Shimterface.Tests
 		{
 			[StaticShim(typeof(TestClass), IsConstructor = true)]
 			IInstanceInterface Create(string arg);
-			[StaticShim(typeof(TestClass), IsConstructor = true)]
+			[ConstructorShim(typeof(TestClass))]
 			IInstanceInterface New(int arg);
 		}
 
@@ -46,6 +47,30 @@ namespace Shimterface.Tests
 			Assert.AreEqual("B_2", instB.Result);
 			Assert.IsInstanceOfType(((IShim)instA).Unshim(), typeof(TestClass));
 			Assert.IsInstanceOfType(((IShim)instB).Unshim(), typeof(TestClass));
+		}
+		
+		public interface IFactoryInterface2
+		{
+			[ConstructorShim(typeof(TestClass))]
+			void New(int arg);
+		}
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentException))]
+		public void Can_not_shim_to_constructor_with_void_return_type()
+		{
+			ShimBuilder.Create<IFactoryInterface2>();
+		}
+		
+		public interface IFactoryInterface3
+		{
+			[ConstructorShim(typeof(TestClass))]
+			int New(int arg);
+		}
+		[TestMethod]
+		[ExpectedException(typeof(ArgumentException))]
+		public void Can_not_shim_to_constructor_with_incorrect_return_type()
+		{
+			ShimBuilder.Create<IFactoryInterface3>();
 		}
 	}
 }

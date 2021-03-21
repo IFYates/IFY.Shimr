@@ -109,11 +109,18 @@ namespace Shimterface
 							| TypeAttributes.BeforeFieldInit
 							| TypeAttributes.AutoLayout, null, new[] { interfaceType });
 
+						// Find static source on interface
+						var intAttr = interfaceType.GetCustomAttribute<StaticShimAttribute>(false);
+						if (intAttr?.IsConstructor == true) // Cannot define full interface as constructor
+						{
+							throw new NotSupportedException("Factory interface cannot be marked as constructor shim: " + interfaceType.FullName);
+						}
+
 						// Proxy all methods (including events, properties, and indexers)
 						foreach (var interfaceMethod in interfaceType.GetMethods())
 						{
-							// Must define static source
-							var attr = interfaceMethod.GetAttribute<StaticShimAttribute>();
+							// Must define static source, if not at interface
+							var attr = interfaceMethod.GetAttribute<StaticShimAttribute>() ?? intAttr;
 							if (attr == null)
 							{
 								throw new InvalidCastException("Factory shim cannot implement non-static member: " + interfaceType.FullName + " " + interfaceMethod.Name);

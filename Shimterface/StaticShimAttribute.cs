@@ -3,9 +3,9 @@
 namespace Shimterface
 {
 	/// <summary>
-	/// Mark property/field or method as being static within another type.
+	/// Mark individual properties/fields or methods as being static within another type, or the entire interface.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Interface | AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = false)]
 	public class StaticShimAttribute : Attribute
 	{
 		/// <summary>
@@ -15,7 +15,7 @@ namespace Shimterface
 		/// <summary>
 		/// True if this member calls a constructor on the target type.
 		/// </summary>
-		public bool IsConstructor { get; set; }
+		public bool IsConstructor { get; [Obsolete("Use Shimterface.ConstructorShimAttribute instead")] set; }
 
 		public StaticShimAttribute(Type targetType)
 		{

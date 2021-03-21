@@ -16,11 +16,17 @@ namespace Shimterface.Tests
 				_HasCalled = true;
 			}
 		}
-
+		
 		public interface IStaticMethod
 		{
 			[StaticShim(typeof(StaticMemberClass))]
 			void Test();
+		}
+
+		public interface IStaticAliasedMethod
+		{
+			[Shim("Test"), StaticShim(typeof(StaticMemberClass))]
+			void AnotherTest();
 		}
 
 		public interface IStaticProperty
@@ -34,6 +40,13 @@ namespace Shimterface.Tests
 			void Test();
 		}
 
+		[TestInitialize]
+		public void ResetState()
+		{
+			ShimBuilder.ResetState();
+			StaticMemberClass._HasCalled = false;
+		}
+
 		[TestMethod]
 		public void Can_define_static_method()
 		{
@@ -41,6 +54,16 @@ namespace Shimterface.Tests
 
 			Assert.IsFalse(StaticMemberClass._HasCalled);
 			factory.Test();
+			Assert.IsTrue(StaticMemberClass._HasCalled);
+		}
+
+		[TestMethod]
+		public void Can_alias_static_method()
+		{
+			var factory = ShimBuilder.Create<IStaticAliasedMethod>();
+
+			Assert.IsFalse(StaticMemberClass._HasCalled);
+			factory.AnotherTest();
 			Assert.IsTrue(StaticMemberClass._HasCalled);
 		}
 

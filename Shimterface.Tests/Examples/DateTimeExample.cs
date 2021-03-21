@@ -16,10 +16,10 @@ namespace Shimterface.Tests
 			ITimeSpan TimeOfDay { get; }
 			string ToString(string format);
 		}
-
+		
+		[StaticShim(typeof(DateTime))]
 		public interface IDateTimeFactory
 		{
-			[StaticShim(typeof(DateTime))]
 			IDateTime Now { get; }
 		}
 		
