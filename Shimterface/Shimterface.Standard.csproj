@@ -8,7 +8,10 @@
         <PackageProjectUrl>https://github.com/IanYates83/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IanYates83/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>v1.4.2
+        <PackageReleaseNotes>vNext
+Supports implemented interface methods.
+
+v1.4.2
 Dedicated ConstructorShimAttribute.
 StaticShimAttribute can be applied to interface for factory default.
 

@@ -67,7 +67,8 @@ namespace Shimterface
 
 						// Proxy all methods (including events, properties, and indexers)
 						var methods = interfaceType.GetMethods()
-							.Union(interfaceType.GetInterfaces().SelectMany(i => i.GetMethods())).ToArray();
+							.Union(interfaceType.GetInterfaces().SelectMany(i => i.GetMethods()))
+							.Where(m => m.IsAbstract).ToArray();
 						foreach (var interfaceMethod in methods)
 						{
 							// Don't try to implement IShim
