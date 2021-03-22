@@ -206,7 +206,7 @@ namespace Shimterface
 			}
 
 			// Can only override with an interface
-			if (implReturnType != null && implReturnType != interfaceMethod.ReturnType && !interfaceMethod.ReturnType.IsInterfaceType())
+			if (implReturnType != null && !interfaceMethod.ReturnType.IsGenericMethodParameter && implReturnType != interfaceMethod.ReturnType && !interfaceMethod.ReturnType.IsInterfaceType())
 			{
 				throw new NotSupportedException($"Shimmed return type ({interfaceMethod.ReturnType.FullName}) must be an interface, on member: {interfaceMethod.DeclaringType.FullName}.{reflectMember.Name}");
 			}

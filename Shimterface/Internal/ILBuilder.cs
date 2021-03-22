@@ -75,10 +75,50 @@ namespace Shimterface.Standard.Internal
 				| MethodAttributes.Virtual,
 				returnType, typeParams?.ToArray() ?? Array.Empty<Type>());
 		}
+		public static MethodBuilder DefinePublicMethod(this TypeBuilder tb, MethodInfo method)
+		{
+			var typeParams = method.GetParameters().Select(p => p.ParameterType).ToArray();
+			var factory = tb.DefineMethod(method.Name, MethodAttributes.Public
+				| MethodAttributes.HideBySig
+				| MethodAttributes.Virtual,
+				method.ReturnType, typeParams);
+
+			if (method.IsGenericMethod)
+			{
+				var srcParams = method.GetGenericArguments().Cast<TypeInfo>().ToArray();
+				var genParams = factory.DefineGenericParameters(srcParams.Select(a => a.Name).ToArray());
+				for (var i = 0; i < genParams.Length; ++i)
+				{
+					genParams[i].SetGenericParameterAttributes(srcParams[i].GenericParameterAttributes);
+					genParams[i].SetBaseTypeConstraint(srcParams[i].BaseType);
+					genParams[i].SetInterfaceConstraints(srcParams[i].ImplementedInterfaces.ToArray());
+				}
+
+				// TODO: resolve T in parameter(s)
+
+				factory.SetReturnType(resolveGenericType(factory.ReturnType, srcParams));
+			}
+
+			return factory;
+		}
+
+		private static Type resolveGenericType(Type type, Type[] generics)
+		{
+			if (generics.Contains(type))
+			{
+				return type;
+			}
+
+			return null;
+		}
 
 		public static bool EmitTypeShim(this ILGenerator impl, Type fromType, Type resultType)
 		{
 			if (fromType == resultType || fromType == typeof(void) || resultType == typeof(void))
+			{
+				return false;
+			}
+			if (resultType.IsGenericMethodParameter)
 			{
 				return false;
 			}
@@ -118,7 +158,7 @@ namespace Shimterface.Standard.Internal
 				return;
 			}
 
-			var method = tb.DefinePublicMethod(interfaceMethod.Name, interfaceMethod.ReturnType, interfaceMethod.GetParameters().Select(p => p.ParameterType));
+			var method = tb.DefinePublicMethod(interfaceMethod);
 			var impl = method.GetILGenerator();
 
 			resolveIfInstance(impl, instField);
@@ -141,7 +181,7 @@ namespace Shimterface.Standard.Internal
 
 		public static void MethodCall(this TypeBuilder tb, MethodInfo interfaceMethod, ConstructorInfo constrInfo)
 		{
-			var method = tb.DefinePublicMethod(interfaceMethod.Name, interfaceMethod.ReturnType, interfaceMethod.GetParameters().Select(p => p.ParameterType));
+			var method = tb.DefinePublicMethod(interfaceMethod);
 			var impl = method.GetILGenerator();
 
 			resolveParameters(impl, constrInfo, interfaceMethod);
@@ -153,7 +193,7 @@ namespace Shimterface.Standard.Internal
 
 		public static void MethodCall(this TypeBuilder tb, FieldBuilder? instField, MethodInfo interfaceMethod, MethodInfo methodInfo)
 		{
-			var method = tb.DefinePublicMethod(interfaceMethod.Name, interfaceMethod.ReturnType, interfaceMethod.GetParameters().Select(p => p.ParameterType));
+			var method = tb.DefinePublicMethod(interfaceMethod);
 			var impl = method.GetILGenerator();
 
 			var callType = !resolveIfInstance(impl, instField)
@@ -169,7 +209,7 @@ namespace Shimterface.Standard.Internal
 		public static void MethodThrowException<T>(this TypeBuilder tb, MethodInfo methodInfo)
 			where T : Exception
 		{
-			var method = tb.DefinePublicMethod(methodInfo.Name, methodInfo.ReturnType, methodInfo.GetParameters().Select(p => p.ParameterType));
+			var method = tb.DefinePublicMethod(methodInfo);
 			var impl = method.GetILGenerator();
 			impl.Emit(OpCodes.Ldarg_0); // this
 
