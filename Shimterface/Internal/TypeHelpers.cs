@@ -57,28 +57,30 @@ namespace Shimterface.Internal
 					var pars = m.GetParameters();
 					var genArgs = m.GetGenericArguments();
 					return Enumerable.Range(0, pars.Length)
-						.All(i => pars[i].ParameterType.IsEquivalentTo(parameterTypes[i], genArgs, genericArgs));
+						.All(i => pars[i].ParameterType.IsEquivalentGenericMethodType(parameterTypes[i]));
 				}).ToArray();
+			if (methods.Length > 1)
+			{
+				throw new AmbiguousMatchException($"Found {methods.Length} methods matching given criteria");
+			}
 			return methods.SingleOrDefault();
 		}
 
 		/// <summary>
-		/// Compares for equivalence of generic types.
-		/// Does not consider the generic order in equivalence test.
+		/// Compares for equivalence of types as used in a generic method.
+		/// Does not compare any part of the generic attributes.
 		/// </summary>
 		/// <param name="type">This type to compare</param>
 		/// <param name="other">The type to compare this type against</param>
-		/// <param name="typeGenerics">The generic types that are accessible to this type</param>
-		/// <param name="otherGenerics">The generic types that are accessible to the other type</param>
 		/// <returns>True if the types can be considered equivalent</returns>
-		public static bool IsEquivalentTo(this Type type, Type other, Type[] typeGenerics, Type[] otherGenerics)
+		public static bool IsEquivalentGenericMethodType(this Type type, Type other)
 		{
 			if (type == other)
 			{
 				return true;
 			}
 
-			if (typeGenerics.Contains(type) && otherGenerics.Contains(other))
+			if (type.IsGenericMethodParameter && other.IsGenericMethodParameter)
 			{
 				return true;
 			}
@@ -91,8 +93,8 @@ namespace Shimterface.Internal
 				if (genType == genOther)
 				{
 					// Compare type arguments
-					return Enumerable.Range(0, genType.GenericTypeArguments.Length)
-						.All(i => genType.GenericTypeArguments[i].IsEquivalentTo(genOther.GenericTypeArguments[i], typeGenerics, otherGenerics));
+					return Enumerable.Range(0, type.GenericTypeArguments.Length)
+						.All(i => type.GenericTypeArguments[i].IsEquivalentGenericMethodType(other.GenericTypeArguments[i]));
 				}
 			}
 
@@ -117,14 +119,30 @@ namespace Shimterface.Internal
 			return type.ResolveType().IsInterface;
 		}
 
-		public static Type ResolveGenericType(Type type, Type[] generics)
+		/// <summary>
+		/// Rebuilds a complex type that may make use of method generic attributes and replaces
+		/// them with the actual method generic attributes of the same name.
+		/// </summary>
+		/// <param name="type">The type that may include method generics</param>
+		/// <param name="generics">Target method generics to use</param>
+		/// <returns>The rebuilt type</returns>
+		public static Type RebuildGenericType(this Type type, Type[] generics)
 		{
-			if (generics.Contains(type))
+			// Method generic argument
+			if (type.IsGenericMethodParameter)
+			{
+				return generics.SingleOrDefault(g => g.Name == type.Name);
+			}
+
+			// Fixed type
+			if (!type.IsGenericType)
 			{
 				return type;
 			}
 
-			return null;
+			// Rebuild using generics
+			var genArgs = type.GetGenericArguments().Select(a => a.RebuildGenericType(generics)).ToArray();
+			return type.GetGenericTypeDefinition().MakeGenericType(genArgs);
 		}
 
 		/// <summary>

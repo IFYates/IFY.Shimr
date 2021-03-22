@@ -198,16 +198,16 @@ namespace Shimterface
 			}
 
 			// Find method
+			var genArgs = interfaceMethod is MethodInfo mi ? mi.GetGenericArguments() : Array.Empty<Type>();
 			if (implMember == null)
 			{
-				var genArgs = interfaceMethod is MethodInfo mi ? mi.GetGenericArguments() : Array.Empty<Type>();
 				var methodInfo = implType.GetMethod(implMemberName, paramTypes, genArgs);
 				implReturnType = methodInfo?.ReturnType;
 				implMember = methodInfo;
 			}
 
 			// Can only override with an interface
-			if (implReturnType != null && !interfaceMethod.ReturnType.IsGenericMethodParameter && implReturnType != interfaceMethod.ReturnType && !interfaceMethod.ReturnType.IsInterfaceType())
+			if (implReturnType != null && !interfaceMethod.ReturnType.IsEquivalentGenericMethodType(implReturnType) && !interfaceMethod.ReturnType.IsInterfaceType())
 			{
 				throw new NotSupportedException($"Shimmed return type ({interfaceMethod.ReturnType.FullName}) must be an interface, on member: {interfaceMethod.DeclaringType.FullName}.{reflectMember.Name}");
 			}

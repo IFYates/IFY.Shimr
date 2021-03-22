@@ -89,17 +89,17 @@ namespace Shimterface.Internal
 				var methodGenPars = factory.DefineGenericParameters(genParams.Select(a => a.Name).ToArray());
 				for (var i = 0; i < methodGenPars.Length; ++i)
 				{
-					methodGenPars[i].SetGenericParameterAttributes(genParams[i].GenericParameterAttributes);
 					methodGenPars[i].SetBaseTypeConstraint(genParams[i].BaseType);
+					methodGenPars[i].SetGenericParameterAttributes(genParams[i].GenericParameterAttributes);
 					methodGenPars[i].SetInterfaceConstraints(genParams[i].ImplementedInterfaces.ToArray());
 				}
 
 				// Resolve T in parameter(s)
-				paramTypes = paramTypes.Select(t => TypeHelpers.ResolveGenericType(t, genParams)).ToArray();
+				paramTypes = paramTypes.Select(t => t.RebuildGenericType(methodGenPars)).ToArray();
 				factory.SetParameters(paramTypes);
 
 				// Resolve T in return
-				factory.SetReturnType(TypeHelpers.ResolveGenericType(factory.ReturnType, genParams));
+				factory.SetReturnType(factory.ReturnType.RebuildGenericType(methodGenPars));
 			}
 
 			return factory.GetILGenerator();
@@ -107,11 +107,8 @@ namespace Shimterface.Internal
 
 		public static bool EmitTypeShim(this ILGenerator impl, Type fromType, Type resultType)
 		{
-			if (fromType == resultType || fromType == typeof(void) || resultType == typeof(void))
-			{
-				return false;
-			}
-			if (resultType.IsGenericMethodParameter)
+			if (fromType == typeof(void) || resultType == typeof(void)
+				|| fromType.IsEquivalentGenericMethodType(resultType))
 			{
 				return false;
 			}
