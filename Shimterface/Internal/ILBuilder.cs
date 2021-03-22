@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Shimterface.Standard.Internal
+namespace Shimterface.Internal
 {
 	internal static class ILBuilder
 	{
@@ -67,49 +67,42 @@ namespace Shimterface.Standard.Internal
 			impl.Emit(OpCodes.Ret);
 		}
 
-		public static ILGenerator DefinePublicMethod(this TypeBuilder tb, string name, Type returnType, IEnumerable<Type>? typeParams = null)
+		public static ILGenerator DefinePublicMethod(this TypeBuilder tb, string name, Type returnType, IEnumerable<Type>? paramTypes = null)
 		{
 			var factory = tb.DefineMethod(name, MethodAttributes.Public
 				| MethodAttributes.HideBySig
 				| MethodAttributes.Virtual,
-				returnType, typeParams?.ToArray() ?? Array.Empty<Type>());
+				returnType, paramTypes?.ToArray() ?? Array.Empty<Type>());
 			return factory.GetILGenerator();
 		}
 		public static ILGenerator DefinePublicMethod(this TypeBuilder tb, MethodInfo method)
 		{
-			var typeParams = method.GetParameters().Select(p => p.ParameterType).ToArray();
+			var paramTypes = method.GetParameters().Select(p => p.ParameterType).ToArray();
 			var factory = tb.DefineMethod(method.Name, MethodAttributes.Public
 				| MethodAttributes.HideBySig
 				| MethodAttributes.Virtual,
-				method.ReturnType, typeParams);
+				method.ReturnType, paramTypes);
 
 			if (method.IsGenericMethod)
 			{
-				var srcParams = method.GetGenericArguments().Cast<TypeInfo>().ToArray();
-				var genParams = factory.DefineGenericParameters(srcParams.Select(a => a.Name).ToArray());
-				for (var i = 0; i < genParams.Length; ++i)
+				var genParams = method.GetGenericArguments().Cast<TypeInfo>().ToArray();
+				var methodGenPars = factory.DefineGenericParameters(genParams.Select(a => a.Name).ToArray());
+				for (var i = 0; i < methodGenPars.Length; ++i)
 				{
-					genParams[i].SetGenericParameterAttributes(srcParams[i].GenericParameterAttributes);
-					genParams[i].SetBaseTypeConstraint(srcParams[i].BaseType);
-					genParams[i].SetInterfaceConstraints(srcParams[i].ImplementedInterfaces.ToArray());
+					methodGenPars[i].SetGenericParameterAttributes(genParams[i].GenericParameterAttributes);
+					methodGenPars[i].SetBaseTypeConstraint(genParams[i].BaseType);
+					methodGenPars[i].SetInterfaceConstraints(genParams[i].ImplementedInterfaces.ToArray());
 				}
 
-				// TODO: resolve T in parameter(s)
+				// Resolve T in parameter(s)
+				paramTypes = paramTypes.Select(t => TypeHelpers.ResolveGenericType(t, genParams)).ToArray();
+				factory.SetParameters(paramTypes);
 
-				factory.SetReturnType(resolveGenericType(factory.ReturnType, srcParams));
+				// Resolve T in return
+				factory.SetReturnType(TypeHelpers.ResolveGenericType(factory.ReturnType, genParams));
 			}
 
 			return factory.GetILGenerator();
-		}
-
-		private static Type resolveGenericType(Type type, Type[] generics)
-		{
-			if (generics.Contains(type))
-			{
-				return type;
-			}
-
-			return null;
 		}
 
 		public static bool EmitTypeShim(this ILGenerator impl, Type fromType, Type resultType)

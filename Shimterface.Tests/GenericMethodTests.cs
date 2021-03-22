@@ -37,6 +37,17 @@ namespace Shimterface.Tests
 				WasCalled = true;
 				return val();
 			}
+
+			
+			public IDictionary<T1, T2> ComplexTest<T1, T2>(T1 key)
+				where T1 : IEnumerator<T2>
+				where T2 : new()
+			{
+				return new Dictionary<T1, T2>
+				{
+					[key] = new T2()
+				};
+			}
 		}
 
 		public interface IBasicTestShim
@@ -61,8 +72,8 @@ namespace Shimterface.Tests
 
 		public interface IReturnTestShim
 		{
-			T ReturnTest<T>()
-				where T : class, IComparable;
+			U ReturnTest<U>()
+				where U : class, IComparable;
 		}
 		[TestMethod]
 		public void Facade_of_generic_method_can_return_generic()
@@ -84,7 +95,7 @@ namespace Shimterface.Tests
 		public interface IFullTestShim
 		{
 			T FullTest<T>(T val)
-				where T : class;
+				where T : class, IComparable;
 		}
 		[TestMethod]
 		public void Facade_of_generic_method_can_send_and_receive_generic_types()
@@ -107,7 +118,7 @@ namespace Shimterface.Tests
 
 		public interface IDeepTestShim
 		{
-			public IEnumerable<T> DeepTest<T>(Func<IEnumerable<T>> val)
+			IEnumerable<T> DeepTest<T>(Func<IEnumerable<T>> val)
 				where T : class;
 		}
 		[TestMethod]
@@ -127,6 +138,30 @@ namespace Shimterface.Tests
 			// Assert
 			Assert.IsTrue(inst.WasCalled);
 			Assert.AreSame(val, res);
+		}
+
+		public interface IComplexTestShim
+		{
+			IDictionary<T1, T2> ComplexTest<T1, T2>(T1 key)
+				where T2 : IEnumerable<T1>;
+		}
+		[TestMethod]
+		public void Support_facade_of_complex_generics()
+		{
+			// Arrange
+			var inst = new TestClass();
+
+			var shim = ShimBuilder.Shim<IComplexTestShim>(inst);
+
+			var val = "Abcd1234";
+
+			// Act
+			Assert.IsFalse(inst.WasCalled);
+			var res = shim.ComplexTest<string, string[]>(val);
+
+			// Assert
+			Assert.IsTrue(inst.WasCalled);
+			Assert.IsTrue(res.ContainsKey(val));
 		}
 	}
 }

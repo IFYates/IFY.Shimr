@@ -4,7 +4,7 @@ using System;
 using System.Threading;
 
 #nullable enable
-namespace Shimterface.Standard.Tests.Examples
+namespace Shimterface.Examples
 {
     #region Production code
 

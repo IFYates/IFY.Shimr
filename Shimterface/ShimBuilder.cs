@@ -1,4 +1,4 @@
-﻿using Shimterface.Standard.Internal;
+﻿using Shimterface.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -200,9 +200,18 @@ namespace Shimterface
 			// Find method
 			if (implMember == null)
 			{
-				var methodInfo = implType.GetMethod(implMemberName, paramTypes);
-				implReturnType = methodInfo?.ReturnType;
-				implMember = methodInfo;
+				if (interfaceMethod is MethodInfo mi && mi.IsGenericMethod)
+				{
+					var methodInfo = implType.GetMethod(implMemberName, paramTypes, mi.GetGenericArguments());
+					implReturnType = methodInfo?.ReturnType;
+					implMember = methodInfo;
+				}
+				else
+				{
+					var methodInfo = implType.GetMethod(implMemberName, paramTypes);
+					implReturnType = methodInfo?.ReturnType;
+					implMember = methodInfo;
+				}
 			}
 
 			// Can only override with an interface
