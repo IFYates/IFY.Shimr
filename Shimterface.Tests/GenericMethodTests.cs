@@ -16,7 +16,7 @@ namespace Shimterface.Tests
 			{
 				WasCalled = true;
 			}
-			
+
 			public T ReturnTest<T>()
 				where T : class, IComparable
 			{
@@ -43,22 +43,6 @@ namespace Shimterface.Tests
 		{
 			void BasicTest<T>();
 		}
-
-		public interface IReturnTestShim
-		{
-			T ReturnTest<T>()
-				where T : class, IComparable;
-		}
-
-		public interface ITestShim2
-		{
-			T FullTest<T>(T val)
-				where T : class;
-
-			public IEnumerable<T> DeepTest<T>(Func<IEnumerable<T>> val)
-				where T : class;
-		}
-
 		[TestMethod]
 		public void Facade_can_include_generic_methods()
 		{
@@ -74,7 +58,12 @@ namespace Shimterface.Tests
 			// Assert
 			Assert.IsTrue(inst.WasCalled);
 		}
-		
+
+		public interface IReturnTestShim
+		{
+			T ReturnTest<T>()
+				where T : class, IComparable;
+		}
 		[TestMethod]
 		public void Facade_of_generic_method_can_return_generic()
 		{
@@ -92,13 +81,18 @@ namespace Shimterface.Tests
 			Assert.AreSame("result", res);
 		}
 
+		public interface IFullTestShim
+		{
+			T FullTest<T>(T val)
+				where T : class;
+		}
 		[TestMethod]
 		public void Facade_of_generic_method_can_send_and_receive_generic_types()
 		{
 			// Arrange
 			var inst = new TestClass();
 
-			var shim = ShimBuilder.Shim<ITestShim2>(inst);
+			var shim = ShimBuilder.Shim<IFullTestShim>(inst);
 
 			var val = "Abcd1234";
 
@@ -111,13 +105,18 @@ namespace Shimterface.Tests
 			Assert.AreSame(val, res);
 		}
 
+		public interface IDeepTestShim
+		{
+			public IEnumerable<T> DeepTest<T>(Func<IEnumerable<T>> val)
+				where T : class;
+		}
 		[TestMethod]
 		public void Facade_of_generic_method_can_send_and_receive_deep_generic_types()
 		{
 			// Arrange
 			var inst = new TestClass();
 
-			var shim = ShimBuilder.Shim<ITestShim2>(inst);
+			var shim = ShimBuilder.Shim<IDeepTestShim>(inst);
 
 			var val = new[] { "Abcd1234" };
 
