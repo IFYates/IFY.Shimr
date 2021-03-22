@@ -200,18 +200,10 @@ namespace Shimterface
 			// Find method
 			if (implMember == null)
 			{
-				if (interfaceMethod is MethodInfo mi && mi.IsGenericMethod)
-				{
-					var methodInfo = implType.GetMethod(implMemberName, paramTypes, mi.GetGenericArguments());
-					implReturnType = methodInfo?.ReturnType;
-					implMember = methodInfo;
-				}
-				else
-				{
-					var methodInfo = implType.GetMethod(implMemberName, paramTypes);
-					implReturnType = methodInfo?.ReturnType;
-					implMember = methodInfo;
-				}
+				var genArgs = interfaceMethod is MethodInfo mi ? mi.GetGenericArguments() : Array.Empty<Type>();
+				var methodInfo = implType.GetMethod(implMemberName, paramTypes, genArgs);
+				implReturnType = methodInfo?.ReturnType;
+				implMember = methodInfo;
 			}
 
 			// Can only override with an interface

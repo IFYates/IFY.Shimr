@@ -37,6 +37,11 @@ namespace Shimterface.Internal
 
 		public static MethodInfo? GetMethod(this Type type, string name, Type[] parameterTypes, Type[] genericArgs)
 		{
+			if (genericArgs.Length == 0)
+			{
+				return type.GetMethod(name, parameterTypes);
+			}
+
 			// Find potentials
 			var methods = type.GetMethods()
 				.Where(m => m.Name == name && m.GetParameters().Length == parameterTypes.Length && m.GetGenericArguments().Length == genericArgs.Length)
