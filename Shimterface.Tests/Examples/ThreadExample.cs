@@ -4,7 +4,7 @@ using System;
 using System.Threading;
 
 #nullable enable
-namespace Shimterface.Standard.Tests.Examples
+namespace Shimterface.Examples
 {
     #region Production code
 
@@ -143,7 +143,7 @@ namespace Shimterface.Standard.Tests.Examples
             }
 
             // Act
-            inst.Start(action, TimeSpan.FromSeconds(5));
+            inst.Start(action, TimeSpan.FromSeconds(1));
             while (inst.IsRunning) { }
 
             // Assert
