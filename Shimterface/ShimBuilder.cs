@@ -29,8 +29,8 @@ namespace Shimterface
 
 		private static readonly List<Type> _ignoreMissingMembers = new List<Type>();
 
-		private static AssemblyBuilder _asm;
-		private static ModuleBuilder _mod;
+		private static AssemblyBuilder? _asm;
+		private static ModuleBuilder? _mod;
 		static ShimBuilder()
 		{
 			ResetState();
@@ -53,12 +53,12 @@ namespace Shimterface
 				{
 					if (!_dynamicTypeCache.ContainsKey(className))
 					{
-						var tb = _mod.DefineType("Shim_" + className, TypeAttributes.Public
+						var tb = _mod?.DefineType("Shim_" + className, TypeAttributes.Public
 							| TypeAttributes.Class
 							| TypeAttributes.AutoClass
 							| TypeAttributes.AnsiClass
 							| TypeAttributes.BeforeFieldInit
-							| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType });
+							| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType }) ?? throw new NullReferenceException();
 
 						var instField = tb.DefineField("_inst", implType, FieldAttributes.Private | FieldAttributes.InitOnly);
 
@@ -67,7 +67,8 @@ namespace Shimterface
 
 						// Proxy all methods (including events, properties, and indexers)
 						var methods = interfaceType.GetMethods()
-							.Union(interfaceType.GetInterfaces().SelectMany(i => i.GetMethods())).ToArray();
+							.Union(interfaceType.GetInterfaces().SelectMany(i => i.GetMethods()))
+							.Where(m => m.IsAbstract).ToArray();
 						foreach (var interfaceMethod in methods)
 						{
 							// Don't try to implement IShim
@@ -102,12 +103,12 @@ namespace Shimterface
 				{
 					if (!_dynamicTypeCache.ContainsKey(className))
 					{
-						var tb = _mod.DefineType(className, TypeAttributes.Public
+						var tb = _mod?.DefineType(className, TypeAttributes.Public
 							| TypeAttributes.Class
 							| TypeAttributes.AutoClass
 							| TypeAttributes.AnsiClass
 							| TypeAttributes.BeforeFieldInit
-							| TypeAttributes.AutoLayout, null, new[] { interfaceType });
+							| TypeAttributes.AutoLayout, null, new[] { interfaceType }) ?? throw new NullReferenceException();
 
 						// Find static source on interface
 						var intAttr = interfaceType.GetCustomAttribute<StaticShimAttribute>(false);
@@ -126,7 +127,7 @@ namespace Shimterface
 								throw new InvalidCastException("Factory shim cannot implement non-static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
 							}
 
-							shimMember(tb, null, attr.TargetType, interfaceMethod, attr.IsConstructor);
+							shimMember(tb, null, attr.TargetType ?? intAttr?.TargetType ?? typeof(void), interfaceMethod, attr.IsConstructor);
 						}
 
 						_dynamicTypeCache.Add(className, tb.CreateType());
@@ -136,7 +137,7 @@ namespace Shimterface
 			return _dynamicTypeCache[className];
 		}
 
-		private static MemberInfo resolveImplementation(Type implType, MethodInfo interfaceMethod, bool isStatic, bool isConstructor)
+		private static MemberInfo? resolveImplementation(Type implType, MethodInfo interfaceMethod, bool isStatic, bool isConstructor)
 		{
 			// Workout real parameter types
 			var paramTypes = interfaceMethod.GetParameters()
@@ -175,8 +176,8 @@ namespace Shimterface
 			}
 
 			// Find implementation return type
-			Type implReturnType = null;
-			MemberInfo implMember = null;
+			Type? implReturnType = null;
+			MemberInfo? implMember = null;
 			if (isPropertyShim)
 			{
 				var propInfo = implType.GetProperty(implMemberName[4..]);
@@ -214,7 +215,7 @@ namespace Shimterface
 			return implMember;
 		}
 
-		private static void shimMember(TypeBuilder tb, FieldBuilder instField, Type implType, MethodInfo interfaceMethod, bool isConstructor)
+		private static void shimMember(TypeBuilder tb, FieldBuilder? instField, Type implType, MethodInfo interfaceMethod, bool isConstructor)
 		{
 			// Match real member
 			var memberInfo = resolveImplementation(implType, interfaceMethod, instField == null, isConstructor);
@@ -227,7 +228,7 @@ namespace Shimterface
 				}
 
 				// TODO: Could support default/custom functionality
-				throw new InvalidCastException($"Cannot shim {implType.FullName} as {interfaceMethod.DeclaringType.FullName}; missing method: {interfaceMethod.Name}");
+				throw new InvalidCastException($"Cannot shim {implType.FullName} as {interfaceMethod.DeclaringType.FullName}; missing method: {interfaceMethod}");
 			}
 
 			// Generate proxy
@@ -282,35 +283,40 @@ namespace Shimterface
 		/// Use a shim to make the given object look like the required type.
 		/// Result will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static TInterface Shim<TInterface>(this object inst)
+		public static TInterface? Shim<TInterface>(this object inst)
 			where TInterface : class
 		{
-			return (TInterface)Shim(typeof(TInterface), inst);
+			return (TInterface?)Shim(typeof(TInterface), inst);
 		}
 		/// <summary>
 		/// Use a shim to make the given objects look like the required type.
 		/// Results will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static TInterface[] Shim<TInterface>(this object[] inst)
+		public static TInterface?[]? Shim<TInterface>(this object[] inst)
 			where TInterface : class
 		{
-			return (TInterface[])Shim<TInterface>((IEnumerable<object>)inst);
+			return (TInterface?[]?)Shim<TInterface>((IEnumerable<object>)inst);
 		}
 		/// <summary>
 		/// Use a shim to make the given objects look like the required type.
 		/// Results will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static IEnumerable<TInterface> Shim<TInterface>(this IEnumerable<object> inst)
+		public static IEnumerable<TInterface?>? Shim<TInterface>(this IEnumerable<object> inst)
 			where TInterface : class
 		{
-			return inst.Select(i => (TInterface)Shim(typeof(TInterface), i)).ToArray();
+			return inst?.Select(i => (TInterface?)Shim(typeof(TInterface), i)).ToArray();
 		}
 		/// <summary>
 		/// Use a shim to make the given object look like the required type.
 		/// Result will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static object Shim(Type interfaceType, object inst)
+		public static object? Shim(Type interfaceType, object inst)
 		{
+			if (inst == null)
+			{
+				return null;
+			}
+
 			// Run-time test that type is an interface
 			if (!interfaceType.IsInterfaceType())
 			{

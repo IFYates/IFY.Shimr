@@ -8,7 +8,7 @@ namespace Shimterface.Standard.Internal
 {
 	internal static class ILBuilder
 	{
-		private static bool resolveIfInstance(ILGenerator impl, FieldBuilder instField)
+		private static bool resolveIfInstance(ILGenerator impl, FieldBuilder? instField)
 		{
 			if (instField == null)
 			{
@@ -68,7 +68,7 @@ namespace Shimterface.Standard.Internal
 			impl.Emit(OpCodes.Ret);
 		}
 
-		public static MethodBuilder DefinePublicMethod(this TypeBuilder tb, string name, Type returnType, IEnumerable<Type> typeParams = null)
+		public static MethodBuilder DefinePublicMethod(this TypeBuilder tb, string name, Type returnType, IEnumerable<Type>? typeParams = null)
 		{
 			return tb.DefineMethod(name, MethodAttributes.Public
 				| MethodAttributes.HideBySig
@@ -108,7 +108,7 @@ namespace Shimterface.Standard.Internal
 			return true;
 		}
 
-		public static void FieldWrap(this TypeBuilder tb, FieldBuilder instField, MethodInfo interfaceMethod, FieldInfo fieldInfo)
+		public static void FieldWrap(this TypeBuilder tb, FieldBuilder? instField, MethodInfo interfaceMethod, FieldInfo fieldInfo)
 		{
 			var args = interfaceMethod.GetParameters();
 			if (args.Length > 0 && (fieldInfo.Attributes & FieldAttributes.InitOnly) > 0)
@@ -151,7 +151,7 @@ namespace Shimterface.Standard.Internal
 			impl.Emit(OpCodes.Ret);
 		}
 
-		public static void MethodCall(this TypeBuilder tb, FieldBuilder instField, MethodInfo interfaceMethod, MethodInfo methodInfo)
+		public static void MethodCall(this TypeBuilder tb, FieldBuilder? instField, MethodInfo interfaceMethod, MethodInfo methodInfo)
 		{
 			var method = tb.DefinePublicMethod(interfaceMethod.Name, interfaceMethod.ReturnType, interfaceMethod.GetParameters().Select(p => p.ParameterType));
 			var impl = method.GetILGenerator();

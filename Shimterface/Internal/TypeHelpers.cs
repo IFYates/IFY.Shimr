@@ -19,7 +19,7 @@ namespace Shimterface
         /// <summary>
         /// Get attribute of method, including get/set for property
         /// </summary>
-        public static TAttribute GetAttribute<TAttribute>(this MethodInfo methodInfo)
+        public static TAttribute? GetAttribute<TAttribute>(this MethodInfo methodInfo)
             where TAttribute : Attribute
         {
             var attr = methodInfo.GetCustomAttribute<TAttribute>(false);

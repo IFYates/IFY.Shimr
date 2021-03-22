@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable CS0184 // 'is' expression's given expression is never of the provided type
 namespace Shimterface.Tests
 {
 	[TestClass]
@@ -51,10 +52,11 @@ namespace Shimterface.Tests
 			IDateTimeFactory dt = ShimBuilder.Create<IDateTimeFactory>();
 			IDateTime now = dt.Now;
 
-			Assert.IsFalse(now is DateTime);
-			Assert.IsTrue(now is IDateTime);
+            Assert.IsFalse(now is DateTime);
+            Assert.IsTrue(now is IDateTime);
 			Assert.IsTrue(now is IShim);
 			Assert.IsTrue(((IShim)now).Unshim() is DateTime);
 		}
 	}
 }
+#pragma warning restore CS0184 // 'is' expression's given expression is never of the provided type
