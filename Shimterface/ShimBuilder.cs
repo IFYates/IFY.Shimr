@@ -282,35 +282,40 @@ namespace Shimterface
 		/// Use a shim to make the given object look like the required type.
 		/// Result will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static TInterface Shim<TInterface>(this object inst)
+		public static TInterface? Shim<TInterface>(this object inst)
 			where TInterface : class
 		{
-			return (TInterface)Shim(typeof(TInterface), inst);
+			return (TInterface?)Shim(typeof(TInterface), inst);
 		}
 		/// <summary>
 		/// Use a shim to make the given objects look like the required type.
 		/// Results will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static TInterface[] Shim<TInterface>(this object[] inst)
+		public static TInterface?[]? Shim<TInterface>(this object[] inst)
 			where TInterface : class
 		{
-			return (TInterface[])Shim<TInterface>((IEnumerable<object>)inst);
+			return (TInterface?[]?)Shim<TInterface>((IEnumerable<object>)inst);
 		}
 		/// <summary>
 		/// Use a shim to make the given objects look like the required type.
 		/// Results will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static IEnumerable<TInterface> Shim<TInterface>(this IEnumerable<object> inst)
+		public static IEnumerable<TInterface?>? Shim<TInterface>(this IEnumerable<object> inst)
 			where TInterface : class
 		{
-			return inst.Select(i => (TInterface)Shim(typeof(TInterface), i)).ToArray();
+			return inst?.Select(i => (TInterface?)Shim(typeof(TInterface), i)).ToArray();
 		}
 		/// <summary>
 		/// Use a shim to make the given object look like the required type.
 		/// Result will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static object Shim(Type interfaceType, object inst)
+		public static object? Shim(Type interfaceType, object inst)
 		{
+			if (inst == null)
+			{
+				return null;
+			}
+
 			// Run-time test that type is an interface
 			if (!interfaceType.IsInterfaceType())
 			{

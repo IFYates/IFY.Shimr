@@ -1,6 +1,8 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable IDE0051 // Remove unused private members
+#pragma warning disable IDE1006 // Naming Styles
 namespace Shimterface.Tests
 {
     [TestClass]
@@ -26,6 +28,12 @@ namespace Shimterface.Tests
             private void Test()
             {
             }
+        }
+        
+        [TestMethod]
+        public void Can_always_shim_null()
+        {
+            ShimBuilder.Shim<IPrivateInterface>((PrivateTestClass)null);
         }
 
         [TestMethod]
@@ -77,3 +85,5 @@ namespace Shimterface.Tests
         }
     }
 }
+#pragma warning restore IDE1006 // Naming Styles
+#pragma warning restore IDE0051 // Remove unused private members

@@ -17,20 +17,13 @@ namespace Shimterface.Tests
 
         public class TestClass
         {
-            public string PropertyWithoutSet { get { return null; } }
+            public string PropertyWithoutSet => null;
         }
 
 		[TestInitialize]
-		public void init()
+		public void ResetState()
 		{
 			ShimBuilder.ResetState();
-		}
-
-		[TestMethod]
-		[ExpectedException(typeof(ArgumentNullException))]
-		public void Cannot_shim_null()
-		{
-			ShimBuilder.Shim<IUnknownMethodTest>(null);
 		}
 
 		[TestMethod]
