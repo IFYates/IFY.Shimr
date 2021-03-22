@@ -143,7 +143,7 @@ namespace Shimterface.Examples
             }
 
             // Act
-            inst.Start(action, TimeSpan.FromSeconds(5));
+            inst.Start(action, TimeSpan.FromSeconds(1));
             while (inst.IsRunning) { }
 
             // Assert
