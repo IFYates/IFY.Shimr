@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29326.143
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D260D65D-0F00-4D2C-9E72-38EC9D2E3F41}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{D260D65D-0F00-4D2C-9E72-38EC9D2E3F41}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
@@ -11,6 +11,14 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shimterface.Standard", "Shimterface\Shimterface.Standard.csproj", "{2706BAF7-5673-4C6C-BA1F-924E7451B3FF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shimterface.Standard.Tests", "Shimterface.Tests\Shimterface.Standard.Tests.csproj", "{A0C6A6F5-57FC-4825-890A-DD1D062B9EAB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shimterface.SysShims", "Shimterface.SysShims\Shimterface.SysShims.csproj", "{62ED5C4E-DDE0-4275-B2B1-E9CC7E0C5391}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shimterface", "Shimterface", "{1E84C057-02FD-470C-9197-F8337D3E4C4E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SysShims", "SysShims", "{D612155F-B538-499A-9A2C-BA34C787DBE1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shimterface.SysShims.Tests", "Shimterface.SysShims.Tests\Shimterface.SysShims.Tests.csproj", "{5AF1D19D-04AF-4335-8783-142EA2A012D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,9 +34,23 @@ Global
 		{A0C6A6F5-57FC-4825-890A-DD1D062B9EAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0C6A6F5-57FC-4825-890A-DD1D062B9EAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0C6A6F5-57FC-4825-890A-DD1D062B9EAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62ED5C4E-DDE0-4275-B2B1-E9CC7E0C5391}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62ED5C4E-DDE0-4275-B2B1-E9CC7E0C5391}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62ED5C4E-DDE0-4275-B2B1-E9CC7E0C5391}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62ED5C4E-DDE0-4275-B2B1-E9CC7E0C5391}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AF1D19D-04AF-4335-8783-142EA2A012D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AF1D19D-04AF-4335-8783-142EA2A012D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AF1D19D-04AF-4335-8783-142EA2A012D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AF1D19D-04AF-4335-8783-142EA2A012D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2706BAF7-5673-4C6C-BA1F-924E7451B3FF} = {1E84C057-02FD-470C-9197-F8337D3E4C4E}
+		{A0C6A6F5-57FC-4825-890A-DD1D062B9EAB} = {1E84C057-02FD-470C-9197-F8337D3E4C4E}
+		{62ED5C4E-DDE0-4275-B2B1-E9CC7E0C5391} = {D612155F-B538-499A-9A2C-BA34C787DBE1}
+		{5AF1D19D-04AF-4335-8783-142EA2A012D2} = {D612155F-B538-499A-9A2C-BA34C787DBE1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3E7F4C82-6A66-408A-A49D-4191EBA571D3}
