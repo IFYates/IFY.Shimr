@@ -57,8 +57,7 @@ namespace Shimterface.Standard.Internal
 		public static void AddUnshimMethod(this TypeBuilder tb, FieldBuilder instField)
 		{
 			// object Unshim()
-			var unshimMethod = tb.DefinePublicMethod("Unshim", typeof(object));
-			var impl = unshimMethod.GetILGenerator();
+			var impl = tb.DefinePublicMethod("Unshim", typeof(object));
 			impl.Emit(OpCodes.Ldarg_0); // this
 			impl.Emit(OpCodes.Ldfld, instField);
 			if (instField.FieldType.IsValueType)
@@ -68,14 +67,15 @@ namespace Shimterface.Standard.Internal
 			impl.Emit(OpCodes.Ret);
 		}
 
-		public static MethodBuilder DefinePublicMethod(this TypeBuilder tb, string name, Type returnType, IEnumerable<Type>? typeParams = null)
+		public static ILGenerator DefinePublicMethod(this TypeBuilder tb, string name, Type returnType, IEnumerable<Type>? typeParams = null)
 		{
-			return tb.DefineMethod(name, MethodAttributes.Public
+			var factory = tb.DefineMethod(name, MethodAttributes.Public
 				| MethodAttributes.HideBySig
 				| MethodAttributes.Virtual,
 				returnType, typeParams?.ToArray() ?? Array.Empty<Type>());
+			return factory.GetILGenerator();
 		}
-		public static MethodBuilder DefinePublicMethod(this TypeBuilder tb, MethodInfo method)
+		public static ILGenerator DefinePublicMethod(this TypeBuilder tb, MethodInfo method)
 		{
 			var typeParams = method.GetParameters().Select(p => p.ParameterType).ToArray();
 			var factory = tb.DefineMethod(method.Name, MethodAttributes.Public
@@ -99,7 +99,7 @@ namespace Shimterface.Standard.Internal
 				factory.SetReturnType(resolveGenericType(factory.ReturnType, srcParams));
 			}
 
-			return factory;
+			return factory.GetILGenerator();
 		}
 
 		private static Type resolveGenericType(Type type, Type[] generics)
@@ -158,8 +158,7 @@ namespace Shimterface.Standard.Internal
 				return;
 			}
 
-			var method = tb.DefinePublicMethod(interfaceMethod);
-			var impl = method.GetILGenerator();
+			var impl = tb.DefinePublicMethod(interfaceMethod);
 
 			resolveIfInstance(impl, instField);
 
@@ -181,8 +180,7 @@ namespace Shimterface.Standard.Internal
 
 		public static void MethodCall(this TypeBuilder tb, MethodInfo interfaceMethod, ConstructorInfo constrInfo)
 		{
-			var method = tb.DefinePublicMethod(interfaceMethod);
-			var impl = method.GetILGenerator();
+			var impl = tb.DefinePublicMethod(interfaceMethod);
 
 			resolveParameters(impl, constrInfo, interfaceMethod);
 			impl.Emit(OpCodes.Newobj, constrInfo);
@@ -193,8 +191,7 @@ namespace Shimterface.Standard.Internal
 
 		public static void MethodCall(this TypeBuilder tb, FieldBuilder? instField, MethodInfo interfaceMethod, MethodInfo methodInfo)
 		{
-			var method = tb.DefinePublicMethod(interfaceMethod);
-			var impl = method.GetILGenerator();
+			var impl = tb.DefinePublicMethod(interfaceMethod);
 
 			var callType = !resolveIfInstance(impl, instField)
 				? OpCodes.Call // Static
@@ -209,8 +206,7 @@ namespace Shimterface.Standard.Internal
 		public static void MethodThrowException<T>(this TypeBuilder tb, MethodInfo methodInfo)
 			where T : Exception
 		{
-			var method = tb.DefinePublicMethod(methodInfo);
-			var impl = method.GetILGenerator();
+			var impl = tb.DefinePublicMethod(methodInfo);
 			impl.Emit(OpCodes.Ldarg_0); // this
 
 			var notImplementedConstr = typeof(T).GetConstructor(new Type[0]);
