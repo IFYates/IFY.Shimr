@@ -11,11 +11,15 @@ namespace Shimterface
 		/// <summary>
 		/// The type that implements this member.
 		/// </summary>
-		public Type TargetType { get; }
+		public Type? TargetType { get; }
 		/// <summary>
 		/// True if this member calls a constructor on the target type.
 		/// </summary>
 		public bool IsConstructor { get; [Obsolete("Use Shimterface.ConstructorShimAttribute instead")] set; }
+
+		protected StaticShimAttribute()
+		{
+		}
 
 		public StaticShimAttribute(Type targetType)
 		{

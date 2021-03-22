@@ -8,6 +8,10 @@ namespace Shimterface
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 	public class ConstructorShimAttribute : StaticShimAttribute
 	{
+		public ConstructorShimAttribute()
+		{
+			IsConstructor = true;
+		}
 		public ConstructorShimAttribute(Type targetType)
 			: base(targetType)
 		{
