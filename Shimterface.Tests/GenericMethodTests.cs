@@ -3,7 +3,7 @@
 namespace Shimterface.Tests
 {
     // https://github.com/IanYates83/Shimterface/issues/5
-    [TestClass]
+    [TestClass, Ignore]
     public class GenericMethodTests
     {
         public class TestClass
