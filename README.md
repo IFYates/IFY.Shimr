@@ -1,11 +1,13 @@
 # Shimterface
-Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement
+Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.
 
 [Available on nuget.](https://www.nuget.org/packages/Shimterface.Standard/)
 
 ## Breaking changes
 **v1.4.0** drops the `ShimAttribute` and limits `TypeShimAttribute` to parameters only.
 If the return type of a shimmed member does not match the implementation member, it must be an interface that can be auto-shimmed.
+
+**v1.4.2** makes the `IsConstructor` property on `StaticShimAttribute` obsolete and will be removed in a future release, in favour of the explicit `ConstructorShimAttribute`.
 
 ## Description
 I'm sure we've all been in the situation where we've had to make use of a class from an external library (including mscorlib) that either doesn't implement any interface or doesn't implement one that can be used for any kind of Inversion of Control usage.
@@ -40,6 +42,12 @@ If you ever needed the original back again, then you simply unshim it:
 ```C#
 TestClass originalObject = (TestClass)((IShim)forcedCast).Unshim();
 ```
+
+## Design principal
+The purpose of Shimterface is to improve testability and inversion-of-control; therefore, all behavioural decisions are designed to be implemented as application design-time.
+This is not a mocking library.
+
+Outside of setting up your DI/IOC container and facades, if you're referencing Shimterface directly, it's likely that you're thinking about a different problem domain to the one solved by this library.
 
 ## Overiding Return/Parameter Types
 For simple class methods, the above will be enough to decouple from the concrete class; however, if the method returns or takes other concrete types, Inversion of Control and unit testability are not hugely improved.
@@ -222,6 +230,5 @@ public void Test_file_system_shims()
 
 ## Future Ideas
 * Generate assembly of compiled shims for direct reference
-* Provide default functionality to shimmed method missing from target type
-* Add concrete functionality to shimmed type (similar to extension methods)
 * Combine multiple target types to single shim
+* Behavioural configuration to attributes (e.g., [Shim(IgnoreMissingMembers = true)])
