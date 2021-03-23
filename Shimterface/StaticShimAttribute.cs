@@ -15,7 +15,7 @@ namespace Shimterface
 		/// <summary>
 		/// True if this member calls a constructor on the target type.
 		/// </summary>
-		public bool IsConstructor { get; [Obsolete("Use Shimterface.ConstructorShimAttribute instead")] set; }
+		internal bool IsConstructor { get; set; }
 
 		protected StaticShimAttribute()
 		{
