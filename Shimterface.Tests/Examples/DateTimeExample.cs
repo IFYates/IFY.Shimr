@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable CS0184 // 'is' expression's given expression is never of the provided type
-namespace Shimterface.Tests
+namespace Shimterface.Examples
 {
 	[TestClass]
 	public class DateTimeExample
