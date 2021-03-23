@@ -46,34 +46,34 @@ namespace Shimterface.SysShims.Threading.Tasks
 
 		ConfiguredTaskAwaitable ConfigureAwait(bool continueOnCapturedContext);
 		ITask ContinueWith(Action<Task, object> continuationAction, object state);
-		ITask ContinueWith(Action<Task, object> continuationAction, object state, CancellationToken cancellationToken);
-		ITask ContinueWith(Action<Task, object> continuationAction, object state, CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
+		ITask ContinueWith(Action<Task, object> continuationAction, object state, [TypeShim(typeof(CancellationToken))] ICancellationToken cancellationToken);
+		ITask ContinueWith(Action<Task, object> continuationAction, object state, [TypeShim(typeof(CancellationToken))] ICancellationToken cancellationToken, TaskContinuationOptions continuationOptions, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
 		ITask ContinueWith(Action<Task, object> continuationAction, object state, TaskContinuationOptions continuationOptions);
 		ITask ContinueWith(Action<Task, object> continuationAction, object state, TaskScheduler scheduler);
 		ITask ContinueWith(Action<Task> continuationAction);
-		ITask ContinueWith(Action<Task> continuationAction, CancellationToken cancellationToken);
+		ITask ContinueWith(Action<Task> continuationAction, [TypeShim(typeof(CancellationToken))] ICancellationToken cancellationToken);
 		ITask ContinueWith(Action<Task> continuationAction, TaskContinuationOptions continuationOptions);
-		ITask ContinueWith(Action<Task> continuationAction, CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
-		//ITask<TResult> ContinueWith<TResult>(Func<Task, object, TResult> continuationFunction, object state, CancellationToken cancellationToken);
+		ITask ContinueWith(Action<Task> continuationAction, [TypeShim(typeof(CancellationToken))] ICancellationToken cancellationToken, TaskContinuationOptions continuationOptions, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
+		//ITask<TResult> ContinueWith<TResult>(Func<Task, object, TResult> continuationFunction, object state, [TypeShim(typeof(CancellationToken))] ICancellationToken cancellationToken);
 		ITask ContinueWith(Action<Task> continuationAction, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
-		//ITask<TResult> ContinueWith<TResult>(Func<Task, TResult> continuationFunction, CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
+		//ITask<TResult> ContinueWith<TResult>(Func<Task, TResult> continuationFunction, [TypeShim(typeof(CancellationToken))] ICancellationToken cancellationToken, TaskContinuationOptions continuationOptions, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
 		//ITask<TResult> ContinueWith<TResult>(Func<Task, TResult> continuationFunction, TaskContinuationOptions continuationOptions);
 		//ITask<TResult> ContinueWith<TResult>(Func<Task, TResult> continuationFunction, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
 		//ITask<TResult> ContinueWith<TResult>(Func<Task, object, TResult> continuationFunction, object state, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
-		//ITask<TResult> ContinueWith<TResult>(Func<Task, TResult> continuationFunction, CancellationToken cancellationToken);
+		//ITask<TResult> ContinueWith<TResult>(Func<Task, TResult> continuationFunction, [TypeShim(typeof(CancellationToken))] ICancellationToken cancellationToken);
 		//ITask<TResult> ContinueWith<TResult>(Func<Task, TResult> continuationFunction);
 		//ITask<TResult> ContinueWith<TResult>(Func<Task, object, TResult> continuationFunction, object state, TaskContinuationOptions continuationOptions);
 		//ITask<TResult> ContinueWith<TResult>(Func<Task, object, TResult> continuationFunction, object state);
-		//ITask<TResult> ContinueWith<TResult>(Func<Task, object, TResult> continuationFunction, object state, CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
+		//ITask<TResult> ContinueWith<TResult>(Func<Task, object, TResult> continuationFunction, object state, [TypeShim(typeof(CancellationToken))] ICancellationToken cancellationToken, TaskContinuationOptions continuationOptions, [TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
 		TaskAwaiter GetAwaiter();
 		void RunSynchronously();
 		void RunSynchronously([TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
 		void Start();
 		void Start([TypeShim(typeof(TaskScheduler))] ITaskScheduler scheduler);
-		void Wait(CancellationToken cancellationToken);
+		void Wait([TypeShim(typeof(CancellationToken))] ICancellationToken cancellationToken);
 		bool Wait(int millisecondsTimeout);
 		void Wait();
-		bool Wait(int millisecondsTimeout, CancellationToken cancellationToken);
+		bool Wait(int millisecondsTimeout, [TypeShim(typeof(CancellationToken))] ICancellationToken cancellationToken);
 		bool Wait(TimeSpan timeout);
 	}
 
