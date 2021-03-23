@@ -102,6 +102,26 @@ namespace Shimterface.Tests
 			shim.SetValue(res);
 			Assert.AreEqual("abc123", obj.GetValue());
 		}
+		
+		public interface IShimOverloadMethod
+		{
+			void SetValue([TypeShim(typeof(string))] IToString str);
+			void SetValue(string str);
+		}
+		[TestMethod]
+		public void Can_call_method_with_covered_parameter_overload_and_original()
+		{
+			var obj = new ReturnTypeTest();
+
+			var shim = ShimBuilder.Shim<IShimOverloadMethod>(obj);
+			var res = ShimBuilder.Shim<IToString>("abc123");
+
+			shim.SetValue(res);
+			Assert.AreEqual("abc123", obj.GetValue());
+
+			shim.SetValue("def456");
+			Assert.AreEqual("def456", obj.GetValue());
+		}
 
 		[TestMethod]
 		[ExpectedException(typeof(InvalidCastException))]
