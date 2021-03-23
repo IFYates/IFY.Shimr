@@ -4,10 +4,7 @@ Utility for creating a dynamic object facade/proxy to allow for using an object 
 [Available on nuget.](https://www.nuget.org/packages/Shimterface.Standard/)
 
 ## Breaking changes
-**v1.4.0** drops the `ShimAttribute` and limits `TypeShimAttribute` to parameters only.
-If the return type of a shimmed member does not match the implementation member, it must be an interface that can be auto-shimmed.
-
-**v1.4.2** makes the `IsConstructor` property on `StaticShimAttribute` obsolete and will be removed in a future release, in favour of the explicit `ConstructorShimAttribute`.
+See the [breaking change wiki](https://github.com/IanYates83/Shimterface/wiki/Breaking-changes).
 
 ## Description
 I'm sure we've all been in the situation where we've had to make use of a class from an external library (including mscorlib) that either doesn't implement any interface or doesn't implement one that can be used for any kind of Inversion of Control usage.
