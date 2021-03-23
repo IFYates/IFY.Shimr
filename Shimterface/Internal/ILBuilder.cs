@@ -85,13 +85,19 @@ namespace Shimterface.Internal
 
 			if (method.IsGenericMethod)
 			{
+				// Define generic arguments and constraints
 				var genParams = method.GetGenericArguments().Cast<TypeInfo>().ToArray();
 				var methodGenPars = factory.DefineGenericParameters(genParams.Select(a => a.Name).ToArray());
 				for (var i = 0; i < methodGenPars.Length; ++i)
 				{
-					methodGenPars[i].SetBaseTypeConstraint(genParams[i].BaseType);
+					// HACK: Reflection is reporting constraint interface hierarchy, which breaks compilation
+					// Strip out parent interfaces in the hope the constraint doesn't specify them
+					var interfaces = genParams[i].ImplementedInterfaces;
+					interfaces = interfaces.Where(i => !interfaces.Any(ii => ii != i && i.IsAssignableFrom(ii))).ToArray();
+
+					methodGenPars[i].SetBaseTypeConstraint(genParams[i].BaseType.RebuildGenericType(methodGenPars));
 					methodGenPars[i].SetGenericParameterAttributes(genParams[i].GenericParameterAttributes);
-					methodGenPars[i].SetInterfaceConstraints(genParams[i].ImplementedInterfaces.ToArray());
+					methodGenPars[i].SetInterfaceConstraints(interfaces.Select(i => i.RebuildGenericType(methodGenPars)).ToArray());
 				}
 
 				// Resolve T in parameter(s)

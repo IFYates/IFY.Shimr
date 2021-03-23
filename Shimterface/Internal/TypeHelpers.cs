@@ -131,7 +131,7 @@ namespace Shimterface.Internal
 			// Method generic argument
 			if (type.IsGenericMethodParameter)
 			{
-				return generics.SingleOrDefault(g => g.Name == type.Name);
+				return generics[type.GenericParameterPosition];
 			}
 
 			// Fixed type

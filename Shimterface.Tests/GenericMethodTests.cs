@@ -145,7 +145,7 @@ namespace Shimterface.Tests
 			IDictionary<T1, T2> ComplexTest<T1, T2>(T1 key)
 				where T2 : IEnumerable<T1>;
 		}
-		[TestMethod, Ignore] // TODO: This scenario is still failing
+		[TestMethod]
 		public void Support_facade_of_complex_generics()
 		{
 			// Arrange
