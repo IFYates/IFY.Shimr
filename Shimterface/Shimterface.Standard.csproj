@@ -49,6 +49,9 @@ Original release for .NET Core</PackageReleaseNotes>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
       <DocumentationFile>Shimterface.Standard.xml</DocumentationFile>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <DocumentationFile>Shimterface.Standard.xml</DocumentationFile>
+    </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     </ItemGroup>

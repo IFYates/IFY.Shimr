@@ -9,12 +9,30 @@
             Mark a method as being a shim of a constructor.
             </summary>
         </member>
-        <member name="M:Shimterface.TypeHelpers.GetAttribute``1(System.Reflection.MethodInfo)">
+        <member name="M:Shimterface.Internal.TypeHelpers.GetAttribute``1(System.Reflection.MethodInfo)">
             <summary>
             Get attribute of method, including get/set for property
             </summary>
         </member>
-        <member name="M:Shimterface.TypeHelpers.ResolveType(System.Type)">
+        <member name="M:Shimterface.Internal.TypeHelpers.IsEquivalentGenericMethodType(System.Type,System.Type)">
+            <summary>
+            Compares for equivalence of types as used in a generic method.
+            Does not compare any part of the generic attributes.
+            </summary>
+            <param name="type">This type to compare</param>
+            <param name="other">The type to compare this type against</param>
+            <returns>True if the types can be considered equivalent</returns>
+        </member>
+        <member name="M:Shimterface.Internal.TypeHelpers.RebuildGenericType(System.Type,System.Type[])">
+            <summary>
+            Rebuilds a complex type that may make use of method generic attributes and replaces
+            them with the actual method generic attributes of the same name.
+            </summary>
+            <param name="type">The type that may include method generics</param>
+            <param name="generics">Target method generics to use</param>
+            <returns>The rebuilt type</returns>
+        </member>
+        <member name="M:Shimterface.Internal.TypeHelpers.ResolveType(System.Type)">
             <summary>
             Resolves array or <see cref="!:IEnumerable&lt;&gt;"/> types to the internal element type, or return the given type.
             </summary>
