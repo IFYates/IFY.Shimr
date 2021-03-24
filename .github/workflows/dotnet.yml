@@ -34,6 +34,7 @@ jobs:
 #        output: ../lcov.info
 #        outputFormat: lcov
 #        testProject: Shimterface.Tests/Shimterface.Standard.Tests.csproj
+##       run: coverlet /path/to/test-assembly.dll --target "dotnet" --targetargs "test /path/to/test-project --no-build"
 #    - name: stryker dotnet
 #      uses: naveen497/actions@0.0.1
 
@@ -42,7 +43,7 @@ jobs:
     - name: Install Stryker.NET (2/2)
       run: dotnet tool restore
     - name: Run Stryker.NET
-      run: dotnet stryker -p Shimterface.Tests/Shimterface.Standard.Tests.csproj
+      run: cd ./Shimterface.Tests/; dotnet stryker
     - name: Upload mutation report
       uses: actions/upload-artifact@v2.2.2
       with:
