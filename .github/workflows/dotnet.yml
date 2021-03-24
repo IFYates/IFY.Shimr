@@ -23,6 +23,8 @@ jobs:
         dotnet-version: 3.1.x
     - name: Restore dependencies
       run: dotnet restore
+    - name: Restore tools
+      run: dotnet tool restore
       
     - name: Build
       run: dotnet build --no-restore
@@ -38,10 +40,6 @@ jobs:
 #    - name: stryker dotnet
 #      uses: naveen497/actions@0.0.1
 
-    - name: Install Stryker.NET (1/2)
-      run: dotnet tool install -g dotnet-stryker
-    - name: Install Stryker.NET (2/2)
-      run: dotnet tool restore
     - name: Run Stryker.NET
       run: cd ./Shimterface.Tests/; dotnet stryker
     - name: Upload mutation report
