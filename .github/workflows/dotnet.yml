@@ -28,18 +28,21 @@ jobs:
       
     - name: Build
       run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
-#    - name: Coverlet coverage test
-#      uses: b3b00/coverlet-action@1.1.1
+#    - name: Test
+#      run: dotnet test --no-build --verbosity normal
+    - name: Coverlet coverage test
+      uses: b3b00/coverlet-action@1.1.1
 #      with:
-#        output: ../lcov.info
+#        output: ./lcov.info
 #        outputFormat: lcov
 #        testProject: Shimterface.Tests/Shimterface.Standard.Tests.csproj
 ##       run: coverlet /path/to/test-assembly.dll --target "dotnet" --targetargs "test /path/to/test-project --no-build"
-#    - name: stryker dotnet
-#      uses: naveen497/actions@0.0.1
-
+    - name: Publish to Coveralls
+      uses: coverallsapp/github-action@v1.1.2
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+#        path-to-lcov: # default is ./coverage/lcov.info
+        
     - name: Run Stryker.NET
       run: cd ./Shimterface.Tests/; dotnet stryker
     - name: Upload mutation report
