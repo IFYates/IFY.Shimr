@@ -1,0 +1,7 @@
+﻿{
+    "stryker-config": {
+        "ignore-methods": [
+            "*Exception.ctor"
+        ]
+    }
+}
