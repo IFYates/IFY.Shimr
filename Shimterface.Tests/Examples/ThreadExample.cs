@@ -149,14 +149,63 @@ namespace Shimterface.Examples
 			// Assert
 			Assert.AreEqual(3, count);
 		}
-
+		
 		[TestMethod]
-		public void Invokes_action_before_sleep()
+		public void Stop__Before_Start__Noop()
 		{
 			// Arrange
-			var threadMock = new Mock<IThread>();
-
 			var threadFactoryMock = new Mock<IThreadingFactory>();
+
+			var inst = new IntervalAction(threadFactoryMock.Object);
+
+			// Act
+			inst.Stop();
+		}
+
+		[TestMethod]
+		public void Interrupt__Before_Start__Noop()
+		{
+			// Arrange
+			var threadFactoryMock = new Mock<IThreadingFactory>();
+
+			var inst = new IntervalAction(threadFactoryMock.Object);
+
+			// Act
+			inst.Interrupt();
+		}
+
+		[TestMethod]
+		public void Interrupt__Cancels_token()
+		{
+			// Arrange
+			var threadFactoryMock = new Mock<IThreadingFactory>();
+			var threadMock = new Mock<IThread>();
+			var tokenSourceMock = new Mock<ICancellationTokenSource>();
+			var tokenMock = new Mock<ICancellationToken>();
+			
+			threadFactoryMock.Setup(m => m.NewThread(It.IsAny<ThreadStart>()))
+				.Returns(threadMock.Object);
+			threadFactoryMock.Setup(m => m.NewTokenSource())
+				.Returns(tokenSourceMock.Object);
+			tokenSourceMock.SetupGet(m => m.Token)
+				.Returns(tokenMock.Object);
+
+			var inst = new IntervalAction(threadFactoryMock.Object);
+
+			// Act
+			inst.Start(() => { }, TimeSpan.MinValue);
+			inst.Interrupt();
+
+			// Assert
+			tokenSourceMock.Verify(m => m.Cancel(), Times.Once);
+		}
+
+		[TestMethod]
+		public void Start__Invokes_action_before_sleeping()
+		{
+			// Arrange
+			var threadFactoryMock = new Mock<IThreadingFactory>();
+			var threadMock = new Mock<IThread>();
 			var tokenSourceMock = new Mock<ICancellationTokenSource>();
 			var tokenMock = new Mock<ICancellationToken>();
 			var waitHandleMock = new Mock<IWaitHandle>();
@@ -198,6 +247,26 @@ namespace Shimterface.Examples
 
 			// Assert
 			Assert.AreEqual(1, count);
+		}
+
+		[TestMethod]
+		public void Start__Twice__Only_processes_once()
+		{
+			// Arrange
+			var threadFactoryMock = new Mock<IThreadingFactory>();
+			var threadMock = new Mock<IThread>();
+			
+			threadFactoryMock.Setup(m => m.NewThread(It.IsAny<ThreadStart>()))
+				.Returns(threadMock.Object);
+
+			var inst = new IntervalAction(threadFactoryMock.Object);
+
+			// Act
+			inst.Start(() => { }, TimeSpan.MinValue);
+			inst.Start(() => { }, TimeSpan.MinValue);
+
+			// Assert
+			threadMock.Verify(m => m.Start(), Times.Once);
 		}
 	}
 

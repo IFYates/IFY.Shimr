@@ -1,11 +1,13 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Shimterface.Tests
 {
 	[TestClass]
 	public class SignatureChangeTests
 	{
+		[ExcludeFromCodeCoverage]
 		public class ReturnTypeTest
 		{
 			public int Value { get; set; }
@@ -78,12 +80,14 @@ namespace Shimterface.Tests
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(NotSupportedException))]
 		public void Covered_return_type_must_be_interface()
 		{
 			var obj = new ReturnTypeTest();
-
-			ShimBuilder.Shim<IBadCoveredMethodTest>(obj);
+			
+			Assert.ThrowsException<NotSupportedException>(() =>
+			{
+				ShimBuilder.Shim<IBadCoveredMethodTest>(obj);
+			});
 		}
 
 		[TestMethod]
@@ -130,15 +134,17 @@ namespace Shimterface.Tests
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(InvalidCastException))]
 		public void Cannot_call_method_with_covered_parameter_and_inappropriate_underyling_type()
 		{
 			var obj = new ReturnTypeTest();
 
 			var shim = ShimBuilder.Shim<ICoveredParametersTest>(obj);
 			var res = ShimBuilder.Shim<IToString>(45876);
-
-			shim.SetValue(res);
+			
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				shim.SetValue(res);
+			});
 		}
 
 		[TestMethod]
@@ -169,14 +175,17 @@ namespace Shimterface.Tests
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(InvalidCastException))]
 		public void Cannot_set_covered_property_with_inappropriate_underlying_value()
 		{
 			var obj = new ReturnTypeTest();
 
 			var shim = ShimBuilder.Shim<ICoveredPropertyTest>(obj);
 			var shim2 = ShimBuilder.Shim<IToString>("test");
-			shim.Value = shim2;
+			
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				shim.Value = shim2;
+			});
 		}
 	}
 }

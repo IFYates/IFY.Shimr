@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -10,6 +11,7 @@ namespace Shimterface.Internal.Tests
 	{
 		#region GetMethod
 
+		[ExcludeFromCodeCoverage]
 		public class TestClass1
 		{
 			public void Generic() { } // Must not match
@@ -18,6 +20,7 @@ namespace Shimterface.Internal.Tests
 			public void GenericParam<T>(T s) { }
 			public void DeepGenericParam<T>(List<T> s) { }
 		}
+		[ExcludeFromCodeCoverage]
 		public class TestClass2
 		{
 			public void Generic<U>() { }
@@ -85,14 +88,13 @@ namespace Shimterface.Internal.Tests
 			// Assert
 			Assert.IsNotNull(res);
 		}
-		
+
 		public interface IMethods1
 		{
 			T Method<T, U>(U a);
 			U Method<T, U>(T b);
 		}
 		[TestMethod]
-		[ExpectedException(typeof(AmbiguousMatchException))]
 		public void GetMethod__Method_collission__Fails()
 		{
 			// Arrange
@@ -101,7 +103,10 @@ namespace Shimterface.Internal.Tests
 			var params2 = method2.GetParameters().Select(p => p.ParameterType).ToArray();
 
 			// Act
-			var res = typeof(IMethods1).GetMethod(method2.Name, params2, genArgs2);
+			Assert.ThrowsException<AmbiguousMatchException>(() =>
+			{
+				typeof(IMethods1).GetMethod(method2.Name, params2, genArgs2);
+			});
 		}
 
 		#endregion GetMethod

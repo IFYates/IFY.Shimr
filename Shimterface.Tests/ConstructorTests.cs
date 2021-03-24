@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Shimterface.Tests
 {
@@ -18,6 +19,7 @@ namespace Shimterface.Tests
 			IInstanceInterface New(int arg);
 		}
 
+		[ExcludeFromCodeCoverage]
 		public class TestClass
 		{
 			public string Result { get; private set; }
@@ -55,10 +57,12 @@ namespace Shimterface.Tests
 			void New(int arg);
 		}
 		[TestMethod]
-		[ExpectedException(typeof(ArgumentException))]
 		public void Can_not_shim_to_constructor_with_void_return_type()
 		{
-			ShimBuilder.Create<IFactoryInterface2>();
+			Assert.ThrowsException<ArgumentException>(() =>
+			{
+				ShimBuilder.Create<IFactoryInterface2>();
+			});
 		}
 
 		public interface IFactoryInterface3
@@ -67,10 +71,12 @@ namespace Shimterface.Tests
 			int New(int arg);
 		}
 		[TestMethod]
-		[ExpectedException(typeof(ArgumentException))]
 		public void Can_not_shim_to_constructor_with_incorrect_return_type()
 		{
-			ShimBuilder.Create<IFactoryInterface3>();
+			Assert.ThrowsException<ArgumentException>(() =>
+			{
+				ShimBuilder.Create<IFactoryInterface3>();
+			});
 		}
 		
 		[StaticShim(typeof(TestClass))]

@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Shimterface.Tests
 {
@@ -8,6 +9,7 @@ namespace Shimterface.Tests
 	[TestClass]
 	public class StaticInterfaceTests
 	{
+		[ExcludeFromCodeCoverage]
 		public class StaticMemberClass
 		{
 			public static string Value { get; set; }
@@ -23,6 +25,7 @@ namespace Shimterface.Tests
 			}
 		}
 
+		[ExcludeFromCodeCoverage]
 		public class StaticMemberClass2
 		{
 			public static void Test()

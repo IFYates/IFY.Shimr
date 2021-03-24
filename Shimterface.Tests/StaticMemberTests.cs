@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Shimterface.Tests
@@ -6,6 +7,7 @@ namespace Shimterface.Tests
 	[TestClass]
 	public class StaticMemberTests
 	{
+		[ExcludeFromCodeCoverage]
 		public class StaticMemberClass
 		{
 			public static string Value { get; set; }
@@ -81,17 +83,21 @@ namespace Shimterface.Tests
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(InvalidCastException))]
 		public void Must_only_define_static_methods()
 		{
-			ShimBuilder.Create<IBadStaticMethod>();
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				ShimBuilder.Create<IBadStaticMethod>();
+			});
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(InvalidCastException))]
 		public void Normal_shims_cannot_use_StaticShimAttribute()
 		{
-			ShimBuilder.Shim<IStaticMethod>(new object());
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				ShimBuilder.Shim<IStaticMethod>(new object());
+			});
 		}
 	}
 }

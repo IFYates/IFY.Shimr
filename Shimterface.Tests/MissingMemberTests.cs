@@ -1,24 +1,26 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Shimterface.Tests
 {
-    [TestClass]
-    public class MissingMemberTests
-    {
-        public interface IUnknownMethodTest
-        {
-            void UnknownMethod();
-        }
-        public interface IPropertyWithoutSetTest
-        {
-            string PropertyWithoutSet { get; set; }
-        }
+	[TestClass]
+	public class MissingMemberTests
+	{
+		public interface IUnknownMethodTest
+		{
+			void UnknownMethod();
+		}
+		public interface IPropertyWithoutSetTest
+		{
+			string PropertyWithoutSet { get; set; }
+		}
 
-        public class TestClass
-        {
-            public string PropertyWithoutSet => null;
-        }
+		[ExcludeFromCodeCoverage]
+		public class TestClass
+		{
+			public string PropertyWithoutSet => null;
+		}
 
 		[TestInitialize]
 		public void ResetState()
@@ -27,42 +29,48 @@ namespace Shimterface.Tests
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(InvalidCastException))]
 		public void All_interface_members_must_exist_in_object()
 		{
 			var obj = new TestClass();
 
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				ShimBuilder.Shim<IUnknownMethodTest>(obj);
+			});
+		}
+
+		[TestMethod]
+		public void Can_choose_to_ignore_missing_members_on_creation()
+		{
+			var obj = new TestClass();
+
+			ShimBuilder.IgnoreMissingMembers<IUnknownMethodTest>();
 			ShimBuilder.Shim<IUnknownMethodTest>(obj);
 		}
 
 		[TestMethod]
-        public void Can_choose_to_ignore_missing_members_on_creation()
-        {
-            var obj = new TestClass();
+		public void Ignored_missing_members_cannot_be_invoked()
+		{
+			var obj = new TestClass();
 
-            ShimBuilder.IgnoreMissingMembers<IUnknownMethodTest>();
-            ShimBuilder.Shim<IUnknownMethodTest>(obj);
-        }
+			ShimBuilder.IgnoreMissingMembers<IUnknownMethodTest>();
+			var shim = ShimBuilder.Shim<IUnknownMethodTest>(obj);
 
-        [TestMethod]
-        [ExpectedException(typeof(NotImplementedException))]
-        public void Ignored_missing_members_cannot_be_invoked()
-        {
-            var obj = new TestClass();
+			Assert.ThrowsException<NotImplementedException>(() =>
+			{
+				shim.UnknownMethod();
+			});
+		}
 
-            ShimBuilder.IgnoreMissingMembers<IUnknownMethodTest>();
-            var shim = ShimBuilder.Shim<IUnknownMethodTest>(obj);
+		[TestMethod]
+		public void Properties_must_contain_all_required_parts()
+		{
+			var obj = new TestClass();
 
-            shim.UnknownMethod();
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(InvalidCastException))]
-        public void Properties_must_contain_all_required_parts()
-        {
-            var obj = new TestClass();
-
-            ShimBuilder.Shim<IPropertyWithoutSetTest>(obj);
-        }
-    }
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				ShimBuilder.Shim<IPropertyWithoutSetTest>(obj);
+			});
+		}
+	}
 }

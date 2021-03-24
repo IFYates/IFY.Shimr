@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Shimterface.Tests
 {
@@ -27,6 +28,7 @@ namespace Shimterface.Tests
 			string GetSetProperty { get; set; }
 		}
 
+		[ExcludeFromCodeCoverage]
 		public class TestClass
 		{
 			public string GetProperty => "value";
@@ -126,12 +128,14 @@ namespace Shimterface.Tests
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(InvalidCastException))]
 		public void Cannot_force_property_over_methods()
 		{
 			var obj = new TrickyMethodClass();
-
-			obj.Shim<ITrickyPropertyShim>();
+			
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				obj.Shim<ITrickyPropertyShim>();
+			});
 		}
 
 		#endregion Tricky method name
