@@ -2,7 +2,10 @@
 Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.
 
 [![Build & Test](https://github.com/IanYates83/Shimterface/actions/workflows/dotnet.yml/badge.svg)](https://github.com/IanYates83/Shimterface/actions/workflows/dotnet.yml)
-[![NuGet](https://img.shields.io/nuget/dt/Shimterface.Standard?label=nuget)](https://www.nuget.org/packages/Shimterface.Standard/)
+[![Coverage Status](https://coveralls.io/repos/github/IanYates83/Shimterface/badge.svg?branch=master)](https://coveralls.io/github/IanYates83/Shimterface?branch=master)
+
+[![NuGet Version](https://img.shields.io/nuget/v/Shimterface.Standard)](https://www.nuget.org/packages/Shimterface.Standard/)
+![NuGet Downloads](https://img.shields.io/nuget/dt/Shimterface.Standard)
 
 ## Description
 I'm sure we've all been in the situation where we've had to make use of a class from an external library (including mscorlib) that either doesn't implement any interface or doesn't implement one that can be used for any kind of Inversion of Control usage.
