@@ -21,13 +21,13 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
-#    - name: Test
-#      run: dotnet test --no-build --verbosity normal
-    - name: Coverlet coverage test
-      uses: b3b00/coverlet-action@1.1.1
-      with:
-        output: ../lcov.info
-        outputFormat: lcov
-        testProject: Shimterface.Tests/Shimterface.Standard.Tests.csproj
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+#    - name: Coverlet coverage test
+#      uses: b3b00/coverlet-action@1.1.1
+#      with:
+#        output: ../lcov.info
+#        outputFormat: lcov
+#        testProject: Shimterface.Tests/Shimterface.Standard.Tests.csproj
     - name: stryker dotnet
       uses: naveen497/actions@0.0.1
