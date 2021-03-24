@@ -42,6 +42,10 @@ namespace Shimterface.Tests
 		{
 			void SetValue([TypeShim(typeof(string))] IToString str);
 		}
+		public interface IBadCoveredParametersTest
+		{
+			void SetValue([TypeShim(typeof(string))] string str);
+		}
 		
 		[TestInitialize]
 		public void ResetState()
@@ -111,6 +115,17 @@ namespace Shimterface.Tests
 
 			shim.SetValue(res);
 			Assert.AreEqual("abc123", obj.GetValue());
+		}
+
+		[TestMethod]
+		public void Covered_parameter_type_must_be_interface()
+		{
+			var obj = new ReturnTypeTest();
+			
+			Assert.ThrowsException<NotSupportedException>(() =>
+			{
+				ShimBuilder.Shim<IBadCoveredParametersTest>(obj);
+			});
 		}
 		
 		public interface IShimOverloadMethod

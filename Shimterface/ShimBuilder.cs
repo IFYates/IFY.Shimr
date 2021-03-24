@@ -29,12 +29,14 @@ namespace Shimterface
 
 		private static readonly List<Type> _ignoreMissingMembers = new List<Type>();
 
-		private static AssemblyBuilder? _asm;
-		private static ModuleBuilder? _mod;
+		private static AssemblyBuilder _asm;
+		private static ModuleBuilder _mod;
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 		static ShimBuilder()
 		{
 			ResetState();
 		}
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
 		/// <summary>
 		/// Don't compile the type every time
@@ -53,12 +55,12 @@ namespace Shimterface
 				{
 					if (!_dynamicTypeCache.ContainsKey(className))
 					{
-						var tb = _mod?.DefineType($"Shim_{className}", TypeAttributes.Public
+						var tb = _mod.DefineType($"Shim_{className}", TypeAttributes.Public
 							| TypeAttributes.Class
 							| TypeAttributes.AutoClass
 							| TypeAttributes.AnsiClass
 							| TypeAttributes.BeforeFieldInit
-							| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType }) ?? throw new NullReferenceException();
+							| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType });
 
 						var instField = tb.DefineField("_inst", implType, FieldAttributes.Private | FieldAttributes.InitOnly);
 
@@ -94,7 +96,8 @@ namespace Shimterface
 			return _dynamicTypeCache[className];
 		}
 
-		private static Type getFactoryType(Type interfaceType)
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Method is internal for testing")]
+        internal static Type getFactoryType(Type interfaceType)
 		{
 			var className = $"{interfaceType.Name}_{interfaceType.GetHashCode()}";
 			if (!_dynamicTypeCache.ContainsKey(className))
@@ -103,19 +106,19 @@ namespace Shimterface
 				{
 					if (!_dynamicTypeCache.ContainsKey(className))
 					{
-						var tb = _mod?.DefineType(className, TypeAttributes.Public
-							| TypeAttributes.Class
-							| TypeAttributes.AutoClass
-							| TypeAttributes.AnsiClass
-							| TypeAttributes.BeforeFieldInit
-							| TypeAttributes.AutoLayout, null, new[] { interfaceType }) ?? throw new NullReferenceException();
-
 						// Find static source on interface
-						var intAttr = interfaceType.GetCustomAttribute<StaticShimAttribute>(false);
+						var intAttr = interfaceType.GetCustomAttributes(typeof(StaticShimAttribute), false).OfType<StaticShimAttribute>().FirstOrDefault();
 						if (intAttr?.IsConstructor == true) // Cannot define full interface as constructor
 						{
 							throw new NotSupportedException($"Factory interface cannot be marked as constructor shim: {interfaceType.FullName}");
 						}
+
+						var tb = _mod.DefineType(className, TypeAttributes.Public
+							| TypeAttributes.Class
+							| TypeAttributes.AutoClass
+							| TypeAttributes.AnsiClass
+							| TypeAttributes.BeforeFieldInit
+							| TypeAttributes.AutoLayout, null, new[] { interfaceType });
 
 						// Proxy all methods (including events, properties, and indexers)
 						foreach (var interfaceMethod in interfaceType.GetMethods())
@@ -127,7 +130,8 @@ namespace Shimterface
 								throw new InvalidCastException($"Factory shim cannot implement non-static member: {interfaceType.FullName} {interfaceMethod.Name}");
 							}
 
-							shimMember(tb, null, attr.TargetType ?? intAttr?.TargetType ?? typeof(void), interfaceMethod, attr.IsConstructor);
+							var implType = attr.TargetType ?? intAttr?.TargetType ?? typeof(void);
+							shimMember(tb, null, implType, interfaceMethod, attr.IsConstructor);
 						}
 
 						_dynamicTypeCache.Add(className, tb.CreateType());
@@ -137,7 +141,7 @@ namespace Shimterface
 			return _dynamicTypeCache[className];
 		}
 
-		private static MemberInfo? resolveImplementation(Type implType, MethodInfo interfaceMethod, bool isStatic, bool isConstructor)
+		private static MemberInfo? resolveImplementation(Type implType, MethodInfo interfaceMethod, bool isConstructor)
 		{
 			// Workout real parameter types
 			var paramTypes = interfaceMethod.GetParameters()
@@ -191,18 +195,17 @@ namespace Shimterface
 				}
 
 				// Property set arg will need to be unshimmed
-				if (isPropertySetShim)
+				if (isPropertySetShim && implReturnType != null)
 				{
-					paramTypes[^1] = implReturnType ?? paramTypes[^1];
+					paramTypes[^1] = implReturnType;
 					implReturnType = null;
 				}
 			}
 
 			// Find method
-			var genArgs = interfaceMethod is MethodInfo mi ? mi.GetGenericArguments() : Array.Empty<Type>();
 			if (implMember == null)
 			{
-				var methodInfo = implType.GetMethod(implMemberName, paramTypes, genArgs);
+				var methodInfo = implType.GetMethod(implMemberName, paramTypes, interfaceMethod.GetGenericArguments());
 				if (interfaceMethod.IsSpecialName != methodInfo?.IsSpecialName)
 				{
 					methodInfo = null;
@@ -224,7 +227,7 @@ namespace Shimterface
 		private static void shimMember(TypeBuilder tb, FieldBuilder? instField, Type implType, MethodInfo interfaceMethod, bool isConstructor)
 		{
 			// Match real member
-			var memberInfo = resolveImplementation(implType, interfaceMethod, instField == null, isConstructor);
+			var memberInfo = resolveImplementation(implType, interfaceMethod, isConstructor);
 			if (memberInfo == null)
 			{
 				if (_ignoreMissingMembers.Contains(interfaceMethod.DeclaringType))
@@ -249,8 +252,6 @@ namespace Shimterface
 				case MethodInfo methodInfo:
 					tb.MethodCall(instField, interfaceMethod, methodInfo);
 					return;
-				default:
-					throw new InvalidOperationException();
 			}
 		}
 
@@ -289,7 +290,7 @@ namespace Shimterface
 		/// Use a shim to make the given object look like the required type.
 		/// Result will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static TInterface? Shim<TInterface>(this object inst)
+		public static TInterface? Shim<TInterface>(this object? inst)
 			where TInterface : class
 		{
 			return (TInterface?)Shim(typeof(TInterface), inst);
@@ -298,16 +299,16 @@ namespace Shimterface
 		/// Use a shim to make the given objects look like the required type.
 		/// Results will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static TInterface?[]? Shim<TInterface>(this object[] inst)
+		public static TInterface?[]? Shim<TInterface>(this object[]? inst)
 			where TInterface : class
 		{
-			return (TInterface?[]?)Shim<TInterface>((IEnumerable<object>)inst);
+			return (TInterface?[]?)Shim<TInterface>((IEnumerable<object>?)inst);
 		}
 		/// <summary>
 		/// Use a shim to make the given objects look like the required type.
 		/// Results will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static IEnumerable<TInterface?>? Shim<TInterface>(this IEnumerable<object> inst)
+		public static IEnumerable<TInterface?>? Shim<TInterface>(this IEnumerable<object>? inst)
 			where TInterface : class
 		{
 			return inst?.Select(i => (TInterface?)Shim(typeof(TInterface), i)).ToArray();
@@ -316,7 +317,7 @@ namespace Shimterface
 		/// Use a shim to make the given object look like the required type.
 		/// Result will also implement <see cref="IShim"/>.
 		/// </summary>
-		public static object? Shim(Type interfaceType, object inst)
+		public static object? Shim(Type interfaceType, object? inst)
 		{
 			if (inst == null)
 			{

@@ -1,4 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -6,9 +8,35 @@ using System.Reflection;
 
 namespace Shimterface.Internal.Tests
 {
+	// NOTE: Not aiming at full coverage here, due to the complexity of what TypeHelpers does.
+	// Full coverage is provided when combined with the rest of the test suite.
 	[TestClass]
 	public class TypeHelpersTests
 	{
+		#region GetAttribute
+
+		[TestMethod]
+		[DataRow("get_"), DataRow("set_")]
+		public void GetAttribute__No_property_for_special_method__Null(string prefix)
+		{
+			// Arrange
+			var methodInfoMock = new Mock<MethodInfo>();
+			methodInfoMock.SetupGet(m => m.Attributes)
+				.Returns(MethodAttributes.SpecialName);
+			methodInfoMock.SetupGet(m => m.Name)
+				.Returns($"{prefix}Test");
+			methodInfoMock.SetupGet(m => m.ReflectedType)
+				.Returns(typeof(object)); // Any type without a "Test" property
+
+			// Act
+			var res = TypeHelpers.GetAttribute<Attribute>(methodInfoMock.Object);
+
+			// Assert
+			Assert.IsNull(res);
+		}
+
+		#endregion GetAttribute
+
 		#region GetMethod
 
 		[ExcludeFromCodeCoverage]
@@ -88,6 +116,36 @@ namespace Shimterface.Internal.Tests
 			// Assert
 			Assert.IsNotNull(res);
 		}
+		
+		[TestMethod]
+		public void GetMethod__No_potential_methods_by_name__Null()
+		{
+			// Act
+			var res = TypeHelpers.GetMethod(typeof(TestClass2), "FixedParamX", new[] { typeof(string) }, new Type[1]);
+
+			// Assert
+			Assert.IsNull(res);
+		}
+
+		[TestMethod]
+		public void GetMethod__No_potential_methods_by_params__Null()
+		{
+			// Act
+			var res = TypeHelpers.GetMethod(typeof(TestClass2), "FixedParam", new[] { typeof(int) }, new Type[1]);
+
+			// Assert
+			Assert.IsNull(res);
+		}
+		
+		[TestMethod]
+		public void GetMethod__No_potential_methods_by_generic_args_count__Null()
+		{
+			// Act
+			var res = TypeHelpers.GetMethod(typeof(TestClass2), "FixedParam", new[] { typeof(string) }, new Type[2]);
+
+			// Assert
+			Assert.IsNull(res);
+		}
 
 		public interface IMethods1
 		{
@@ -111,10 +169,10 @@ namespace Shimterface.Internal.Tests
 
 		#endregion GetMethod
 
-		#region IsEquivalentTo
-
+		#region IsEquivalentGenericMethodType
+		
 		[TestMethod]
-		public void IsEquivalentTo__Same_type__True()
+		public void IsEquivalentGenericMethodType__Same_open_type__True()
 		{
 			// Arrange
 			var type = typeof(IList<>);
@@ -125,7 +183,48 @@ namespace Shimterface.Internal.Tests
 			// Assert
 			Assert.IsTrue(res);
 		}
+		
+		[TestMethod]
+		public void IsEquivalentGenericMethodType__Same_closed_type__True()
+		{
+			// Arrange
+			var type = typeof(IList<string>);
 
-		#endregion IsEquivalentTo
+			// Act
+			var res = type.IsEquivalentGenericMethodType(type);
+
+			// Assert
+			Assert.IsTrue(res);
+		}
+		
+		[TestMethod]
+		public void IsEquivalentGenericMethodType__Different_open_type__False()
+		{
+			// Arrange
+			var type = typeof(IList<>);
+			var type2 = typeof(IEnumerable<>);
+
+			// Act
+			var res = type.IsEquivalentGenericMethodType(type2);
+
+			// Assert
+			Assert.IsFalse(res);
+		}
+		
+		[TestMethod]
+		public void IsEquivalentGenericMethodType__Different_closed_type__False()
+		{
+			// Arrange
+			var type = typeof(IList<string>);
+			var type2 = typeof(IList<int>);
+
+			// Act
+			var res = type.IsEquivalentGenericMethodType(type2);
+
+			// Assert
+			Assert.IsFalse(res);
+		}
+		
+		#endregion IsEquivalentGenericMethodType
 	}
 }
