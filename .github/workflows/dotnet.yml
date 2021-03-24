@@ -1,4 +1,4 @@
-name: .NET
+name: Build & Test
 
 on:
   push:
@@ -26,6 +26,6 @@ jobs:
     - name: Coverlet coverage test
       uses: b3b00/coverlet-action@1.1.1
       with:
-        output: Shimterface.Tests/lcov.info
+        output: lcov.info
         outputFormat: lcov
         testProject: Shimterface.Tests/Shimterface.Standard.Tests.csproj
