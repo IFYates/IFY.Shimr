@@ -19,6 +19,7 @@ jobs:
         dotnet-version: 3.1.x
     - name: Restore dependencies
       run: dotnet restore
+      
     - name: Build
       run: dotnet build --no-restore
     - name: Test
@@ -29,5 +30,16 @@ jobs:
 #        output: ../lcov.info
 #        outputFormat: lcov
 #        testProject: Shimterface.Tests/Shimterface.Standard.Tests.csproj
-    - name: stryker dotnet
-      uses: naveen497/actions@0.0.1
+#    - name: stryker dotnet
+#      uses: naveen497/actions@0.0.1
+
+    - name: Install Stryker.NET
+      run: dotnet tool install -g dotnet-stryker
+    - name: Run Stryker.NET
+      run: dotnet stryker -p Shimterface.Tests/Shimterface.Standard.Tests.csproj
+    - name: Upload mutation report
+      uses: actions/upload-artifact@v2.2.2
+      with:
+        name: mutation-report.html
+        path: ./**/mutation-report.html
+      
