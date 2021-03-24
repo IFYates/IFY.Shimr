@@ -33,8 +33,10 @@ jobs:
 #    - name: stryker dotnet
 #      uses: naveen497/actions@0.0.1
 
-    - name: Install Stryker.NET
+    - name: Install Stryker.NET (1/2)
       run: dotnet tool install -g dotnet-stryker
+    - name: Install Stryker.NET (2/2)
+      run: dotnet tool restore
     - name: Run Stryker.NET
       run: dotnet stryker -p Shimterface.Tests/Shimterface.Standard.Tests.csproj
     - name: Upload mutation report
