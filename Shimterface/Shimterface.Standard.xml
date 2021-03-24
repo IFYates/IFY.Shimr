@@ -9,7 +9,7 @@
             Mark a method as being a shim of a constructor.
             </summary>
         </member>
-        <member name="M:Shimterface.Internal.TypeHelpers.GetAttribute``1(System.Reflection.MethodInfo)">
+        <member name="M:Shimterface.Internal.TypeHelpers.GetAttribute``1(System.Reflection.MemberInfo)">
             <summary>
             Get attribute of method, including get/set for property
             </summary>

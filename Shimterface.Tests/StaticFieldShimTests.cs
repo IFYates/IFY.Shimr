@@ -33,10 +33,19 @@ namespace Shimterface.Tests
             string Immutable { get; set; }
         }
 
-        public interface IOverrideFieldTest
+        public interface IStaticOverrideFieldTest
         {
             [StaticShim(typeof(TestClass))]
             IGetSetFieldTest Child { get; set; }
+        }
+        public interface IOverrideFieldTest
+        {
+            [StaticShim(typeof(TestClass))]
+            IChildTest Child { get; set; }
+        }
+        public interface IChildTest
+        {
+            long InstanceValue { get; set; }
         }
 
         public class TestClass
@@ -44,6 +53,8 @@ namespace Shimterface.Tests
             public static long VValue;
             public static string RValue;
             public static readonly string Immutable = "readonly";
+
+            public long InstanceValue;
 
             public static TestClass Child;
         }
@@ -81,7 +92,7 @@ namespace Shimterface.Tests
 
             Assert.AreEqual(98765L, TestClass.VValue);
         }
-        
+
         [TestMethod]
         public void Can_shim_a_static_ref_field_as_a_get_property()
         {
@@ -128,6 +139,17 @@ namespace Shimterface.Tests
         }
 
         [TestMethod]
+        [ExpectedException(typeof(InvalidCastException))]
+        public void Shim_static_field_cannot_shim_return_as_static()
+        {
+            TestClass.Child = new TestClass();
+
+            var shim = ShimBuilder.Create<IStaticOverrideFieldTest>();
+
+            shim.Child?.ToString(); // Throws exception on auto-shim
+        }
+
+        [TestMethod]
         public void Shim_static_field_with_changed_return_type()
         {
             TestClass.Child = new TestClass();
@@ -141,7 +163,7 @@ namespace Shimterface.Tests
         public void Shim_static_field_with_changed_set_type()
         {
             var newChild = new TestClass();
-            var newChildShim = newChild.Shim<IGetSetFieldTest>();
+            var newChildShim = newChild.Shim<IChildTest>();
 
             var shim = ShimBuilder.Create<IOverrideFieldTest>();
             shim.Child = newChildShim;

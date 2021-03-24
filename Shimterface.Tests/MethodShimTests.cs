@@ -35,26 +35,36 @@ namespace Shimterface.Tests
             }
         }
 
-        public class TestClass
+        public abstract class TestParentClass
         {
             public bool VoidMethodCalled = false;
             public void VoidMethod()
             {
                 VoidMethodCalled = true;
             }
+            
+            public abstract string StringMethod();
 
+            public virtual string StringMethodArgs(string arg1, int arg2)
+            {
+                return "bad_result";
+            }
+        }
+
+        public class TestClass : TestParentClass
+        {
             public object[] VoidMethodArgsCalled = null;
             public void VoidMethodArgs(string arg1, int arg2)
             {
                 VoidMethodArgsCalled = new object[] { arg1, arg2 };
             }
 
-            public string StringMethod()
+            public override string StringMethod()
             {
                 return "result";
             }
 
-            public string StringMethodArgs(string arg1, int arg2)
+            public override string StringMethodArgs(string arg1, int arg2)
             {
                 return arg1 + "-" + arg2;
             }

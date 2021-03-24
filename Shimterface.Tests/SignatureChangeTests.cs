@@ -40,6 +40,12 @@ namespace Shimterface.Tests
 		{
 			void SetValue([TypeShim(typeof(string))] IToString str);
 		}
+		
+		[TestInitialize]
+		public void ResetState()
+		{
+			ShimBuilder.ResetState();
+		}
 
 		[TestMethod]
 		public void Can_shim_property_with_covered_type()

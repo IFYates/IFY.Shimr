@@ -111,12 +111,12 @@ namespace Shimterface.Internal
 			return factory.GetILGenerator();
 		}
 
-		public static bool EmitTypeShim(this ILGenerator impl, Type fromType, Type resultType)
+		public static void EmitTypeShim(this ILGenerator impl, Type fromType, Type resultType)
 		{
 			if (fromType == typeof(void) || resultType == typeof(void)
 				|| fromType.IsEquivalentGenericMethodType(resultType))
 			{
-				return false;
+				return;
 			}
 
 			if (fromType.IsValueType)
@@ -127,21 +127,19 @@ namespace Shimterface.Internal
 			var shimType = resultType.ResolveType();
 			var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { shimType }, new[] { valType });
 			impl.Emit(OpCodes.Call, shimMethod);
-			return true;
 		}
 
-		public static bool EmitTypeUnshim(this ILGenerator impl, Type shimType, Type realType)
+		public static void EmitTypeUnshim(this ILGenerator impl, Type shimType, Type realType)
 		{
 			if (shimType == realType || shimType == typeof(void) || realType == typeof(void))
 			{
-				return false;
+				return;
 			}
 
 			var valType = realType.IsArrayType() ? typeof(object[]) : typeof(object);
 			var resultType = realType.ResolveType();
 			var unshimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Unshim), new[] { resultType }, new[] { valType });
 			impl.Emit(OpCodes.Call, unshimMethod);
-			return true;
 		}
 
 		public static void FieldWrap(this TypeBuilder tb, FieldBuilder? instField, MethodInfo interfaceMethod, FieldInfo fieldInfo)

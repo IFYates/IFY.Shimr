@@ -53,7 +53,7 @@ namespace Shimterface
 				{
 					if (!_dynamicTypeCache.ContainsKey(className))
 					{
-						var tb = _mod?.DefineType("Shim_" + className, TypeAttributes.Public
+						var tb = _mod?.DefineType($"Shim_{className}", TypeAttributes.Public
 							| TypeAttributes.Class
 							| TypeAttributes.AutoClass
 							| TypeAttributes.AnsiClass
@@ -78,10 +78,10 @@ namespace Shimterface
 							}
 
 							// Must not implement unsupported attributes
-							var attr = interfaceMethod.GetCustomAttribute<StaticShimAttribute>(false);
+							var attr = interfaceMethod.GetAttribute<StaticShimAttribute>();
 							if (attr != null)
 							{
-								throw new InvalidCastException("Instance shim cannot implement static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
+								throw new InvalidCastException($"Instance shim cannot implement static member: {interfaceType.FullName} {interfaceMethod.Name}");
 							}
 
 							shimMember(tb, instField, implType, interfaceMethod, false);
@@ -96,7 +96,7 @@ namespace Shimterface
 
 		private static Type getFactoryType(Type interfaceType)
 		{
-			var className = interfaceType.Name + "_" + interfaceType.GetHashCode();
+			var className = $"{interfaceType.Name}_{interfaceType.GetHashCode()}";
 			if (!_dynamicTypeCache.ContainsKey(className))
 			{
 				lock (_sync)
@@ -114,7 +114,7 @@ namespace Shimterface
 						var intAttr = interfaceType.GetCustomAttribute<StaticShimAttribute>(false);
 						if (intAttr?.IsConstructor == true) // Cannot define full interface as constructor
 						{
-							throw new NotSupportedException("Factory interface cannot be marked as constructor shim: " + interfaceType.FullName);
+							throw new NotSupportedException($"Factory interface cannot be marked as constructor shim: {interfaceType.FullName}");
 						}
 
 						// Proxy all methods (including events, properties, and indexers)
@@ -124,7 +124,7 @@ namespace Shimterface
 							var attr = interfaceMethod.GetAttribute<StaticShimAttribute>() ?? intAttr;
 							if (attr == null)
 							{
-								throw new InvalidCastException("Factory shim cannot implement non-static member: " + interfaceType.FullName + " " + interfaceMethod.Name);
+								throw new InvalidCastException($"Factory shim cannot implement non-static member: {interfaceType.FullName} {interfaceMethod.Name}");
 							}
 
 							shimMember(tb, null, attr.TargetType ?? intAttr?.TargetType ?? typeof(void), interfaceMethod, attr.IsConstructor);
@@ -146,7 +146,7 @@ namespace Shimterface
 					var paramAttr = p.GetCustomAttribute<TypeShimAttribute>();
 					if (paramAttr != null && !p.ParameterType.IsInterfaceType())
 					{
-						throw new NotSupportedException("Shimmed parameter type must be an interface: " + interfaceMethod.DeclaringType.FullName);
+						throw new NotSupportedException($"Shimmed parameter type must be an interface: {interfaceMethod.DeclaringType.FullName}");
 					}
 					return paramAttr?.RealType ?? p.ParameterType;
 				}).ToArray();
@@ -168,7 +168,7 @@ namespace Shimterface
 
 			// Look for name override
 			var implMemberName = interfaceMethod.Name;
-			var attr = reflectMember.GetCustomAttribute<ShimAttribute>(false);
+			var attr = reflectMember.GetAttribute<ShimAttribute>();
 			if (attr?.ImplementationName != null)
 			{
 				implMemberName = (isPropertyShim ? implMemberName[0..4] : string.Empty)
@@ -203,6 +203,11 @@ namespace Shimterface
 			if (implMember == null)
 			{
 				var methodInfo = implType.GetMethod(implMemberName, paramTypes, genArgs);
+				if (interfaceMethod.IsSpecialName != methodInfo?.IsSpecialName)
+				{
+					methodInfo = null;
+				}
+
 				implReturnType = methodInfo?.ReturnType;
 				implMember = methodInfo;
 			}
@@ -321,7 +326,7 @@ namespace Shimterface
 			// Run-time test that type is an interface
 			if (!interfaceType.IsInterfaceType())
 			{
-				throw new NotSupportedException("Generic argument must be a direct interface: " + interfaceType.FullName);
+				throw new NotSupportedException($"Generic argument must be a direct interface: {interfaceType.FullName}");
 			}
 
 			if (interfaceType.IsAssignableFrom(inst.GetType()))

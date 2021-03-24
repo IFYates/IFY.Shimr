@@ -19,19 +19,24 @@ namespace Shimterface.Internal
 		/// <summary>
 		/// Get attribute of method, including get/set for property
 		/// </summary>
-		public static TAttribute? GetAttribute<TAttribute>(this MethodInfo methodInfo)
+		public static TAttribute? GetAttribute<TAttribute>(this MemberInfo memberInfo)
 			where TAttribute : Attribute
 		{
-			var attr = methodInfo.GetCustomAttribute<TAttribute>(false);
-			if (attr == null && (methodInfo.Attributes & MethodAttributes.SpecialName) > 0
-					&& (methodInfo.Name.StartsWith("get_") || methodInfo.Name.StartsWith("set_")))
+			var attr = memberInfo.GetCustomAttribute<TAttribute>(false);
+			if (attr != null)
 			{
-				var propInfo = methodInfo.ReflectedType.GetProperty(methodInfo.Name[4..]);
-				if (propInfo != null)
-				{
-					attr = propInfo.GetCustomAttribute<TAttribute>(false);
-				}
+				return attr;
 			}
+
+			// Might be method of property
+			if (memberInfo is MethodInfo mi
+				 && (mi.Attributes & MethodAttributes.SpecialName) > 0
+				 && (mi.Name.StartsWith("get_") || mi.Name.StartsWith("set_")))
+			{
+				var propInfo = memberInfo.ReflectedType.GetProperty(memberInfo.Name[4..]);
+				attr = propInfo?.GetCustomAttribute<TAttribute>(false);
+			}
+
 			return attr;
 		}
 
