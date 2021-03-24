@@ -26,6 +26,6 @@ jobs:
     - name: Coverlet coverage test
       uses: b3b00/coverlet-action@1.1.1
       with:
-        output: ./coverlet.corbertura.xml
-        outputFormat: corbertura
+        output: Shimterface.Tests/lcov.info
+        outputFormat: lcov
         testProject: Shimterface.Tests/Shimterface.Standard.Tests.csproj
