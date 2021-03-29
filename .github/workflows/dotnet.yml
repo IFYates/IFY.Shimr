@@ -31,25 +31,26 @@ jobs:
 #    - name: Test
 #      run: dotnet test --no-build --verbosity normal
     - name: Coverlet coverage test
-      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/netcoreapp3.1/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format cobertura
-#    - name: Publish to Coveralls
-#      uses: coverallsapp/github-action@v1.1.2
-#      with:
-#        github-token: ${{ secrets.GITHUB_TOKEN }}
-#        path-to-lcov: coverage.info
-    - name: Codecov
-      uses: codecov/codecov-action@v1.3.1
+      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/netcoreapp3.1/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format lcov
+    - name: Publish to Coveralls
+      uses: coverallsapp/github-action@v1.1.2
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        flags: unittests
-        files: coverage.cobertura.xml
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: /home/runner/work/Shimterface/Shimterface/
         verbose: true
+#      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/netcoreapp3.1/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format cobertura
+#    - name: Codecov
+#      uses: codecov/codecov-action@v1.3.1
+#      with:
+#        token: ${{ secrets.GITHUB_TOKEN }}
+#        flags: unittests
+#        files: coverage.cobertura.xml
+#        verbose: true
 
-    - name: Run Stryker.NET
-      run: cd ./Shimterface.Tests/; dotnet stryker
-    - name: Upload mutation report
-      uses: actions/upload-artifact@v2.2.2
-      with:
-        name: mutation-report.html
-        path: ./**/mutation-report.html
-      
+#    - name: Run Stryker.NET
+#      run: cd ./Shimterface.Tests/; dotnet stryker
+#    - name: Upload mutation report
+#      uses: actions/upload-artifact@v2.2.2
+#      with:
+#        name: mutation-report.html
+#        path: ./**/mutation-report.html
