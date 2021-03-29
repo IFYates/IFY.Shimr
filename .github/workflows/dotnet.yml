@@ -36,8 +36,7 @@ jobs:
       uses: coverallsapp/github-action@v1.1.2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: /home/runner/work/Shimterface/Shimterface/
-#        verbose: true
+        path-to-lcov: coverage.info
 #      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/netcoreapp3.1/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format cobertura
 #    - name: Codecov
 #      uses: codecov/codecov-action@v1.3.1
