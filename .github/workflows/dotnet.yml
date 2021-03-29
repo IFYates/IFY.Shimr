@@ -31,7 +31,7 @@ jobs:
 #    - name: Test
 #      run: dotnet test --no-build --verbosity normal
     - name: Coverlet coverage test
-      run: coverlet ./Shimterface.Tests/bin/Debug/netcoreapp3.1/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format lcov
+      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/netcoreapp3.1/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format lcov
     - name: Publish to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
