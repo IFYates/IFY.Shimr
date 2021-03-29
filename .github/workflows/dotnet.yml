@@ -31,13 +31,20 @@ jobs:
 #    - name: Test
 #      run: dotnet test --no-build --verbosity normal
     - name: Coverlet coverage test
-      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/netcoreapp3.1/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format lcov
-    - name: Publish to Coveralls
-      uses: coverallsapp/github-action@v1.1.2
+      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/netcoreapp3.1/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format cobertura
+#    - name: Publish to Coveralls
+#      uses: coverallsapp/github-action@v1.1.2
+#      with:
+#        github-token: ${{ secrets.GITHUB_TOKEN }}
+#        path-to-lcov: coverage.info
+    - name: Codecov
+      uses: codecov/codecov-action@v1.3.1
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: coverage.info
-        
+        token: ${{ secrets.GITHUB_TOKEN }}
+        flags: unittests
+        file: coverage.cobertura.xml
+        #verbose: true
+
     - name: Run Stryker.NET
       run: cd ./Shimterface.Tests/; dotnet stryker
     - name: Upload mutation report
