@@ -42,8 +42,8 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         flags: unittests
-        file: coverage.cobertura.xml
-        #verbose: true
+        files: coverage.cobertura.xml
+        verbose: true
 
     - name: Run Stryker.NET
       run: cd ./Shimterface.Tests/; dotnet stryker
