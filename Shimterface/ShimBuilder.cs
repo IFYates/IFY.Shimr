@@ -96,8 +96,8 @@ namespace Shimterface
 			return _dynamicTypeCache[className];
 		}
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Method is internal for testing")]
-        internal static Type getFactoryType(Type interfaceType)
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "Method is internal for testing")]
+		internal static Type getFactoryType(Type interfaceType)
 		{
 			var className = $"{interfaceType.Name}_{interfaceType.GetHashCode()}";
 			if (!_dynamicTypeCache.ContainsKey(className))
@@ -171,6 +171,7 @@ namespace Shimterface
 			}
 
 			// Look for name override
+			var bindingOptions = BindingFlags.Public | BindingFlags.Instance;
 			var implMemberName = interfaceMethod.Name;
 			var attr = reflectMember.GetAttribute<ShimAttribute>();
 			if (attr?.ImplementationName != null)
@@ -179,12 +180,25 @@ namespace Shimterface
 					+ attr.ImplementationName;
 			}
 
+			// Decide if proxy
+			var proxyAttr = reflectMember.GetCustomAttribute<ShimProxyAttribute>(false);
+			if (proxyAttr != null)
+			{
+				var paramList = paramTypes.ToList();
+				paramList.Insert(0, interfaceMethod.DeclaringType);
+				paramTypes = paramList.ToArray();
+
+				bindingOptions = BindingFlags.Static | BindingFlags.Public;
+				implType = proxyAttr.ImplementationType;
+				//proxyAttr.ImplementationName
+				//proxyAttr.Behaviour
+			}
+
 			// Find implementation return type
 			Type? implReturnType = null;
 			MemberInfo? implMember = null;
-			if (isPropertyShim)
+			if (reflectMember is PropertyInfo propInfo)
 			{
-				var propInfo = implType.GetProperty(implMemberName[4..]);
 				implReturnType = propInfo?.PropertyType;
 				if (implReturnType == null)
 				{
@@ -205,7 +219,7 @@ namespace Shimterface
 			// Find method
 			if (implMember == null)
 			{
-				var methodInfo = implType.GetMethod(implMemberName, paramTypes, interfaceMethod.GetGenericArguments());
+				var methodInfo = implType.GetMethod(implMemberName, paramTypes, interfaceMethod.GetGenericArguments(), bindingOptions);
 				if (interfaceMethod.IsSpecialName != methodInfo?.IsSpecialName)
 				{
 					methodInfo = null;

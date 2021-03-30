@@ -12,10 +12,10 @@
         /// <summary>
         /// Shimmed type must provide the member to be overriden.
         /// </summary>
-        MustOverride,
+        Override,
         /// <summary>
         /// Shim must be defining a member not in the shimmed type.
         /// </summary>
-        MustAdd,
+        Add,
     }
 }

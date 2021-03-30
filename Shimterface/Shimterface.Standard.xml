@@ -49,6 +49,26 @@
             Return the original object that has been shimmed.
             </summary>
         </member>
+        <member name="T:Shimterface.ProxyBehaviour">
+            <summary>
+            Specify how the <see cref="T:Shimterface.ShimProxyAttribute"/> member is expected to behave.
+            </summary>
+        </member>
+        <member name="F:Shimterface.ProxyBehaviour.Default">
+            <summary>
+            Will override existing members, otherwise adds.
+            </summary>
+        </member>
+        <member name="F:Shimterface.ProxyBehaviour.Override">
+            <summary>
+            Shimmed type must provide the member to be overriden.
+            </summary>
+        </member>
+        <member name="F:Shimterface.ProxyBehaviour.Add">
+            <summary>
+            Shim must be defining a member not in the shimmed type.
+            </summary>
+        </member>
         <member name="T:Shimterface.ShimAttribute">
             <summary>
             Mark a member type as explicitly shimming an item with a different name.
@@ -123,6 +143,26 @@
             <summary>
             Recast shims to original type.
             No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="T:Shimterface.IShim"/> of <typeparamref name="T"/>.
+            </summary>
+        </member>
+        <member name="T:Shimterface.ShimProxyAttribute">
+            <summary>
+            Mark a shim member as being a proxy to an implementation elsewhere.
+            </summary>
+        </member>
+        <member name="P:Shimterface.ShimProxyAttribute.ImplementationType">
+            <summary>
+            The type that implements this member.
+            </summary>
+        </member>
+        <member name="P:Shimterface.ShimProxyAttribute.ImplementationName">
+            <summary>
+            The name of the implemenation member.
+            </summary>
+        </member>
+        <member name="P:Shimterface.ShimProxyAttribute.Behaviour">
+            <summary>
+            The behaviour of this proxy member.
             </summary>
         </member>
         <member name="T:Shimterface.StaticShimAttribute">

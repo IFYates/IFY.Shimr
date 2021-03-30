@@ -70,7 +70,7 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsFalse(obj.MethodBCalled);
-			Assert.AreSame(obj, TestImpl_MethodOverride.MethodBCalledObj);
+			Assert.AreSame(shim, TestImpl_MethodOverride.MethodBCalledObj);
 		}
 		
 		public interface ITestShim_DefaultOverride : ITestShim
@@ -100,7 +100,7 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsFalse(obj.MethodBCalled);
-			Assert.AreSame(obj, TestImpl_DefaultOverride.MethodBCalledObj);
+			Assert.AreSame(shim, TestImpl_DefaultOverride.MethodBCalledObj);
 		}
 		
 		public interface ITestShim_MethodOverrideAlias : ITestShim
@@ -131,7 +131,7 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsFalse(obj.MethodBCalled);
-			Assert.AreSame(obj, TestImpl_MethodOverrideAlias.MethodBCalledObj);
+			Assert.AreSame(shim, TestImpl_MethodOverrideAlias.MethodBCalledObj);
 		}
 		
 		public interface ITestShim_CallBase : ITestShim
@@ -161,7 +161,7 @@ namespace Shimterface.Tests
 			shim.MethodB();
 
 			// Assert
-			Assert.AreSame(obj, TestImpl_MethodOverrideAlias.MethodBCalledObj);
+			Assert.AreSame(shim, TestImpl_MethodOverrideAlias.MethodBCalledObj);
 			Assert.IsTrue(obj.MethodBCalled);
 		}
 		
@@ -242,7 +242,7 @@ namespace Shimterface.Tests
 			shim.MethodB();
 
 			// Assert
-			Assert.AreSame(obj, TestImpl_MethodAdd.MethodBCalledObj);
+			Assert.AreSame(shim, TestImpl_MethodAdd.MethodBCalledObj);
 		}
 		
 		public interface ITestShim_DefaultAdd : ITestShim
@@ -271,7 +271,7 @@ namespace Shimterface.Tests
 			shim.MethodB();
 
 			// Assert
-			Assert.AreSame(obj, TestImpl_DefaultAdd.MethodBCalledObj);
+			Assert.AreSame(shim, TestImpl_DefaultAdd.MethodBCalledObj);
 		}
 		
 		public interface ITestShim_MethodAddAlias : ITestShim
@@ -300,7 +300,7 @@ namespace Shimterface.Tests
 			shim.MethodC(); // Actually TestImpl_MethodOverrideAlias.MethodB
 
 			// Assert
-			Assert.AreSame(obj, TestImpl_MethodAddAlias.MethodBCalledObj);
+			Assert.AreSame(shim, TestImpl_MethodAddAlias.MethodBCalledObj);
 		}
 		
 		[TestMethod]
