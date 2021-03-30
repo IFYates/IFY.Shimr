@@ -68,11 +68,11 @@ namespace Shimterface.Internal
 				if (proxyAttr != null)
 				{
 					proxiedBinding = new ShimBinding(InterfaceMethod);
+					proxiedBinding.resolve(implType, false, false);
 
 					// Confirm behaviour is valid
 					if (proxyAttr.Behaviour != ProxyBehaviour.Default)
 					{
-						proxiedBinding.resolve(implType, false, false);
 						if (proxyAttr.Behaviour == ProxyBehaviour.Add)
 						{
 							if (proxiedBinding.ImplementedMember != null)

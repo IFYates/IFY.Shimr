@@ -174,7 +174,7 @@ namespace Shimterface.Tests
 			shim.MethodB();
 
 			// Assert
-			Assert.AreSame(shim, TestImpl_MethodOverrideAlias.MethodBCalledObj);
+			Assert.AreSame(shim, TestImpl_CallBase.MethodBCalledObj);
 			Assert.IsTrue(obj.MethodBCalled);
 		}
 		
