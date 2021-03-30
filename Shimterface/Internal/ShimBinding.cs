@@ -142,8 +142,10 @@ namespace Shimterface.Internal
 			{
 				ProxyImplementationMember = ImplementedMember;
 				ImplementedMember = proxiedBinding.ImplementedMember;
+				return ProxyImplementationMember != null;
 			}
-			return ImplementedMember != null || ProxyImplementationMember != null;
+
+			return ImplementedMember != null;
 		}
 	}
 }
