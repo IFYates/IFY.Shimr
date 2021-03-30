@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -44,13 +45,13 @@ namespace Shimterface.Internal
 		{
 			if (genericArgs.Length == 0)
 			{
-                return bindingFlags == BindingFlags.Default
-                    ? type.GetMethod(name, parameterTypes, null)
-                    : type.GetMethod(name, bindingFlags, null, parameterTypes, null);
-            }
+				return bindingFlags == BindingFlags.Default
+					? type.GetMethod(name, parameterTypes, null)
+					: type.GetMethod(name, bindingFlags, null, parameterTypes, null);
+			}
 
-            // Find potentials
-            var methods = type.GetMethods()
+			// Find potentials
+			var methods = type.GetMethods()
 				.Where(m => m.Name == name && m.GetParameters().Length == parameterTypes.Length && m.GetGenericArguments().Length == genericArgs.Length)
 				.ToArray();
 			if (methods.Length == 0)
@@ -153,7 +154,7 @@ namespace Shimterface.Internal
 		}
 
 		/// <summary>
-		/// Resolves array or <see cref="IEnumerable&lt;&gt;"/> types to the internal element type, or return the given type.
+		/// Resolves array or <see cref="IEnumerable{T}"/> types to the internal element type, or return the given type.
 		/// </summary>
 		/// <param name="type">A type or collection of a type.</param>
 		/// <returns>A singular type.</returns>

@@ -34,7 +34,7 @@
         </member>
         <member name="M:Shimterface.Internal.TypeHelpers.ResolveType(System.Type)">
             <summary>
-            Resolves array or <see cref="!:IEnumerable&lt;&gt;"/> types to the internal element type, or return the given type.
+            Resolves array or <see cref="T:System.Collections.Generic.IEnumerable`1"/> types to the internal element type, or return the given type.
             </summary>
             <param name="type">A type or collection of a type.</param>
             <returns>A singular type.</returns>

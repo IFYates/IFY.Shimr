@@ -11,6 +11,12 @@ namespace Shimterface.Tests
 	[TestClass]
 	public class ExtendedFunctionalityTests_Method
 	{
+		[TestInitialize]
+		public void ResetState()
+		{
+			ShimBuilder.ResetState();
+		}
+
 		public interface ITestShim
 		{
 			void MethodA();
@@ -381,6 +387,19 @@ namespace Shimterface.Tests
 
 		[TestMethod]
 		public void Proxy_member_must_exist_in_impl_type()
+		{
+			// Arrange
+			var obj = new TestClass_HasMethodB();
+			
+			// Act
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				obj.Shim<ITestShim_MissingImpl>();
+			});
+		}
+
+		[TestMethod]
+		public void Factory_cannot_define_proxy()
 		{
 			// Arrange
 			var obj = new TestClass_HasMethodB();
