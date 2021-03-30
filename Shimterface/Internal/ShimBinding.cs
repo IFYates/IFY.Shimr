@@ -8,7 +8,7 @@ namespace Shimterface.Internal
 	{
 		public MethodInfo InterfaceMethod { get; }
 		public MemberInfo? ImplementedMember { get; private set; }
-		public MemberInfo? ProxyImplementationMember { get; private set; }
+		public MemberInfo? ProxyImplementationMember { get; internal set; }
 		public bool IsProperty { get; private set; }
 
 		public ShimBinding(MethodInfo interfaceMethod)
