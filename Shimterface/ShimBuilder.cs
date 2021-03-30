@@ -141,7 +141,7 @@ namespace Shimterface
 			return _dynamicTypeCache[className];
 		}
 
-		private static MemberInfo? resolveImplementation(Type implType, MethodInfo interfaceMethod, bool isConstructor)
+		private static MemberInfo? resolveImplementation(Type implType, MethodInfo interfaceMethod, bool isConstructor, bool resolveProxy = true)
 		{
 			// Workout real parameter types
 			var paramTypes = interfaceMethod.GetParameters()
@@ -181,17 +181,37 @@ namespace Shimterface
 			}
 
 			// Decide if proxy
-			var proxyAttr = reflectMember.GetCustomAttribute<ShimProxyAttribute>(false);
-			if (proxyAttr != null)
+			if (resolveProxy)
 			{
-				var paramList = paramTypes.ToList();
-				paramList.Insert(0, interfaceMethod.DeclaringType);
-				paramTypes = paramList.ToArray();
+				var proxyAttr = reflectMember.GetCustomAttribute<ShimProxyAttribute>(false);
+				if (proxyAttr != null)
+				{
+					// Confirm behaviour is valid
+					if (proxyAttr.Behaviour != ProxyBehaviour.Default)
+					{
+						var implMethod = resolveImplementation(implType, interfaceMethod, false, false);
+						if (proxyAttr.Behaviour == ProxyBehaviour.Add)
+						{
+							if (implMethod != null)
+							{
+								throw new InvalidCastException($"Cannot proxy {implType.FullName} as {interfaceMethod.DeclaringType.FullName}; adding existing method: {interfaceMethod}");
+							}
+						}
+						else if (implMethod == null)
+						{
+							throw new InvalidCastException($"Cannot proxy {implType.FullName} as {interfaceMethod.DeclaringType.FullName}; override of missing method: {interfaceMethod}");
+						}
+					}
+					
+					// Apply proxy redirect
+					var paramList = paramTypes.ToList();
+					paramList.Insert(0, interfaceMethod.DeclaringType);
+					paramTypes = paramList.ToArray();
 
-				bindingOptions = BindingFlags.Static | BindingFlags.Public;
-				implType = proxyAttr.ImplementationType;
-				//proxyAttr.ImplementationName
-				//proxyAttr.Behaviour
+					bindingOptions = BindingFlags.Static | BindingFlags.Public;
+					implType = proxyAttr.ImplementationType;
+					implMemberName = proxyAttr.ImplementationName ?? reflectMember.Name;
+				}
 			}
 
 			// Find implementation return type

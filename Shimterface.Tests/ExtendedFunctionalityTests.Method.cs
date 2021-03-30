@@ -121,7 +121,7 @@ namespace Shimterface.Tests
 		}
 
 		[TestMethod]
-		public void Shim_can_define_proxy_to_override_member_with_alias_and_autoshim()
+		public void Shim_can_define_proxy_to_override_member_with_alias()
 		{
 			// Arrange
 			var obj = new TestClass_HasMethodB();
@@ -198,7 +198,7 @@ namespace Shimterface.Tests
 			shim.MethodB();
 
 			// Assert
-			Assert.AreSame(shim, TestImpl_MethodOverrideAlias.MethodBCalledObj);
+			Assert.AreSame(shim, TestImpl_ArgImpl.MethodBCalledObj);
 		}
 
 		public interface ITestShim_MissingBase : ITestShim
@@ -352,7 +352,10 @@ namespace Shimterface.Tests
 			var obj = new TestClass_HasMethodB();
 
 			// Act
-			obj.Shim<ITestShim_MethodAdd>();
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				obj.Shim<ITestShim_MethodAdd>();
+			});
 		}
 		
 		[TestMethod]

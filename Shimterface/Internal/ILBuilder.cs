@@ -27,7 +27,7 @@ namespace Shimterface.Internal
 			for (var i = 0; i < pars1.Length; ++i)
 			{
 				// May want "this" as first arg
-				if (i == 0 && methodInfo.IsStatic && pars1.Length == pars2.Length + 1)
+				if (i == 0 && methodInfo.IsStatic && pars1.Length == pars2.Length + 1 && pars1[0].ParameterType.IsAssignableFrom(interfaceMethod.DeclaringType))
 				{
 					impl.Emit(OpCodes.Ldarg_0); // this
 				}
