@@ -11,10 +11,6 @@ namespace Shimterface.Tests
 	[TestClass]
 	public class ExtendedFunctionalityTests_Property
 	{
-		public interface ITestShim
-		{
-		}
-
 		[ExcludeFromCodeCoverage]
 		public class TestClass_NoProperty
 		{

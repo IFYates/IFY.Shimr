@@ -152,6 +152,20 @@ namespace Shimterface.Internal
 
 		public static void WrapField(this TypeBuilder tb, FieldInfo? instField, ShimBinding binding, FieldInfo fieldInfo)
 		{
+			ILGenerator impl;
+			if (binding.ProxyImplementationMember != null)
+			{
+				var proxyImplementation = (MethodInfo)binding.ProxyImplementationMember;
+
+				// Call proxy method
+				impl = tb.DefinePublicMethod(binding.InterfaceMethod);
+				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty);
+				impl.Emit(OpCodes.Call, proxyImplementation);
+				impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
+				impl.Emit(OpCodes.Ret);
+				return;
+			}
+
 			var args = binding.InterfaceMethod.GetParameters();
 			if (args.Length > 0 && (fieldInfo.Attributes & FieldAttributes.InitOnly) > 0)
 			{
@@ -159,11 +173,10 @@ namespace Shimterface.Internal
 				tb.MethodThrowException<InvalidOperationException>(binding.InterfaceMethod);
 				return;
 			}
-
-			var impl = tb.DefinePublicMethod(binding.InterfaceMethod);
-
+			
+			impl = tb.DefinePublicMethod(binding.InterfaceMethod);
 			resolveIfInstance(fieldInfo.IsStatic, impl, instField);
-
+			
 			if (args.Length == 0)
 			{
 				// Get
