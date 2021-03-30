@@ -153,7 +153,6 @@ namespace Shimterface
 					return;
 				}
 
-				// TODO: Could support default/custom functionality
 				throw new InvalidCastException($"Cannot shim {implType.FullName} as {interfaceMethod.DeclaringType.FullName}; missing method: {interfaceMethod}");
 			}
 

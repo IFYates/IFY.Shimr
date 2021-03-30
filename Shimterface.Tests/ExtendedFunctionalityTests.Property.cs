@@ -153,5 +153,32 @@ namespace Shimterface.Tests
 				obj.Shim<ITestShim_OverrideProperty>();
 			});
 		}
+
+		public interface ITestShim_OverridePropertyAlias
+		{
+			[Shim("Property")]
+			[ShimProxy(typeof(TestImpl_OverridePropertyAlias), "PropertyProxy", ProxyBehaviour.Override)]
+			string PropertyShim { get; set; }
+		}
+		[ExcludeFromCodeCoverage]
+		public class TestImpl_OverridePropertyAlias
+		{
+			public static string PropertyProxy { get; set; }
+		}
+
+		[TestMethod]
+		public void Can_override_property_proxy_with_aliases()
+		{
+			// Arrange
+			var obj = new TestClass_HasProperty();
+			var shim = obj.Shim<ITestShim_OverridePropertyAlias>();
+
+			// Act
+			shim.PropertyShim = "test";
+
+			// Assert
+			Assert.IsNull(obj.Property);
+			Assert.AreSame("test", TestImpl_OverridePropertyAlias.PropertyProxy);
+		}
 	}
 }

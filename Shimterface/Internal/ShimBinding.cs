@@ -52,7 +52,7 @@ namespace Shimterface.Internal
 			}
 
 			// Look for name override
-			var bindingOptions = BindingFlags.Default;
+			BindingFlags? bindingOptions = null;
 			var implMemberName = InterfaceMethod.Name;
 			var attr = reflectMember.GetAttribute<ShimAttribute>();
 			if (attr?.ImplementationName != null)
@@ -88,16 +88,22 @@ namespace Shimterface.Internal
 					}
 
 					// Apply proxy redirect
+					bindingOptions = BindingFlags.Static | BindingFlags.Public;
+					implType = proxyAttr.ImplementationType;
+					implMemberName = proxyAttr.ImplementationName;
+
 					if (!IsProperty)
 					{
 						var paramList = paramTypes.ToList();
 						paramList.Insert(0, InterfaceMethod.DeclaringType);
 						paramTypes = paramList.ToArray();
 					}
+					else if (implMemberName != null)
+					{
+						implMemberName = InterfaceMethod.Name[0..4] + implMemberName;
+					}
 
-					bindingOptions = BindingFlags.Static | BindingFlags.Public;
-					implType = proxyAttr.ImplementationType;
-					implMemberName = proxyAttr.ImplementationName ?? InterfaceMethod.Name;
+					implMemberName ??= InterfaceMethod.Name;
 				}
 			}
 
@@ -105,7 +111,7 @@ namespace Shimterface.Internal
 			Type? implReturnType = null;
 			if (IsProperty)
 			{
-				var propInfo = implType.GetProperty(implMemberName[4..], bindingOptions);
+				var propInfo = implType.GetProperty(implMemberName[4..], bindingOptions ?? (BindingFlags.Public | BindingFlags.Instance));
 				implReturnType = propInfo?.PropertyType;
 				if (implReturnType == null)
 				{
@@ -126,7 +132,7 @@ namespace Shimterface.Internal
 			// Find method
 			if (ImplementedMember == null)
 			{
-				var methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments(), bindingOptions);
+				var methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments(), bindingOptions ?? BindingFlags.Default);
 				if (InterfaceMethod.IsSpecialName != methodInfo?.IsSpecialName)
 				{
 					methodInfo = null;
