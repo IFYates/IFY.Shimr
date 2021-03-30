@@ -224,7 +224,7 @@ namespace Shimterface.Internal
 			if (baseImplementation == null)
 			{
 				// Call proxy method
-				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, true);
+				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty);
 				impl.Emit(OpCodes.Call, proxyImplementation);
 				impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
 				impl.Emit(OpCodes.Ret);
@@ -249,7 +249,7 @@ namespace Shimterface.Internal
 			impl.Emit(OpCodes.Stfld, proxyField);
 
 			// Call proxy method
-			resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, true);
+			resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty);
 			impl.Emit(OpCodes.Call, proxyImplementation);
 			impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
 

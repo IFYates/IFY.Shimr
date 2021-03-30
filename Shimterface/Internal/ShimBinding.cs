@@ -7,8 +7,9 @@ namespace Shimterface.Internal
 	internal class ShimBinding
 	{
 		public MethodInfo InterfaceMethod { get; }
-		public MemberInfo? ImplementedMember { get; set; }
-		public MemberInfo? ProxyImplementationMember { get; set; }
+		public MemberInfo? ImplementedMember { get; private set; }
+		public MemberInfo? ProxyImplementationMember { get; private set; }
+		public bool IsProperty { get; private set; }
 
 		public ShimBinding(MethodInfo interfaceMethod)
 		{
@@ -43,9 +44,9 @@ namespace Shimterface.Internal
 
 			// If really a property, will need to get attributes from PropertyInfo
 			var isPropertySetShim = InterfaceMethod.IsSpecialName && InterfaceMethod.Name.StartsWith("set_");
-			var isPropertyShim = isPropertySetShim || (InterfaceMethod.IsSpecialName && InterfaceMethod.Name.StartsWith("get_"));
+			IsProperty = isPropertySetShim || (InterfaceMethod.IsSpecialName && InterfaceMethod.Name.StartsWith("get_"));
 			MemberInfo reflectMember = InterfaceMethod;
-			if (isPropertyShim)
+			if (IsProperty)
 			{
 				reflectMember = InterfaceMethod.DeclaringType.GetProperty(InterfaceMethod.Name[4..]);
 			}
@@ -56,7 +57,7 @@ namespace Shimterface.Internal
 			var attr = reflectMember.GetAttribute<ShimAttribute>();
 			if (attr?.ImplementationName != null)
 			{
-				implMemberName = (isPropertyShim ? implMemberName[0..4] : string.Empty)
+				implMemberName = (IsProperty ? implMemberName[0..4] : string.Empty)
 					+ attr.ImplementationName;
 			}
 
@@ -85,23 +86,26 @@ namespace Shimterface.Internal
 							throw new InvalidCastException($"Cannot proxy {implType.FullName} as {InterfaceMethod.DeclaringType.FullName}; override of missing method: {InterfaceMethod}");
 						}
 					}
-					
+
 					// Apply proxy redirect
-					var paramList = paramTypes.ToList();
-					paramList.Insert(0, InterfaceMethod.DeclaringType);
-					paramTypes = paramList.ToArray();
+					if (!IsProperty)
+					{
+						var paramList = paramTypes.ToList();
+						paramList.Insert(0, InterfaceMethod.DeclaringType);
+						paramTypes = paramList.ToArray();
+					}
 
 					bindingOptions = BindingFlags.Static | BindingFlags.Public;
 					implType = proxyAttr.ImplementationType;
-					implMemberName = proxyAttr.ImplementationName ?? reflectMember.Name;
+					implMemberName = proxyAttr.ImplementationName ?? InterfaceMethod.Name;
 				}
 			}
 
 			// Find implementation return type
 			Type? implReturnType = null;
-			if (isPropertyShim)
+			if (IsProperty)
 			{
-				var propInfo = implType.GetProperty(implMemberName[4..]);
+				var propInfo = implType.GetProperty(implMemberName[4..], bindingOptions);
 				implReturnType = propInfo?.PropertyType;
 				if (implReturnType == null)
 				{
