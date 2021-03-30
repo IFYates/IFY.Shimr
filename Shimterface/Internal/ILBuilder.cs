@@ -244,6 +244,7 @@ namespace Shimterface.Internal
 
 			// Set proxy context
 			impl.MarkLabel(jmpProxyCall);
+			impl.BeginExceptionBlock();
 			impl.Emit(OpCodes.Ldarg_0); // this
 			impl.Emit(OpCodes.Ldc_I4_1);
 			impl.Emit(OpCodes.Stfld, proxyField);
@@ -254,9 +255,12 @@ namespace Shimterface.Internal
 			impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
 
 			// Unset proxy context
+			impl.BeginFinallyBlock();
 			impl.Emit(OpCodes.Ldarg_0); // this
 			impl.Emit(OpCodes.Ldc_I4_0);
 			impl.Emit(OpCodes.Stfld, proxyField);
+			impl.EndExceptionBlock();
+
 			impl.Emit(OpCodes.Ret);
 		}
 

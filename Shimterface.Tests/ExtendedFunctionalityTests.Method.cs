@@ -64,7 +64,7 @@ namespace Shimterface.Tests
 				MethodBCalledObj = obj;
 			}
 		}
-		
+
 		[TestMethod]
 		public void Shim_can_define_proxy_to_override_member()
 		{
@@ -79,7 +79,7 @@ namespace Shimterface.Tests
 			Assert.IsFalse(obj.MethodBCalled);
 			Assert.AreSame(shim, TestImpl_MethodOverride.MethodBCalledObj);
 		}
-		
+
 		public interface ITestShim_DefaultOverride : ITestShim
 		{
 			[ShimProxy(typeof(TestImpl_DefaultOverride))]
@@ -109,7 +109,7 @@ namespace Shimterface.Tests
 			Assert.IsFalse(obj.MethodBCalled);
 			Assert.AreSame(shim, TestImpl_DefaultOverride.MethodBCalledObj);
 		}
-		
+
 		public interface ITestShim_MethodOverrideAlias : ITestShim
 		{
 			[Shim("MethodB")]
@@ -140,7 +140,7 @@ namespace Shimterface.Tests
 			Assert.IsFalse(obj.MethodBCalled);
 			Assert.AreSame(shim, TestImpl_MethodOverrideAlias.MethodBCalledObj);
 		}
-		
+
 		public interface ITestShim_CallBase : ITestShim
 		{
 			[ShimProxy(typeof(TestImpl_CallBase))]
@@ -177,7 +177,63 @@ namespace Shimterface.Tests
 			Assert.AreSame(shim, TestImpl_CallBase.MethodBCalledObj);
 			Assert.IsTrue(obj.MethodBCalled);
 		}
-		
+
+		[ExcludeFromCodeCoverage]
+		public class TestClass_MethodFails
+		{
+			public void Fail()
+			{
+				throw new InvalidOperationException();
+			}
+		}
+		public interface ITestShim_MethodFails
+		{
+			[ShimProxy(typeof(TestImpl_MethodFails), ProxyBehaviour.Override)]
+			void Fail();
+		}
+		[ExcludeFromCodeCoverage]
+		public class TestImpl_MethodFails
+		{
+			public static int CallPre { get; private set; }
+			public static int CallPost { get; private set; }
+			public static int CallEnd { get; private set; }
+
+			public static void Fail(ITestShim_MethodFails inst)
+			{
+				++CallPre;
+				try
+				{
+					inst.Fail();
+					++CallPost;
+				}
+				finally
+				{
+					++CallEnd;
+				}
+			}
+		}
+
+		[TestMethod]
+		[Timeout(1_000)] // Incase of recursion
+		public void Failure_during_underlying_call_does_not_break_proxy()
+		{
+			// Arrange
+			var obj = new TestClass_MethodFails();
+			var shim = obj.Shim<ITestShim_MethodFails>();
+
+			var fails = 0;
+
+			// Act
+			try { shim.Fail(); } catch (InvalidOperationException) { ++fails; }
+			try { shim.Fail(); } catch (InvalidOperationException) { ++fails; }
+
+			// Assert
+			Assert.AreEqual(2, fails);
+			Assert.AreEqual(2, TestImpl_MethodFails.CallPre);
+			Assert.AreEqual(0, TestImpl_MethodFails.CallPost);
+			Assert.AreEqual(2, TestImpl_MethodFails.CallEnd);
+		}
+
 		public interface ITestShim_ArgImpl : ITestShim
 		{
 			[ShimProxy(typeof(TestImpl_ArgImpl))]
@@ -199,7 +255,7 @@ namespace Shimterface.Tests
 			// Arrange
 			var obj = new TestClass_HasMethodB();
 			var shim = obj.Shim<ITestShim_ArgImpl>();
-			
+
 			// Act
 			shim.MethodB();
 
@@ -226,14 +282,14 @@ namespace Shimterface.Tests
 		{
 			// Arrange
 			var obj = new TestClass_NoMethodB();
-			
+
 			// Act
 			Assert.ThrowsException<InvalidCastException>(() =>
 			{
 				obj.Shim<ITestShim_MissingBase>();
 			});
 		}
-		
+
 		public interface ITestShim_BadImpl : ITestShim
 		{
 			[ShimProxy(typeof(TestImpl_BadImpl))]
@@ -252,7 +308,7 @@ namespace Shimterface.Tests
 		{
 			// Arrange
 			var obj = new TestClass_HasMethodB();
-			
+
 			// Act
 			Assert.ThrowsException<InvalidCastException>(() =>
 			{
@@ -263,7 +319,7 @@ namespace Shimterface.Tests
 		#endregion Override
 
 		#region Add
-		
+
 		public interface ITestShim_MethodAdd : ITestShim
 		{
 			[ShimProxy(typeof(TestImpl_MethodAdd), ProxyBehaviour.Add)]
@@ -278,7 +334,7 @@ namespace Shimterface.Tests
 				MethodBCalledObj = obj;
 			}
 		}
-		
+
 		[TestMethod]
 		public void Shim_can_define_proxy_to_add_member()
 		{
@@ -292,7 +348,7 @@ namespace Shimterface.Tests
 			// Assert
 			Assert.AreSame(shim, TestImpl_MethodAdd.MethodBCalledObj);
 		}
-		
+
 		public interface ITestShim_DefaultAdd : ITestShim
 		{
 			[ShimProxy(typeof(TestImpl_DefaultAdd))]
@@ -307,7 +363,7 @@ namespace Shimterface.Tests
 				MethodBCalledObj = obj;
 			}
 		}
-		
+
 		[TestMethod]
 		public void Shim_can_define_proxy_to_add_member_by_default()
 		{
@@ -321,7 +377,7 @@ namespace Shimterface.Tests
 			// Assert
 			Assert.AreSame(shim, TestImpl_DefaultAdd.MethodBCalledObj);
 		}
-		
+
 		public interface ITestShim_MethodAddAlias : ITestShim
 		{
 			[ShimProxy(typeof(TestImpl_MethodAddAlias), "MethodD", ProxyBehaviour.Add)]
@@ -350,7 +406,7 @@ namespace Shimterface.Tests
 			// Assert
 			Assert.AreSame(shim, TestImpl_MethodAddAlias.MethodBCalledObj);
 		}
-		
+
 		[TestMethod]
 		public void Added_member_must_not_exist_in_shimmed_type()
 		{
@@ -363,7 +419,7 @@ namespace Shimterface.Tests
 				obj.Shim<ITestShim_MethodAdd>();
 			});
 		}
-		
+
 		[TestMethod]
 		public void Added_implementation_must_take_compatible_first_param()
 		{
@@ -378,7 +434,7 @@ namespace Shimterface.Tests
 		}
 
 		#endregion Add
-		
+
 		public interface ITestShim_MissingImpl : ITestShim
 		{
 			[ShimProxy(typeof(TestImpl_DefaultOverride))]
@@ -390,7 +446,7 @@ namespace Shimterface.Tests
 		{
 			// Arrange
 			var obj = new TestClass_HasMethodB();
-			
+
 			// Act
 			Assert.ThrowsException<InvalidCastException>(() =>
 			{
@@ -403,7 +459,7 @@ namespace Shimterface.Tests
 		{
 			// Arrange
 			var obj = new TestClass_HasMethodB();
-			
+
 			// Act
 			Assert.ThrowsException<InvalidCastException>(() =>
 			{
