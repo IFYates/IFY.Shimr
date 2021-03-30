@@ -171,7 +171,7 @@ namespace Shimterface
 			}
 
 			// Look for name override
-			var bindingOptions = BindingFlags.Public | BindingFlags.Instance;
+			var bindingOptions = BindingFlags.Default;
 			var implMemberName = interfaceMethod.Name;
 			var attr = reflectMember.GetAttribute<ShimAttribute>();
 			if (attr?.ImplementationName != null)
@@ -197,8 +197,9 @@ namespace Shimterface
 			// Find implementation return type
 			Type? implReturnType = null;
 			MemberInfo? implMember = null;
-			if (reflectMember is PropertyInfo propInfo)
+			if (isPropertyShim)
 			{
+				var propInfo = implType.GetProperty(implMemberName[4..]);
 				implReturnType = propInfo?.PropertyType;
 				if (implReturnType == null)
 				{

@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Shimterface.Tests
@@ -41,7 +42,7 @@ namespace Shimterface.Tests
 			}
 		}
 
-        #region Override
+		#region Override
 
 		public interface ITestShim_MethodOverride : ITestShim
 		{
@@ -106,14 +107,14 @@ namespace Shimterface.Tests
 		public interface ITestShim_MethodOverrideAlias : ITestShim
 		{
 			[Shim("MethodB")]
-			[ShimProxy(typeof(TestImpl_MethodOverrideAlias), "MethodB", ProxyBehaviour.Override)]
+			[ShimProxy(typeof(TestImpl_MethodOverrideAlias), "MethodD", ProxyBehaviour.Override)]
 			void MethodC();
 		}
 		[ExcludeFromCodeCoverage]
 		public class TestImpl_MethodOverrideAlias
 		{
 			public static ITestShim MethodBCalledObj { get; set; }
-			public static void MethodB(ITestShim_MethodOverrideAlias obj)
+			public static void MethodD(ITestShim_MethodOverrideAlias obj)
 			{
 				MethodBCalledObj = obj;
 			}
@@ -145,12 +146,18 @@ namespace Shimterface.Tests
 			public static ITestShim MethodBCalledObj { get; set; }
 			public static void MethodB(ITestShim_CallBase obj)
 			{
+				if (MethodBCalledObj != null)
+				{
+					throw new InvalidOperationException("recursion");
+				}
+
 				MethodBCalledObj = obj;
 				obj.MethodB();
 			}
 		}
 
 		[TestMethod]
+		[Timeout(1_000)] // Incase of recursion
 		public void Override_member_can_call_shimmed_implementation()
 		{
 			// Arrange
@@ -165,6 +172,35 @@ namespace Shimterface.Tests
 			Assert.IsTrue(obj.MethodBCalled);
 		}
 		
+		public interface ITestShim_ArgImpl : ITestShim
+		{
+			[ShimProxy(typeof(TestImpl_ArgImpl))]
+			void MethodB();
+		}
+		[ExcludeFromCodeCoverage]
+		public class TestImpl_ArgImpl
+		{
+			public static ITestShim MethodBCalledObj { get; set; }
+			public static void MethodB(ITestShim obj)
+			{
+				MethodBCalledObj = obj;
+			}
+		}
+
+		[TestMethod]
+		public void Override_implementation_can_invoke_on_compatible_arg()
+		{
+			// Arrange
+			var obj = new TestClass_HasMethodB();
+			var shim = obj.Shim<ITestShim_ArgImpl>();
+			
+			// Act
+			shim.MethodB();
+
+			// Assert
+			Assert.AreSame(shim, TestImpl_MethodOverrideAlias.MethodBCalledObj);
+		}
+
 		public interface ITestShim_MissingBase : ITestShim
 		{
 			[ShimProxy(typeof(TestImpl_MissingBase), ProxyBehaviour.Override)]
@@ -186,7 +222,10 @@ namespace Shimterface.Tests
 			var obj = new TestClass_NoMethodB();
 			
 			// Act
-			obj.Shim<ITestShim_MissingBase>();
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				obj.Shim<ITestShim_MissingBase>();
+			});
 		}
 		
 		public interface ITestShim_BadImpl : ITestShim
@@ -209,12 +248,15 @@ namespace Shimterface.Tests
 			var obj = new TestClass_HasMethodB();
 			
 			// Act
-			obj.Shim<ITestShim_BadImpl>();
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				obj.Shim<ITestShim_BadImpl>();
+			});
 		}
 
-        #endregion Override
+		#endregion Override
 
-        #region Add
+		#region Add
 		
 		public interface ITestShim_MethodAdd : ITestShim
 		{
@@ -231,7 +273,7 @@ namespace Shimterface.Tests
 			}
 		}
 		
-        [TestMethod]
+		[TestMethod]
 		public void Shim_can_define_proxy_to_add_member()
 		{
 			// Arrange
@@ -276,21 +318,21 @@ namespace Shimterface.Tests
 		
 		public interface ITestShim_MethodAddAlias : ITestShim
 		{
-			[ShimProxy(typeof(TestImpl_MethodAddAlias), "MethodB", ProxyBehaviour.Add)]
+			[ShimProxy(typeof(TestImpl_MethodAddAlias), "MethodD", ProxyBehaviour.Add)]
 			void MethodC();
 		}
 		[ExcludeFromCodeCoverage]
 		public class TestImpl_MethodAddAlias
 		{
 			public static ITestShim MethodBCalledObj { get; set; }
-			public static void MethodB(ITestShim_MethodAddAlias obj)
+			public static void MethodD(ITestShim_MethodAddAlias obj)
 			{
 				MethodBCalledObj = obj;
 			}
 		}
 
 		[TestMethod]
-		public void Shim_can_define_proxy_to_add_member_with_alias()
+		public void Shim_can_define_proxy_to_add_member_to_alias_impl()
 		{
 			// Arrange
 			var obj = new TestClass_NoMethodB();
@@ -320,10 +362,13 @@ namespace Shimterface.Tests
 			var obj = new TestClass_NoMethodB();
 
 			// Act
-			obj.Shim<ITestShim_BadImpl>();
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				obj.Shim<ITestShim_BadImpl>();
+			});
 		}
 
-        #endregion Add
+		#endregion Add
 		
 		public interface ITestShim_MissingImpl : ITestShim
 		{
@@ -338,7 +383,10 @@ namespace Shimterface.Tests
 			var obj = new TestClass_HasMethodB();
 			
 			// Act
-			obj.Shim<ITestShim_MissingImpl>();
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				obj.Shim<ITestShim_MissingImpl>();
+			});
 		}
 	}
 }

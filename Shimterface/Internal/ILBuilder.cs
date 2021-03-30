@@ -8,9 +8,9 @@ namespace Shimterface.Internal
 {
 	internal static class ILBuilder
 	{
-		private static bool resolveIfInstance(ILGenerator impl, FieldBuilder? instField)
+		private static bool resolveIfInstance(bool isStatic, ILGenerator impl, FieldBuilder? instField)
 		{
-			if (instField == null)
+			if (isStatic || instField == null)
 			{
 				return false;
 			}
@@ -26,8 +26,16 @@ namespace Shimterface.Internal
 			var pars2 = interfaceMethod.GetParameters();
 			for (var i = 0; i < pars1.Length; ++i)
 			{
-				impl.Emit(OpCodes.Ldarg, i + 1);
-				impl.EmitTypeUnshim(pars2[i].ParameterType, pars1[i].ParameterType);
+				// May want "this" as first arg
+				if (i == 0 && methodInfo.IsStatic && pars1.Length == pars2.Length + 1)
+				{
+					impl.Emit(OpCodes.Ldarg_0); // this
+				}
+				else
+				{
+					impl.Emit(OpCodes.Ldarg, i + 1);
+					impl.EmitTypeUnshim(pars2[i].ParameterType, pars1[i].ParameterType);
+				}
 			}
 		}
 
@@ -154,7 +162,7 @@ namespace Shimterface.Internal
 
 			var impl = tb.DefinePublicMethod(interfaceMethod);
 
-			resolveIfInstance(impl, instField);
+			resolveIfInstance(fieldInfo.IsStatic, impl, instField);
 
 			if (args.Length == 0)
 			{
@@ -187,7 +195,7 @@ namespace Shimterface.Internal
 		{
 			var impl = tb.DefinePublicMethod(interfaceMethod);
 
-			var callType = !resolveIfInstance(impl, instField)
+			var callType = !resolveIfInstance(methodInfo.IsStatic, impl, instField)
 				? OpCodes.Call // Static
 				: OpCodes.Callvirt;
 

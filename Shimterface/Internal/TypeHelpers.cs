@@ -40,15 +40,17 @@ namespace Shimterface.Internal
 			return attr;
 		}
 
-		public static MethodInfo? GetMethod(this Type type, string name, Type[] parameterTypes, Type[] genericArgs)
+		public static MethodInfo? GetMethod(this Type type, string name, Type[] parameterTypes, Type[] genericArgs, BindingFlags bindingFlags = BindingFlags.Default)
 		{
 			if (genericArgs.Length == 0)
 			{
-				return type.GetMethod(name, parameterTypes);
-			}
+                return bindingFlags == BindingFlags.Default
+                    ? type.GetMethod(name, parameterTypes, null)
+                    : type.GetMethod(name, bindingFlags, null, parameterTypes, null);
+            }
 
-			// Find potentials
-			var methods = type.GetMethods()
+            // Find potentials
+            var methods = type.GetMethods()
 				.Where(m => m.Name == name && m.GetParameters().Length == parameterTypes.Length && m.GetGenericArguments().Length == genericArgs.Length)
 				.ToArray();
 			if (methods.Length == 0)
