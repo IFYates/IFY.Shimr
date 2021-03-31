@@ -21,21 +21,21 @@ namespace Shimterface.Internal
 		}
 		private static void resolveParameters(ILGenerator impl, MethodBase methodInfo, MethodInfo interfaceMethod, bool isProxy = false)
 		{
-			// Pass each parameter from the method call to the implementation
-			var pars1 = methodInfo.GetParameters();
+			var pars1 = methodInfo.GetParameters().ToList();
 			var pars2 = interfaceMethod.GetParameters();
-			for (var i = 0; i < pars1.Length; ++i)
+
+			// Proxies take "this" as first arg
+			if (isProxy)
 			{
-				// Proxies take "this" as first arg
-				if (isProxy)
-				{
-					impl.Emit(OpCodes.Ldarg_0); // this
-				}
-				else
-				{
-					impl.Emit(OpCodes.Ldarg, i + 1);
-					impl.EmitTypeUnshim(pars2[i].ParameterType, pars1[i].ParameterType);
-				}
+				impl.Emit(OpCodes.Ldarg_0); // this
+				pars1.RemoveAt(0);
+			}
+
+			// Pass each parameter from the method call to the implementation
+			for (int i = 0; i < pars1.Count; ++i)
+			{
+				impl.Emit(OpCodes.Ldarg, i + 1);
+				impl.EmitTypeUnshim(pars2[i].ParameterType, pars1[i].ParameterType);
 			}
 		}
 
@@ -173,10 +173,10 @@ namespace Shimterface.Internal
 				tb.MethodThrowException<InvalidOperationException>(binding.InterfaceMethod);
 				return;
 			}
-			
+
 			impl = tb.DefinePublicMethod(binding.InterfaceMethod);
 			resolveIfInstance(fieldInfo.IsStatic, impl, instField);
-			
+
 			if (args.Length == 0)
 			{
 				// Get
@@ -263,7 +263,7 @@ namespace Shimterface.Internal
 			impl.Emit(OpCodes.Stfld, proxyField);
 
 			// Call proxy method
-			resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty);
+			resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty || !proxyImplementation.IsSpecialName);
 			impl.Emit(OpCodes.Call, proxyImplementation);
 			impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
 
