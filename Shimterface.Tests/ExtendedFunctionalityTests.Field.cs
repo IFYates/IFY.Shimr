@@ -46,7 +46,7 @@ namespace Shimterface.Tests
 			// Assert
 			Assert.AreEqual("test", TestImpl_AddField.Field);
 		}
-		
+
 		public interface ITestShim_AddFieldDefault
 		{
 			[ShimProxy(typeof(TestImpl_AddFieldDefault))]
@@ -84,7 +84,7 @@ namespace Shimterface.Tests
 				obj.Shim<ITestShim_AddField>();
 			});
 		}
-		
+
 		public interface ITestShim_OverrideField
 		{
 			[ShimProxy(typeof(TestImpl_OverrideField), ProxyBehaviour.Override)]
@@ -108,7 +108,7 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsNull(obj.Field);
-			Assert.AreSame("test", TestImpl_OverrideField.Field);
+			Assert.AreEqual("test", TestImpl_OverrideField.Field);
 		}
 
 		public interface ITestShim_OverrideFieldDefault
@@ -134,7 +134,7 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsNull(obj.Field);
-			Assert.AreSame("test", TestImpl_OverrideFieldDefault.Field);
+			Assert.AreEqual("test", TestImpl_OverrideFieldDefault.Field);
 		}
 
 		[TestMethod]
@@ -174,7 +174,75 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsNull(obj.Field);
-			Assert.AreSame("test", TestImpl_OverrideFieldAlias.FieldProxy);
+			Assert.AreEqual("test", TestImpl_OverrideFieldAlias.FieldProxy);
+		}
+
+		public interface ITestShim_FieldMethods
+		{
+			[ShimProxy(typeof(TestImpl_FieldMethods))]
+			string Field { get; set; }
+		}
+		[ExcludeFromCodeCoverage]
+		[SuppressMessage("Style", "IDE1006:Naming Styles")]
+		public class TestImpl_FieldMethods
+		{
+			private static bool _inProxy = false;
+			public static string FieldValue { get; private set; }
+
+			public static string get_Field(ITestShim_FieldMethods inst)
+			{
+				if (_inProxy) { return FieldValue; }
+				try
+				{
+					_inProxy = true;
+					return inst.Field;
+				}
+				finally
+				{
+					_inProxy = false;
+				}
+			}
+			public static void set_Field(ITestShim_FieldMethods inst, string value)
+			{
+				if (_inProxy) { FieldValue = value; return; }
+				try
+				{
+					_inProxy = true;
+					inst.Field = value;
+				}
+				finally
+				{
+					_inProxy = false;
+				}
+			}
+		}
+
+		[TestMethod]
+		public void Can_override_field_using_methods()
+		{
+			// Arrange
+			var obj = new TestClass_HasField();
+			var shim = obj.Shim<ITestShim_FieldMethods>();
+
+			// Act
+			shim.Field = "test";
+
+			// Assert
+			Assert.AreEqual("test", obj.Field);
+		}
+
+		[TestMethod]
+		public void Can_add_field_using_methods()
+		{
+			// Arrange
+			var obj = new TestClass_NoField();
+			var shim = obj.Shim<ITestShim_FieldMethods>();
+
+			// Act
+			shim.Field = "test";
+
+			// Assert
+			Assert.AreEqual("test", TestImpl_FieldMethods.FieldValue);
 		}
 	}
 }

@@ -4,15 +4,17 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>Ian Yates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.6.0</Version>
+        <Version>1.6.1</Version>
         <PackageProjectUrl>https://github.com/IanYates83/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IanYates83/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>Able to add methods/properties to shims.
-Can override shim method/property from underlying implementation.</PackageReleaseNotes>
+        <PackageReleaseNotes>[v1.6.1] Property and field overrides/adds can be done with methods.
+[v1.6.1] MissingMemberException instead of InvalidCastException thrown for unmatched shim members.
+[v1.6.0] Able to add methods/properties to shims.
+[v1.6.0] Can override shim method/property from underlying implementation.</PackageReleaseNotes>
         <Copyright>(c) Ian Yates</Copyright>
-        <AssemblyVersion>1.6.0</AssemblyVersion>
-        <FileVersion>1.6.0</FileVersion>
+        <AssemblyVersion>1.6.1</AssemblyVersion>
+        <FileVersion>1.6.1</FileVersion>
         <Description>Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.</Description>
         <Nullable>enable</Nullable>
         <RootNamespace>Shimterface</RootNamespace>

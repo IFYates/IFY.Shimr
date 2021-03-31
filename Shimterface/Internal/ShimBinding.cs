@@ -23,25 +23,6 @@ namespace Shimterface.Internal
 
 		private bool resolve(Type implType, bool isConstructor, bool resolveProxy)
 		{
-			// Workout real parameter types
-			var paramTypes = InterfaceMethod.GetParameters()
-				.Select(p =>
-				{
-					var paramAttr = p.GetCustomAttribute<TypeShimAttribute>();
-					if (paramAttr != null && !p.ParameterType.IsInterfaceType())
-					{
-						throw new NotSupportedException($"Shimmed parameter type must be an interface: {InterfaceMethod.DeclaringType.FullName}");
-					}
-					return paramAttr?.RealType ?? p.ParameterType;
-				}).ToArray();
-
-			// Constructors don't provide other functionality
-			if (isConstructor)
-			{
-				ImplementedMember = implType.GetConstructor(paramTypes);
-				return true;
-			}
-
 			// If really a property, will need to get attributes from PropertyInfo
 			var isPropertySetShim = InterfaceMethod.IsSpecialName && InterfaceMethod.Name.StartsWith("set_");
 			IsProperty = isPropertySetShim || (InterfaceMethod.IsSpecialName && InterfaceMethod.Name.StartsWith("get_"));
@@ -51,23 +32,20 @@ namespace Shimterface.Internal
 				reflectMember = InterfaceMethod.DeclaringType.GetProperty(InterfaceMethod.Name[4..]);
 			}
 
-			// Look for name override
-			BindingFlags? bindingOptions = null;
-			var implMemberName = InterfaceMethod.Name;
-			var attr = reflectMember.GetAttribute<ShimAttribute>();
-			if (attr?.ImplementationName != null)
-			{
-				implMemberName = (IsProperty ? implMemberName[0..4] : string.Empty)
-					+ attr.ImplementationName;
-			}
-
 			// Decide if proxy
 			ShimBinding? proxiedBinding = null;
+			ShimProxyAttribute? proxyAttr = null;
 			if (resolveProxy)
 			{
-				var proxyAttr = reflectMember.GetCustomAttribute<ShimProxyAttribute>(false);
+				proxyAttr = reflectMember.GetCustomAttribute<ShimProxyAttribute>(false);
 				if (proxyAttr != null)
 				{
+					// Cannot proxy constructor
+					if (isConstructor)
+					{
+						throw new InvalidCastException($"Cannot proxy {implType.FullName} constructor in {InterfaceMethod.DeclaringType.FullName}");
+					}
+
 					proxiedBinding = new ShimBinding(InterfaceMethod);
 					proxiedBinding.resolve(implType, false, false);
 
@@ -86,25 +64,62 @@ namespace Shimterface.Internal
 							throw new InvalidCastException($"Cannot proxy {implType.FullName} as {InterfaceMethod.DeclaringType.FullName}; override of missing method: {InterfaceMethod}");
 						}
 					}
-
-					// Apply proxy redirect
-					bindingOptions = BindingFlags.Static | BindingFlags.Public;
-					implType = proxyAttr.ImplementationType;
-					implMemberName = proxyAttr.ImplementationName;
-
-					if (!IsProperty)
-					{
-						var paramList = paramTypes.ToList();
-						paramList.Insert(0, InterfaceMethod.DeclaringType);
-						paramTypes = paramList.ToArray();
-					}
-					else if (implMemberName != null)
-					{
-						implMemberName = InterfaceMethod.Name[0..4] + implMemberName;
-					}
-
-					implMemberName ??= InterfaceMethod.Name;
 				}
+			}
+
+			// Workout real parameter types
+			var paramTypes = InterfaceMethod.GetParameters()
+				.Select(p =>
+				{
+					var paramAttr = p.GetCustomAttribute<TypeShimAttribute>();
+					if (paramAttr != null && !p.ParameterType.IsInterfaceType())
+					{
+						throw new NotSupportedException($"Shimmed parameter type must be an interface: {InterfaceMethod.DeclaringType.FullName}");
+					}
+					return paramAttr?.RealType ?? p.ParameterType;
+				}).ToArray();
+			void addInstanceParam(Type type)
+			{
+				var paramList = paramTypes.ToList();
+				paramList.Insert(0, type);
+				paramTypes = paramList.ToArray();
+			}
+
+			// Constructors don't provide other functionality
+			if (isConstructor)
+			{
+				ImplementedMember = implType.GetConstructor(paramTypes);
+				return ImplementedMember != null;
+			}
+
+			// Look for name override
+			BindingFlags? bindingOptions = null;
+			var implMemberName = InterfaceMethod.Name;
+			var attr = reflectMember.GetAttribute<ShimAttribute>();
+			if (attr?.ImplementationName != null)
+			{
+				implMemberName = (IsProperty ? implMemberName[0..4] : string.Empty)
+					+ attr.ImplementationName;
+			}
+
+			// Handle proxy logic
+			if (proxyAttr != null)
+			{
+				// Apply proxy redirect
+				bindingOptions = BindingFlags.Static | BindingFlags.Public;
+				implType = proxyAttr.ImplementationType;
+				implMemberName = proxyAttr.ImplementationName;
+
+				if (!IsProperty)
+				{
+					addInstanceParam(InterfaceMethod.DeclaringType);
+				}
+				else if (implMemberName != null)
+				{
+					implMemberName = InterfaceMethod.Name[0..4] + implMemberName;
+				}
+
+				implMemberName ??= InterfaceMethod.Name;
 			}
 
 			// Find implementation return type
@@ -133,7 +148,13 @@ namespace Shimterface.Internal
 			if (ImplementedMember == null)
 			{
 				var methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments(), bindingOptions ?? BindingFlags.Default);
-				if (InterfaceMethod.IsSpecialName != methodInfo?.IsSpecialName)
+				if (methodInfo == null && IsProperty && proxiedBinding != null)
+				{
+					// Try again for proxy property to method override
+					addInstanceParam(InterfaceMethod.DeclaringType);
+					methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments(), bindingOptions ?? BindingFlags.Default);
+				}
+				else if (InterfaceMethod.IsSpecialName != methodInfo?.IsSpecialName)
 				{
 					methodInfo = null;
 				}

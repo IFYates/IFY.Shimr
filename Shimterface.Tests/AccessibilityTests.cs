@@ -68,7 +68,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new PublicTestClass();
 
-			Assert.ThrowsException<InvalidCastException>(() =>
+			Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				ShimBuilder.Shim<IPublicInterface>(obj);
 			});

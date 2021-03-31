@@ -19,23 +19,23 @@ namespace Shimterface.Internal
 			impl.Emit(instField.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld, instField);
 			return true;
 		}
-		private static void resolveParameters(ILGenerator impl, MethodBase methodInfo, MethodInfo interfaceMethod, bool isProxy = false)
+		private static void resolveParameters(ILGenerator impl, MethodBase methodInfo, MethodInfo interfaceMethod)
 		{
-			// Pass each parameter from the method call to the implementation
-			var pars1 = methodInfo.GetParameters();
+			var pars1 = methodInfo.GetParameters().ToList();
 			var pars2 = interfaceMethod.GetParameters();
-			for (var i = 0; i < pars1.Length; ++i)
+
+			// Proxies take "this" as first arg
+			if (pars1.Count == pars2.Length + 1 && pars1[0].ParameterType.IsAssignableFrom(interfaceMethod.DeclaringType))
 			{
-				// Proxies take "this" as first arg
-				if (isProxy)
-				{
-					impl.Emit(OpCodes.Ldarg_0); // this
-				}
-				else
-				{
-					impl.Emit(OpCodes.Ldarg, i + 1);
-					impl.EmitTypeUnshim(pars2[i].ParameterType, pars1[i].ParameterType);
-				}
+				impl.Emit(OpCodes.Ldarg_0); // this
+				pars1.RemoveAt(0);
+			}
+
+			// Pass each parameter from the method call to the implementation
+			for (int i = 0; i < pars1.Count; ++i)
+			{
+				impl.Emit(OpCodes.Ldarg, i + 1);
+				impl.EmitTypeUnshim(pars2[i].ParameterType, pars1[i].ParameterType);
 			}
 		}
 
@@ -149,23 +149,20 @@ namespace Shimterface.Internal
 			var unshimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Unshim), new[] { resultType }, new[] { valType });
 			impl.Emit(OpCodes.Call, unshimMethod);
 		}
+		
+		public static void WrapConstructor(this TypeBuilder tb, ShimBinding binding, ConstructorInfo constrInfo)
+		{
+			var impl = tb.DefinePublicMethod(binding.InterfaceMethod);
+
+			resolveParameters(impl, constrInfo, binding.InterfaceMethod);
+			impl.Emit(OpCodes.Newobj, constrInfo);
+			var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { binding.InterfaceMethod.ReturnType }, new[] { typeof(object) });
+			impl.Emit(OpCodes.Call, shimMethod);
+			impl.Emit(OpCodes.Ret);
+		}
 
 		public static void WrapField(this TypeBuilder tb, FieldInfo? instField, ShimBinding binding, FieldInfo fieldInfo)
 		{
-			ILGenerator impl;
-			if (binding.ProxyImplementationMember != null)
-			{
-				var proxyImplementation = (MethodInfo)binding.ProxyImplementationMember;
-
-				// Call proxy method
-				impl = tb.DefinePublicMethod(binding.InterfaceMethod);
-				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty);
-				impl.Emit(OpCodes.Call, proxyImplementation);
-				impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
-				impl.Emit(OpCodes.Ret);
-				return;
-			}
-
 			var args = binding.InterfaceMethod.GetParameters();
 			if (args.Length > 0 && (fieldInfo.Attributes & FieldAttributes.InitOnly) > 0)
 			{
@@ -173,10 +170,36 @@ namespace Shimterface.Internal
 				tb.MethodThrowException<InvalidOperationException>(binding.InterfaceMethod);
 				return;
 			}
+
+			var impl = tb.DefinePublicMethod(binding.InterfaceMethod);
+
+			if (binding.ProxyImplementationMember != null)
+			{
+				proxyMemberCall(impl, tb, instField, binding);
+				return;
+			}
+
+			implFieldCall(impl, instField, binding, fieldInfo);
+		}
+
+		public static void WrapMethod(this TypeBuilder tb, FieldInfo? instField, ShimBinding binding, MethodInfo methodInfo)
+		{
+			var impl = tb.DefinePublicMethod(binding.InterfaceMethod);
+
+			if (binding.ProxyImplementationMember != null)
+			{
+				proxyMemberCall(impl, tb, instField, binding);
+				return;
+			}
 			
-			impl = tb.DefinePublicMethod(binding.InterfaceMethod);
+			implMethodCall(impl, instField, binding.InterfaceMethod, methodInfo);
+		}
+
+		private static void implFieldCall(ILGenerator impl, FieldInfo? instField, ShimBinding binding, FieldInfo fieldInfo)
+		{
 			resolveIfInstance(fieldInfo.IsStatic, impl, instField);
-			
+
+			var args = binding.InterfaceMethod.GetParameters();
 			if (args.Length == 0)
 			{
 				// Get
@@ -192,31 +215,6 @@ namespace Shimterface.Internal
 			}
 			impl.Emit(OpCodes.Ret);
 		}
-
-		public static void WrapConstructor(this TypeBuilder tb, ShimBinding binding, ConstructorInfo constrInfo)
-		{
-			var impl = tb.DefinePublicMethod(binding.InterfaceMethod);
-
-			resolveParameters(impl, constrInfo, binding.InterfaceMethod);
-			impl.Emit(OpCodes.Newobj, constrInfo);
-			var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { binding.InterfaceMethod.ReturnType }, new[] { typeof(object) });
-			impl.Emit(OpCodes.Call, shimMethod);
-			impl.Emit(OpCodes.Ret);
-		}
-
-		public static void WrapMethod(this TypeBuilder tb, FieldInfo? instField, ShimBinding binding, MethodInfo methodInfo)
-		{
-			var impl = tb.DefinePublicMethod(binding.InterfaceMethod);
-
-			if (binding.ProxyImplementationMember != null)
-			{
-				proxyMethodCall(impl, tb, instField, binding);
-			}
-			else
-			{
-				implMethodCall(impl, instField, binding.InterfaceMethod, methodInfo);
-			}
-		}
 		private static void implMethodCall(ILGenerator impl, FieldInfo? instField, MethodInfo interfaceMethod, MethodInfo methodInfo)
 		{
 			var callType = !resolveIfInstance(methodInfo.IsStatic, impl, instField)
@@ -229,15 +227,14 @@ namespace Shimterface.Internal
 			impl.EmitTypeShim(methodInfo.ReturnType, interfaceMethod.ReturnType);
 			impl.Emit(OpCodes.Ret);
 		}
-		private static void proxyMethodCall(ILGenerator impl, TypeBuilder tb, FieldInfo? instField, ShimBinding binding)
+		private static void proxyMemberCall(ILGenerator impl, TypeBuilder tb, FieldInfo? instField, ShimBinding binding)
 		{
 			var proxyImplementation = binding.ProxyImplementationMember as MethodInfo ?? throw new NullReferenceException();
-			var baseImplementation = binding.ImplementedMember as MethodInfo;
 
-			if (baseImplementation == null)
+			if (binding.ImplementedMember == null)
 			{
-				// Call proxy method
-				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty);
+				// Call static proxy method
+				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod);
 				impl.Emit(OpCodes.Call, proxyImplementation);
 				impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
 				impl.Emit(OpCodes.Ret);
@@ -252,8 +249,15 @@ namespace Shimterface.Internal
 			impl.Emit(OpCodes.Ldarg_0); // this
 			impl.Emit(OpCodes.Ldfld, proxyField);
 			impl.Emit(OpCodes.Brfalse, jmpProxyCall);
-			implMethodCall(impl, instField, binding.InterfaceMethod, baseImplementation);
-			impl.Emit(OpCodes.Ret);
+			switch (binding.ImplementedMember)
+			{
+				case FieldInfo fi:
+					implFieldCall(impl, instField, binding, fi);
+					break;
+				case MethodInfo mi:
+					implMethodCall(impl, instField, binding.InterfaceMethod, mi);
+					break;
+			}
 
 			// Set proxy context
 			impl.MarkLabel(jmpProxyCall);
@@ -263,7 +267,7 @@ namespace Shimterface.Internal
 			impl.Emit(OpCodes.Stfld, proxyField);
 
 			// Call proxy method
-			resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty);
+			resolveParameters(impl, proxyImplementation, binding.InterfaceMethod);
 			impl.Emit(OpCodes.Call, proxyImplementation);
 			impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
 

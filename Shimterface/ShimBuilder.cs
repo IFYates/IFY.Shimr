@@ -153,7 +153,7 @@ namespace Shimterface
 					return;
 				}
 
-				throw new InvalidCastException($"Cannot shim {implType.FullName} as {interfaceMethod.DeclaringType.FullName}; missing method: {interfaceMethod}");
+				throw new MissingMemberException($"Cannot shim {implType.FullName} as {interfaceMethod.DeclaringType.FullName}; missing method: {interfaceMethod}");
 			}
 
 			// Generate proxy

@@ -33,7 +33,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new TestClass();
 
-			Assert.ThrowsException<InvalidCastException>(() =>
+			Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				ShimBuilder.Shim<IUnknownMethodTest>(obj);
 			});
@@ -67,7 +67,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new TestClass();
 
-			Assert.ThrowsException<InvalidCastException>(() =>
+			Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				ShimBuilder.Shim<IPropertyWithoutSetTest>(obj);
 			});
