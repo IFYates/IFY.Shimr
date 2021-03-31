@@ -132,7 +132,7 @@ namespace Shimterface.Tests
 		public void Create__No_static_type__Fail()
 		{
 			// Act
-			Assert.ThrowsException<InvalidCastException>(() =>
+			Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				ShimBuilder.Create<IInvalidStaticShim>();
 			});

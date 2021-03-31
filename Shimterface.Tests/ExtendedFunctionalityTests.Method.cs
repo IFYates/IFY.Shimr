@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -310,7 +310,7 @@ namespace Shimterface.Tests
 			var obj = new TestClass_HasMethodB();
 
 			// Act
-			Assert.ThrowsException<InvalidCastException>(() =>
+			Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				obj.Shim<ITestShim_BadImpl>();
 			});
@@ -457,7 +457,7 @@ namespace Shimterface.Tests
 			var obj = new TestClass_NoMethodB();
 
 			// Act
-			Assert.ThrowsException<InvalidCastException>(() =>
+			Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				obj.Shim<ITestShim_BadImpl>();
 			});
@@ -478,7 +478,7 @@ namespace Shimterface.Tests
 			var obj = new TestClass_HasMethodB();
 
 			// Act
-			Assert.ThrowsException<InvalidCastException>(() =>
+			Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				obj.Shim<ITestShim_MissingImpl>();
 			});
@@ -491,7 +491,7 @@ namespace Shimterface.Tests
 			var obj = new TestClass_HasMethodB();
 
 			// Act
-			Assert.ThrowsException<InvalidCastException>(() =>
+			Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				obj.Shim<ITestShim_MissingImpl>();
 			});

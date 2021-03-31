@@ -94,5 +94,19 @@ namespace Shimterface.Tests
 			Assert.AreEqual("B_4", inst.Result);
 			Assert.IsInstanceOfType(((IShim)inst).Unshim(), typeof(TestClass));
 		}
+		
+		public interface IFactoryInterface5
+		{
+			[ConstructorShim(typeof(TestClass))]
+			int New(decimal arg);
+		}
+		[TestMethod]
+		public void Can_not_shim_to_missing_constructor()
+		{
+			Assert.ThrowsException<MissingMemberException>(() =>
+			{
+				ShimBuilder.Create<IFactoryInterface5>();
+			});
+		}
 	}
 }

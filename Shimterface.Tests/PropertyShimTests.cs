@@ -132,7 +132,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new TrickyMethodClass();
 			
-			Assert.ThrowsException<InvalidCastException>(() =>
+			Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				obj.Shim<ITrickyPropertyShim>();
 			});

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -39,7 +39,7 @@ namespace Shimterface.Internal
 			if (isConstructor)
 			{
 				ImplementedMember = implType.GetConstructor(paramTypes);
-				return true;
+				return ImplementedMember != null;
 			}
 
 			// If really a property, will need to get attributes from PropertyInfo

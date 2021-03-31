@@ -108,7 +108,7 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsNull(obj.Field);
-			Assert.AreSame("test", TestImpl_OverrideField.Field);
+			Assert.AreEqual("test", TestImpl_OverrideField.Field);
 		}
 
 		public interface ITestShim_OverrideFieldDefault
@@ -134,7 +134,7 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsNull(obj.Field);
-			Assert.AreSame("test", TestImpl_OverrideFieldDefault.Field);
+			Assert.AreEqual("test", TestImpl_OverrideFieldDefault.Field);
 		}
 
 		[TestMethod]
@@ -174,7 +174,7 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsNull(obj.Field);
-			Assert.AreSame("test", TestImpl_OverrideFieldAlias.FieldProxy);
+			Assert.AreEqual("test", TestImpl_OverrideFieldAlias.FieldProxy);
 		}
 	}
 }
