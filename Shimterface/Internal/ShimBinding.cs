@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 
@@ -148,7 +148,13 @@ namespace Shimterface.Internal
 			if (ImplementedMember == null)
 			{
 				var methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments(), bindingOptions ?? BindingFlags.Default);
-				if (InterfaceMethod.IsSpecialName != methodInfo?.IsSpecialName)
+				if (methodInfo == null && IsProperty && proxiedBinding != null)
+				{
+					// Try again for proxy property to method override
+					addInstanceParam(InterfaceMethod.DeclaringType);
+					methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments(), bindingOptions ?? BindingFlags.Default);
+				}
+				else if (InterfaceMethod.IsSpecialName != methodInfo?.IsSpecialName)
 				{
 					methodInfo = null;
 				}

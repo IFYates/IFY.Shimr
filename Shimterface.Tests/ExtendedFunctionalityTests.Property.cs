@@ -108,7 +108,7 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsNull(obj.Property);
-			Assert.AreSame("test", TestImpl_OverrideProperty.Property);
+			Assert.AreEqual("test", TestImpl_OverrideProperty.Property);
 		}
 
 		public interface ITestShim_OverridePropertyDefault
@@ -134,7 +134,7 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsNull(obj.Property);
-			Assert.AreSame("test", TestImpl_OverridePropertyDefault.Property);
+			Assert.AreEqual("test", TestImpl_OverridePropertyDefault.Property);
 		}
 
 		[TestMethod]
@@ -174,7 +174,39 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.IsNull(obj.Property);
-			Assert.AreSame("test", TestImpl_OverridePropertyAlias.PropertyProxy);
+			Assert.AreEqual("test", TestImpl_OverridePropertyAlias.PropertyProxy);
+		}
+		
+		public interface ITestShim_PropertyMethods
+		{
+			[ShimProxy(typeof(TestImpl_PropertyMethods), ProxyBehaviour.Override)]
+			string Property { get; set; }
+		}
+		[ExcludeFromCodeCoverage]
+		[SuppressMessage("Style", "IDE1006:Naming Styles")]
+		public class TestImpl_PropertyMethods
+		{
+			public static string get_Property(ITestShim_PropertyMethods inst)
+			{
+				return inst.Property;
+			}
+			public static void set_Property(ITestShim_PropertyMethods inst, string value)
+			{
+				inst.Property = value;
+			}
+		}
+		[TestMethod]
+		public void Can_override_property_using_methods()
+		{
+			// Arrange
+			var obj = new TestClass_HasProperty();
+			var shim = obj.Shim<ITestShim_PropertyMethods>();
+
+			// Act
+			shim.Property = "test";
+
+			// Assert
+			Assert.AreEqual("test", obj.Property);
 		}
 	}
 }
