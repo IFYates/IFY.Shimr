@@ -315,6 +315,36 @@ namespace Shimterface.Tests
 				obj.Shim<ITestShim_BadImpl>();
 			});
 		}
+		
+		public interface ITestShim_ChangeShim : ITestShim
+		{
+			[ShimProxy(typeof(TestImpl_ChangeShim))]
+			new void MethodA();
+		}
+		[ExcludeFromCodeCoverage]
+		public class TestImpl_ChangeShim
+		{
+			public static ITestShim_ChangeShim MethodACalledObj { get; set; }
+			public static void MethodA(ITestShim_ChangeShim inst)
+			{
+				MethodACalledObj = inst;
+			}
+		}
+
+		[TestMethod]
+		public void Can_change_shim_in_hierarchy()
+		{
+			// Arrange
+			var obj = new TestClass_NoMethodB();
+			var shim = obj.Shim<ITestShim_ChangeShim>();
+
+			// Act
+			shim.MethodA();
+
+			// Assert
+			Assert.IsFalse(obj.MethodACalled);
+			Assert.AreSame(shim, TestImpl_ChangeShim.MethodACalledObj);
+		}
 
 		#endregion Override
 
