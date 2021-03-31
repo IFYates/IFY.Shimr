@@ -230,9 +230,8 @@ namespace Shimterface.Internal
 		private static void proxyMemberCall(ILGenerator impl, TypeBuilder tb, FieldInfo? instField, ShimBinding binding)
 		{
 			var proxyImplementation = binding.ProxyImplementationMember as MethodInfo ?? throw new NullReferenceException();
-			var baseImplementation = binding.ImplementedMember as MethodInfo;
 
-			if (baseImplementation == null)
+			if (binding.ImplementedMember == null)
 			{
 				// Call static proxy method
 				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod);
@@ -250,8 +249,15 @@ namespace Shimterface.Internal
 			impl.Emit(OpCodes.Ldarg_0); // this
 			impl.Emit(OpCodes.Ldfld, proxyField);
 			impl.Emit(OpCodes.Brfalse, jmpProxyCall);
-			implMethodCall(impl, instField, binding.InterfaceMethod, baseImplementation);
-			impl.Emit(OpCodes.Ret);
+			switch (binding.ImplementedMember)
+			{
+				case FieldInfo fi:
+					implFieldCall(impl, instField, binding, fi);
+					break;
+				case MethodInfo mi:
+					implMethodCall(impl, instField, binding.InterfaceMethod, mi);
+					break;
+			}
 
 			// Set proxy context
 			impl.MarkLabel(jmpProxyCall);
