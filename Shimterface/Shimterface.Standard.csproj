@@ -8,7 +8,8 @@
         <PackageProjectUrl>https://github.com/IanYates83/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IanYates83/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>[v1.6.1] Property and field overrides/adds can be done with methods.
+        <PackageReleaseNotes>[v1.6.1] Fix not being able to proxy methods with parameters.
+[v1.6.1] Property and field overrides/adds can be done with methods.
 [v1.6.1] MissingMemberException instead of InvalidCastException thrown for unmatched shim members.
 [v1.6.0] Able to add methods/properties to shims.
 [v1.6.0] Can override shim method/property from underlying implementation.</PackageReleaseNotes>
