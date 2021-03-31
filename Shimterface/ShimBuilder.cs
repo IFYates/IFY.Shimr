@@ -1,4 +1,5 @@
 ﻿using Shimterface.Internal;
+using Shimterface.Shims;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -60,7 +61,8 @@ namespace Shimterface
 							| TypeAttributes.AutoClass
 							| TypeAttributes.AnsiClass
 							| TypeAttributes.BeforeFieldInit
-							| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType });
+							| TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType })
+							.Shim<ITypeBuilder>();
 
 						var instField = tb.DefineField("_inst", implType, FieldAttributes.Private | FieldAttributes.InitOnly);
 
@@ -118,7 +120,8 @@ namespace Shimterface
 							| TypeAttributes.AutoClass
 							| TypeAttributes.AnsiClass
 							| TypeAttributes.BeforeFieldInit
-							| TypeAttributes.AutoLayout, null, new[] { interfaceType });
+							| TypeAttributes.AutoLayout, null, new[] { interfaceType })
+							.Shim<ITypeBuilder>();
 
 						// Proxy all methods (including events, properties, and indexers)
 						foreach (var interfaceMethod in interfaceType.GetMethods())
@@ -141,7 +144,7 @@ namespace Shimterface
 			return _dynamicTypeCache[className];
 		}
 
-		private static void shimMember(TypeBuilder tb, FieldBuilder? instField, Type implType, MethodInfo interfaceMethod, bool isConstructor)
+		private static void shimMember(ITypeBuilder tb, FieldBuilder? instField, Type implType, MethodInfo interfaceMethod, bool isConstructor)
 		{
 			// Match real member
 			var binding = new ShimBinding(interfaceMethod);
@@ -149,7 +152,7 @@ namespace Shimterface
 			{
 				if (_ignoreMissingMembers.Contains(interfaceMethod.DeclaringType))
 				{
-					ILBuilder.MethodThrowException<NotImplementedException>(tb, interfaceMethod);
+					tb.MethodThrowException<NotImplementedException>(interfaceMethod);
 					return;
 				}
 

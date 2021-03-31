@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Shims;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -20,7 +21,7 @@ namespace Shimterface.Internal.Tests
 			var tb = mod.DefineType($"TestClass", TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout, null, null);
 
 			// Act
-			var impl = tb.DefinePublicMethod("TestMethod", typeof(bool), new List<Type> { typeof(string), typeof(int) });
+			var impl = tb.Shim<ITypeBuilder>().DefinePublicMethod("TestMethod", typeof(bool), new List<Type> { typeof(string), typeof(int) });
 			impl.Emit(OpCodes.Ret);
 
 			var type = tb.CreateType();
@@ -49,7 +50,7 @@ namespace Shimterface.Internal.Tests
 			// Act
 			Assert.ThrowsException<NullReferenceException>(() =>
 			{
-				tb.WrapMethod(null, binding, method);
+				tb.Shim<ITypeBuilder>().WrapMethod(null, binding, method);
 			});
 		}
 	}
