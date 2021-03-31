@@ -19,13 +19,13 @@ namespace Shimterface.Internal
 			impl.Emit(instField.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld, instField);
 			return true;
 		}
-		private static void resolveParameters(ILGenerator impl, MethodBase methodInfo, MethodInfo interfaceMethod, bool isProxy = false)
+		private static void resolveParameters(ILGenerator impl, MethodBase methodInfo, MethodInfo interfaceMethod)
 		{
 			var pars1 = methodInfo.GetParameters().ToList();
 			var pars2 = interfaceMethod.GetParameters();
 
 			// Proxies take "this" as first arg
-			if (isProxy)
+			if (pars1.Count == pars2.Length + 1 && pars1[0].ParameterType.IsAssignableFrom(interfaceMethod.DeclaringType))
 			{
 				impl.Emit(OpCodes.Ldarg_0); // this
 				pars1.RemoveAt(0);
@@ -159,7 +159,7 @@ namespace Shimterface.Internal
 
 				// Call proxy method
 				impl = tb.DefinePublicMethod(binding.InterfaceMethod);
-				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty);
+				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod);
 				impl.Emit(OpCodes.Call, proxyImplementation);
 				impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
 				impl.Emit(OpCodes.Ret);
@@ -237,7 +237,7 @@ namespace Shimterface.Internal
 			if (baseImplementation == null)
 			{
 				// Call proxy method
-				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty);
+				resolveParameters(impl, proxyImplementation, binding.InterfaceMethod);
 				impl.Emit(OpCodes.Call, proxyImplementation);
 				impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
 				impl.Emit(OpCodes.Ret);
@@ -263,7 +263,7 @@ namespace Shimterface.Internal
 			impl.Emit(OpCodes.Stfld, proxyField);
 
 			// Call proxy method
-			resolveParameters(impl, proxyImplementation, binding.InterfaceMethod, !binding.IsProperty || !proxyImplementation.IsSpecialName);
+			resolveParameters(impl, proxyImplementation, binding.InterfaceMethod);
 			impl.Emit(OpCodes.Call, proxyImplementation);
 			impl.EmitTypeShim(proxyImplementation.ReturnType, binding.InterfaceMethod.ReturnType);
 
