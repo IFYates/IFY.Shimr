@@ -1,4 +1,4 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -25,6 +25,8 @@ namespace Shimterface.Tests
 		[ExcludeFromCodeCoverage]
 		public class TestClass_NoMethodB
 		{
+			public TestClass_NoMethodB() { }
+
 			public bool MethodACalled { get; private set; }
 			public void MethodA()
 			{
@@ -344,6 +346,22 @@ namespace Shimterface.Tests
 			// Assert
 			Assert.IsFalse(obj.MethodACalled);
 			Assert.AreSame(shim, TestImpl_ChangeShim.MethodACalledObj);
+		}
+
+		public interface ITestShim_Constructor
+		{
+			[ConstructorShim(typeof(TestClass_NoMethodB))]
+			[ShimProxy(typeof(TestImpl_DefaultOverride))]
+			ITestShim MethodB();
+		}
+		[TestMethod]
+		public void Cannot_override_constructor()
+		{
+			// Act
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				ShimBuilder.Create<ITestShim_Constructor>();
+			});
 		}
 
 		#endregion Override
