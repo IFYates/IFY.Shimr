@@ -46,7 +46,7 @@ namespace Shimterface.Tests
 			// Assert
 			Assert.AreEqual("test", TestImpl_AddProperty.Property);
 		}
-		
+
 		public interface ITestShim_AddPropertyDefault
 		{
 			[ShimProxy(typeof(TestImpl_AddPropertyDefault))]
@@ -84,7 +84,7 @@ namespace Shimterface.Tests
 				obj.Shim<ITestShim_AddProperty>();
 			});
 		}
-		
+
 		public interface ITestShim_OverrideProperty
 		{
 			[ShimProxy(typeof(TestImpl_OverrideProperty), ProxyBehaviour.Override)]
@@ -176,23 +176,44 @@ namespace Shimterface.Tests
 			Assert.IsNull(obj.Property);
 			Assert.AreEqual("test", TestImpl_OverridePropertyAlias.PropertyProxy);
 		}
-		
+
 		public interface ITestShim_PropertyMethods
 		{
-			[ShimProxy(typeof(TestImpl_PropertyMethods), ProxyBehaviour.Override)]
+			[ShimProxy(typeof(TestImpl_PropertyMethods))]
 			string Property { get; set; }
 		}
 		[ExcludeFromCodeCoverage]
 		[SuppressMessage("Style", "IDE1006:Naming Styles")]
 		public class TestImpl_PropertyMethods
 		{
+			private static bool _inProxy = false;
+			public static string PropertyValue { get; private set; }
+
 			public static string get_Property(ITestShim_PropertyMethods inst)
 			{
-				return inst.Property;
+				if (_inProxy) { return PropertyValue; }
+				try
+				{
+					_inProxy = true;
+					return inst.Property;
+				}
+				finally
+				{
+					_inProxy = false;
+				}
 			}
 			public static void set_Property(ITestShim_PropertyMethods inst, string value)
 			{
-				inst.Property = value;
+				if (_inProxy) { PropertyValue = value; return; }
+				try
+				{
+					_inProxy = true;
+					inst.Property = value;
+				}
+				finally
+				{
+					_inProxy = false;
+				}
 			}
 		}
 		[TestMethod]
@@ -207,6 +228,20 @@ namespace Shimterface.Tests
 
 			// Assert
 			Assert.AreEqual("test", obj.Property);
+		}
+
+		[TestMethod]
+		public void Can_add_property_using_methods()
+		{
+			// Arrange
+			var obj = new TestClass_NoProperty();
+			var shim = obj.Shim<ITestShim_PropertyMethods>();
+
+			// Act
+			shim.Property = "test";
+
+			// Assert
+			Assert.AreEqual("test", TestImpl_PropertyMethods.PropertyValue);
 		}
 	}
 }
