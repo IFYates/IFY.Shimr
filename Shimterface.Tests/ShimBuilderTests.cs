@@ -24,8 +24,8 @@ namespace Shimterface.Tests
 		public interface ITestShim
 		{
 		}
-
-		[StaticShimAttribute(typeof(TestClass))]
+		
+		[StaticShim(typeof(TestClass))]
 		public interface IStaticShim
 		{
 		}
@@ -121,7 +121,23 @@ namespace Shimterface.Tests
 			// Assert
 			Assert.AreEqual(shim1.GetType().GetHashCode(), shim2.GetType().GetHashCode());
 		}
-
+		
+		[StaticShim(null)]
+		public interface IInvalidStaticShim
+		{
+			void Method();
+		}
+		
+		[TestMethod]
+		public void Create__No_static_type__Fail()
+		{
+			// Act
+			Assert.ThrowsException<InvalidCastException>(() =>
+			{
+				ShimBuilder.Create<IInvalidStaticShim>();
+			});
+		}
+		
 		[TestMethod]
 		public void getFactoryType__StaticShimAttribute_IsConstructor__Fail()
 		{

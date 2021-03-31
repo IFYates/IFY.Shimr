@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -40,11 +41,13 @@ namespace Shimterface.Internal
 			return attr;
 		}
 
-		public static MethodInfo? GetMethod(this Type type, string name, Type[] parameterTypes, Type[] genericArgs)
+		public static MethodInfo? GetMethod(this Type type, string name, Type[] parameterTypes, Type[] genericArgs, BindingFlags bindingFlags = BindingFlags.Default)
 		{
 			if (genericArgs.Length == 0)
 			{
-				return type.GetMethod(name, parameterTypes);
+				return bindingFlags == BindingFlags.Default
+					? type.GetMethod(name, parameterTypes, null)
+					: type.GetMethod(name, bindingFlags, null, parameterTypes, null);
 			}
 
 			// Find potentials
@@ -151,7 +154,7 @@ namespace Shimterface.Internal
 		}
 
 		/// <summary>
-		/// Resolves array or <see cref="IEnumerable&lt;&gt;"/> types to the internal element type, or return the given type.
+		/// Resolves array or <see cref="IEnumerable{T}"/> types to the internal element type, or return the given type.
 		/// </summary>
 		/// <param name="type">A type or collection of a type.</param>
 		/// <returns>A singular type.</returns>
