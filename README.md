@@ -1,9 +1,9 @@
 # Shimterface
 Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.
 
-[![Build & Test](https://github.com/IanYates83/Shimterface/actions/workflows/dotnet.yml/badge.svg)](https://github.com/IanYates83/Shimterface/actions/workflows/dotnet.yml)
-[![Coverage Status](https://coveralls.io/repos/github/IanYates83/Shimterface/badge.svg?branch=master)](https://coveralls.io/github/IanYates83/Shimterface?branch=master)
-[![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2FIanYates83%2FShimterface%2Frefs%2Fheads%2Fmaster)](https://dashboard.stryker-mutator.io/reports/github.com/IanYates83/Shimterface/refs/heads/master)
+[![Build & Test](https://github.com/IanYates83/Shimterface/actions/workflows/dotnet.yml/badge.svg)](https://github.com/IFYates/Shimterface/actions/workflows/dotnet.yml)
+[![Coverage Status](https://coveralls.io/repos/github/IFYates/Shimterface/badge.svg?branch=master)](https://coveralls.io/github/IFYates/Shimterface?branch=master)
+[![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2FIFYates%2FShimterface%2Fmaster)](https://dashboard.stryker-mutator.io/reports/github.com/IFYates/Shimterface/master)
 
 [![NuGet Version](https://img.shields.io/nuget/v/Shimterface.Standard)](https://www.nuget.org/packages/Shimterface.Standard/)
 ![NuGet Downloads](https://img.shields.io/nuget/dt/Shimterface.Standard)
@@ -45,7 +45,7 @@ TestClass originalObject = ShimBuilder.Unshim<TestClass>(forcedCast);
 The wiki contains lots more examples and detailed coverage of usage.
 
 ## Breaking changes
-See the [breaking change wiki](https://github.com/IanYates83/Shimterface/wiki/Breaking-changes).
+See the [breaking change wiki](https://github.com/IFYates/Shimterface/wiki/Breaking-changes).
 
 ## Design principal
 The purpose of Shimterface is to improve testability and inversion-of-control; therefore, all behavioural decisions are designed to be implemented as application design-time.
