@@ -226,7 +226,21 @@ namespace Shimterface.Internal.Tests
             // Assert
             Assert.IsFalse(res);
         }
-        
+
         #endregion IsEquivalentGenericMethodType
+
+        [TestMethod]
+        public void IsEquivalentGenericType__Same_type__True()
+        {
+            // Arrange
+            var type1 = typeof(string);
+            var type2 = typeof(string);
+
+            // Act
+            var res = type1.IsEquivalentGenericType(type2);
+
+            // Assert
+            Assert.IsTrue(res);
+        }
     }
 }

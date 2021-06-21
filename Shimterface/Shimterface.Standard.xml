@@ -14,6 +14,15 @@
             Get attribute of method, including get/set for property
             </summary>
         </member>
+        <member name="M:Shimterface.Internal.TypeHelpers.IsEquivalentType(System.Type,System.Type)">
+            <summary>
+            Compares for equivalent of types in general usage.
+            Identical, assignable, similar generic definition.
+            </summary>
+            <param name="type">The definition type.</param>
+            <param name="other">The type that needs to be equivalent.</param>
+            <returns>True if <paramref name="other"/> is equivalent to <paramref name="type"/>.</returns>
+        </member>
         <member name="M:Shimterface.Internal.TypeHelpers.IsEquivalentGenericMethodType(System.Type,System.Type)">
             <summary>
             Compares for equivalence of types as used in a generic method.
@@ -22,6 +31,14 @@
             <param name="type">This type to compare</param>
             <param name="other">The type to compare this type against</param>
             <returns>True if the types can be considered equivalent</returns>
+        </member>
+        <member name="M:Shimterface.Internal.TypeHelpers.IsEquivalentGenericType(System.Type,System.Type)">
+            <summary>
+            Compares for equivalent generic types and their attributes.
+            </summary>
+            <param name="type">The generic type to compare</param>
+            <param name="other">The generic type to compare this type against</param>
+            <returns>True if <paramref name="other"/> is equivalent to <paramref name="type"/>.</returns>
         </member>
         <member name="M:Shimterface.Internal.TypeHelpers.RebuildGenericType(System.Type,System.Type[])">
             <summary>

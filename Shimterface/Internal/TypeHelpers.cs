@@ -84,6 +84,20 @@ namespace Shimterface.Internal
         }
 
         /// <summary>
+        /// Compares for equivalent of types in general usage.
+        /// Identical, assignable, similar generic definition.
+        /// </summary>
+        /// <param name="type">The definition type.</param>
+        /// <param name="other">The type that needs to be equivalent.</param>
+        /// <returns>True if <paramref name="other"/> is equivalent to <paramref name="type"/>.</returns>
+        public static bool IsEquivalentType(this Type type, Type other)
+        {
+            return type == other
+                || type.IsAssignableFrom(other)
+                || IsEquivalentGenericType(type, other);
+        }
+
+        /// <summary>
         /// Compares for equivalence of types as used in a generic method.
         /// Does not compare any part of the generic attributes.
         /// </summary>
@@ -92,12 +106,20 @@ namespace Shimterface.Internal
         /// <returns>True if the types can be considered equivalent</returns>
         public static bool IsEquivalentGenericMethodType(this Type type, Type other)
         {
-            if (type == other)
-            {
-                return true;
-            }
+            return type == other
+                || (type.IsGenericMethodParameter && other.IsGenericMethodParameter)
+                || IsEquivalentGenericType(type, other);
+        }
 
-            if (type.IsGenericMethodParameter && other.IsGenericMethodParameter)
+        /// <summary>
+        /// Compares for equivalent generic types and their attributes.
+        /// </summary>
+        /// <param name="type">The generic type to compare</param>
+        /// <param name="other">The generic type to compare this type against</param>
+        /// <returns>True if <paramref name="other"/> is equivalent to <paramref name="type"/>.</returns>
+        public static bool IsEquivalentGenericType(this Type type, Type other)
+        {
+            if (type == other)
             {
                 return true;
             }
