@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Shimterface.Tests
 {
-	// https://github.com/IanYates83/Shimterface/issues/5
+	// https://github.com/IFYates/Shimterface/issues/5
 	[TestClass]
 	public class GenericMethodTests
 	{

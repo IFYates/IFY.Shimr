@@ -72,8 +72,10 @@ namespace Shimterface.Tests
 				return arg1 + "-" + arg2;
 			}
 
-			public void DifferentMethodSig(int arg1)
-			{
+#pragma warning disable IDE0060 // Remove unused parameter
+            public void DifferentMethodSig(int arg1)
+#pragma warning restore IDE0060 // Remove unused parameter
+            {
 			}
 		}
 

@@ -93,7 +93,6 @@ namespace Shimterface.Internal
 			}
 
 			// Look for name override
-			BindingFlags? bindingOptions = null;
 			var implMemberName = InterfaceMethod.Name;
 			var attr = reflectMember.GetAttribute<ShimAttribute>();
 			if (attr?.ImplementationName != null)
@@ -106,7 +105,6 @@ namespace Shimterface.Internal
 			if (proxyAttr != null)
 			{
 				// Apply proxy redirect
-				bindingOptions = BindingFlags.Static | BindingFlags.Public;
 				implType = proxyAttr.ImplementationType;
 				implMemberName = proxyAttr.ImplementationName;
 
@@ -126,7 +124,7 @@ namespace Shimterface.Internal
 			Type? implReturnType = null;
 			if (IsProperty)
 			{
-				var propInfo = implType.GetProperty(implMemberName[4..], bindingOptions ?? (BindingFlags.Public | BindingFlags.Instance));
+				var propInfo = implType.GetProperty(implMemberName[4..], BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public);
 				implReturnType = propInfo?.PropertyType;
 				if (implReturnType == null)
 				{
@@ -147,12 +145,18 @@ namespace Shimterface.Internal
 			// Find method
 			if (ImplementedMember == null)
 			{
-				var methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments(), bindingOptions ?? BindingFlags.Default);
+				var genArgs = InterfaceMethod.GetGenericArguments();
+				var methodInfo = implType.GetMethod(implMemberName, InterfaceMethod.ReturnType, paramTypes, genArgs);
+				if (methodInfo == null)
+				{
+					// Try for mismatch returntype
+					methodInfo = implType.GetMethod(implMemberName, paramTypes, genArgs);
+				}
 				if (methodInfo == null && IsProperty && proxiedBinding != null)
 				{
 					// Try again for proxy property to method override
 					addInstanceParam(InterfaceMethod.DeclaringType);
-					methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments(), bindingOptions ?? BindingFlags.Default);
+					methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments());
 				}
 				else if (InterfaceMethod.IsSpecialName != methodInfo?.IsSpecialName)
 				{

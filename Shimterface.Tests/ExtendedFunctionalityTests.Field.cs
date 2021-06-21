@@ -6,7 +6,7 @@ namespace Shimterface.Tests
 {
 	/// <summary>
 	/// Tests around extending/replacing shim functionality
-	/// https://github.com/IanYates83/Shimterface/issues/3
+	/// https://github.com/IFYates/Shimterface/issues/3
 	/// </summary>
 	[TestClass]
 	public class ExtendedFunctionalityTests_Field

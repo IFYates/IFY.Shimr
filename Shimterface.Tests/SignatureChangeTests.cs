@@ -202,5 +202,37 @@ namespace Shimterface.Tests
 				shim.Value = shim2;
 			});
 		}
+
+        #region Issue 11 - Unable to shim hidden method
+		// https://github.com/IFYates/Shimterface/issues/11
+
+        public abstract class Issue11BaseClass
+        {
+            public string GetValue() { return "value"; }
+        }
+
+        public class Issue11Class : Issue11BaseClass
+        {
+            new public int GetValue() { return 1; }
+        }
+
+        public interface IShimIssue11
+        {
+            string GetValue();
+        }
+
+        [TestMethod]
+        public void Issue11__Can_shim_hidden_method()
+        {
+            var obj = new Issue11Class();
+            Assert.IsInstanceOfType(obj.GetValue(), typeof(int)); // New method takes precedence
+
+            var shim = obj.Shim<IShimIssue11>();
+
+            var result = shim.GetValue();
+            Assert.AreEqual("value", result);
+        }
+
+        #endregion Issue 11
 	}
 }
