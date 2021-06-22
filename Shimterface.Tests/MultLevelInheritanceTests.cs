@@ -85,8 +85,8 @@ namespace Shimterface.Tests
         // Shim wants everything, without inheritance
         public interface INotInheritedShim
         {
-            [Shim(typeof(IBase))]
-            IEnumerable<int> Values { get; set; }
+            [Shim(typeof(IBase), "Values")]
+            IEnumerable<int> BaseValues { get; set; }
             [Shim("Values")]
             int[] IntValues { get; set; } // From Impl
             [Shim("Values")]
@@ -109,7 +109,7 @@ namespace Shimterface.Tests
             var shim = obj.Shim<INotInheritedShim>();
 
             Assert.IsNotNull(shim);
-            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.Values.ToArray());
+            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.BaseValues.ToArray());
             CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.IntValues);
             CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.StringValues);
         }
