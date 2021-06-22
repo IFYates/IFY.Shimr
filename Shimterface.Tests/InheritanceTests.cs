@@ -97,6 +97,7 @@ namespace Shimterface.Tests
         {
 			var obj = new Method3();
 			Assert.AreEqual((byte)2, obj.Method());
+			Assert.AreEqual(1, ((Method2)obj).Method());
 
 			var shim = obj.Shim<IMethod1>();
 			Assert.AreEqual("value", shim.Method());

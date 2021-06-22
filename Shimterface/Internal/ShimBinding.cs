@@ -125,6 +125,13 @@ namespace Shimterface.Internal
                 implMemberName ??= InterfaceMethod.Name;
             }
 
+            // If member is a direct implementation, use it
+            if (InterfaceMethod.ReflectedType.IsAssignableFrom(implType))
+            {
+                ImplementedMember = InterfaceMethod;
+                return true;
+            }
+
             // Find implementation return type
             Type? implReturnType = null;
             if (IsProperty)
@@ -133,6 +140,13 @@ namespace Shimterface.Internal
                 var propInfo = implType.GetProperties()
                     .Where(p => p.Name == propName && p.PropertyType.IsEquivalentType(propertyType))
                     .SingleOrDefault();
+                if (propInfo == null)
+                {
+                    // Support explicitly implemented interface members
+                    propInfo = implType.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
+                        .Where(p => p.Name == propName && p.PropertyType.IsEquivalentType(propertyType))
+                        .SingleOrDefault();
+                }
                 if (propInfo == null)
                 {
                     propInfo = implType.GetProperty(propName);
