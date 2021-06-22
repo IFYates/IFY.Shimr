@@ -105,6 +105,10 @@ namespace Shimterface.Internal
                 implMemberName = (IsProperty ? implMemberName[0..4] : string.Empty)
                     + attr.ImplementationName;
             }
+            if (attr?.DefinitionType != null)
+            {
+                implType = attr.DefinitionType;
+            }
 
             // Handle proxy logic
             if (proxyAttr != null)
