@@ -97,7 +97,7 @@ namespace Shimterface.Internal
                 return ImplementedMember != null;
             }
 
-            // Look for name override
+            // Look for name/type override
             var implMemberName = InterfaceMethod.Name;
             var attr = reflectMember.GetAttribute<ShimAttribute>();
             if (attr?.ImplementationName != null)
@@ -141,20 +141,7 @@ namespace Shimterface.Internal
             if (IsProperty)
             {
                 var propName = implMemberName[4..];
-                var propInfo = implType.GetProperties()
-                    .Where(p => p.Name == propName && p.PropertyType.IsEquivalentType(propertyType))
-                    .SingleOrDefault();
-                if (propInfo == null)
-                {
-                    // Support explicitly implemented interface members
-                    propInfo = implType.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
-                        .Where(p => p.Name == propName && p.PropertyType.IsEquivalentType(propertyType))
-                        .SingleOrDefault();
-                }
-                if (propInfo == null)
-                {
-                    propInfo = implType.GetProperty(propName);
-                }
+                var propInfo = implType.FindProperty(propName, propertyType);
 
                 implReturnType = propInfo?.PropertyType;
                 if (implReturnType == null)

@@ -46,6 +46,21 @@ namespace Shimterface.Internal
             return Enumerable.Range(0, arr.Count()).All(i => comparer(arr.ElementAt(i), other.ElementAt(i)));
         }
 
+        public static PropertyInfo? FindProperty(this Type implType, string propertyName, Type propertyType)
+        {
+            // Try public first
+            var propInfo = implType.GetProperties()
+                .Where(p => p.Name == propertyName && p.PropertyType.IsEquivalentType(propertyType))
+                .SingleOrDefault();
+
+            // Support explicitly implemented interface members (non-public)
+            propInfo ??= implType.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
+                .Where(p => p.Name == propertyName && p.PropertyType.IsEquivalentType(propertyType))
+                .SingleOrDefault();
+
+            return propInfo ?? implType.GetProperty(propertyName);
+        }
+
         public static MethodInfo? GetMethod(this Type type, string name, Type[] parameterTypes, Type[] genericArgs)
             => GetMethod(type, name, null, parameterTypes, genericArgs);
         public static MethodInfo? GetMethod(this Type type, string name, Type? returnType, Type[] parameterTypes, Type[] genericArgs)
