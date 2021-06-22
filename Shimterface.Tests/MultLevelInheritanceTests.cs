@@ -9,6 +9,12 @@ namespace Shimterface.Tests
     [TestClass]
     public class MultLevelInheritanceTests
     {
+        [TestInitialize]
+        public void Reset()
+        {
+            ShimBuilder.ResetState();
+        }
+
         // Low-level interface
         public interface IBase
         {
@@ -69,6 +75,52 @@ namespace Shimterface.Tests
             ((IBase)obj).Values = new[] { 1, 2, 3 };
 
             var shim = obj.Shim<IFullShim>();
+
+            Assert.IsNotNull(shim);
+            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetValues().ToArray());
+            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetIntValues());
+            CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.GetStringValues());
+        }
+
+        // Shim wants everything, without inheritance
+        public interface INotInheritedShim
+        {
+            [Shim(typeof(IBase))]
+            IEnumerable<int> Values { get; set; }
+            [Shim("Values")]
+            int[] IntValues { get; set; } // From Impl
+            [Shim("Values")]
+            string[] StringValues { get; } // From Extr
+
+            [Shim(typeof(IBase))]
+            IEnumerable<int> GetValues();
+            [Shim("GetValues")]
+            int[] GetIntValues(); // From Impl
+            [Shim("GetValues")]
+            string[] GetStringValues(); // From Extr
+        }
+
+        [TestMethod]
+        public void Can_shim_property_by_type_without_inheritance()
+        {
+            var obj = new Extr();
+            ((IBase)obj).Values = new[] { 1, 2, 3 };
+
+            var shim = obj.Shim<INotInheritedShim>();
+
+            Assert.IsNotNull(shim);
+            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.Values.ToArray());
+            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.IntValues);
+            CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.StringValues);
+        }
+
+        [TestMethod]
+        public void Can_shim_method_by_type_inheritance()
+        {
+            var obj = new Extr();
+            ((IBase)obj).Values = new[] { 1, 2, 3 };
+
+            var shim = obj.Shim<INotInheritedShim>();
 
             Assert.IsNotNull(shim);
             CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetValues().ToArray());

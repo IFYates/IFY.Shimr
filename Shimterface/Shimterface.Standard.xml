@@ -91,6 +91,35 @@
             Mark a member type as explicitly shimming an item with a different name.
             </summary>
         </member>
+        <member name="P:Shimterface.ShimAttribute.DefinitionType">
+            <summary>
+            The type that defines the member, for when there's a conflict.
+            </summary>
+        </member>
+        <member name="P:Shimterface.ShimAttribute.ImplementationName">
+            <summary>
+            The name of the member in the target type.
+            </summary>
+        </member>
+        <member name="M:Shimterface.ShimAttribute.#ctor(System.Type)">
+            <summary>
+            
+            </summary>
+            <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
+        </member>
+        <member name="M:Shimterface.ShimAttribute.#ctor(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="name">The name of the member in the target type.</param>
+        </member>
+        <member name="M:Shimterface.ShimAttribute.#ctor(System.Type,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
+            <param name="name">The name of the member in the target type.</param>
+        </member>
         <member name="T:Shimterface.ShimBuilder">
             <summary>
             Provides facility to create a shim that guarantees an object can be treated as the specified interface type.
