@@ -97,13 +97,17 @@ namespace Shimterface.Internal
                 return ImplementedMember != null;
             }
 
-            // Look for name override
+            // Look for name/type override
             var implMemberName = InterfaceMethod.Name;
             var attr = reflectMember.GetAttribute<ShimAttribute>();
             if (attr?.ImplementationName != null)
             {
                 implMemberName = (IsProperty ? implMemberName[0..4] : string.Empty)
                     + attr.ImplementationName;
+            }
+            if (attr?.DefinitionType != null)
+            {
+                implType = attr.DefinitionType;
             }
 
             // Handle proxy logic
@@ -125,18 +129,19 @@ namespace Shimterface.Internal
                 implMemberName ??= InterfaceMethod.Name;
             }
 
+            // If member is a direct implementation, use it
+            if (InterfaceMethod.ReflectedType.IsAssignableFrom(implType))
+            {
+                ImplementedMember = InterfaceMethod;
+                return true;
+            }
+
             // Find implementation return type
             Type? implReturnType = null;
             if (IsProperty)
             {
                 var propName = implMemberName[4..];
-                var propInfo = implType.GetProperties()
-                    .Where(p => p.Name == propName && p.PropertyType.IsEquivalentType(propertyType))
-                    .SingleOrDefault();
-                if (propInfo == null)
-                {
-                    propInfo = implType.GetProperty(propName);
-                }
+                var propInfo = implType.FindProperty(propName, propertyType);
 
                 implReturnType = propInfo?.PropertyType;
                 if (implReturnType == null)
