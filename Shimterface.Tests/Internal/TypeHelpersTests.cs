@@ -37,6 +37,52 @@ namespace Shimterface.Internal.Tests
 
         #endregion GetAttribute
 
+        #region GetConstructor
+
+        [TestMethod]
+        public void GetConstructor__Mismatch_generic__Null()
+        {
+            // Act
+            var res = typeof(string).GetConstructor(Array.Empty<Type>(), new[] { typeof(int) });
+
+            // Assert
+            Assert.IsNull(res);
+        }
+
+        [TestMethod]
+        public void GetConstructor__No_matches__Null()
+        {
+            // Act
+            var res = typeof(string).GetConstructor(Array.Empty<Type>(), Array.Empty<Type>());
+
+            // Assert
+            Assert.IsNull(res);
+        }
+
+        [ExcludeFromCodeCoverage]
+        public class TestClass3<T>
+        {
+            public TestClass3(int a)
+            {
+                a.ToString();
+            }
+            public TestClass3(T b)
+            {
+                b.ToString();
+            }
+        }
+
+        [TestMethod]
+        public void GetConstructor__Multiple_constructors__Exception()
+        {
+            Assert.ThrowsException<AmbiguousMatchException>(() =>
+            {
+                typeof(TestClass3<int>).GetConstructor(new[] { typeof(int) }, Array.Empty<Type>());
+            });
+        }
+
+        #endregion GetConstructor
+
         #region GetMethod
 
 #pragma warning disable IDE0060 // Remove unused parameter
@@ -120,7 +166,7 @@ namespace Shimterface.Internal.Tests
             // Assert
             Assert.IsNotNull(res);
         }
-        
+
         [TestMethod]
         public void GetMethod__No_potential_methods_by_name__Null()
         {
@@ -140,7 +186,7 @@ namespace Shimterface.Internal.Tests
             // Assert
             Assert.IsNull(res);
         }
-        
+
         [TestMethod]
         public void GetMethod__No_potential_methods_by_generic_args_count__Null()
         {
@@ -174,7 +220,7 @@ namespace Shimterface.Internal.Tests
         #endregion GetMethod
 
         #region IsEquivalentGenericMethodType
-        
+
         [TestMethod]
         public void IsEquivalentGenericMethodType__Same_open_type__True()
         {
@@ -187,7 +233,7 @@ namespace Shimterface.Internal.Tests
             // Assert
             Assert.IsTrue(res);
         }
-        
+
         [TestMethod]
         public void IsEquivalentGenericMethodType__Same_closed_type__True()
         {
@@ -200,7 +246,7 @@ namespace Shimterface.Internal.Tests
             // Assert
             Assert.IsTrue(res);
         }
-        
+
         [TestMethod]
         public void IsEquivalentGenericMethodType__Different_open_type__False()
         {
@@ -214,7 +260,7 @@ namespace Shimterface.Internal.Tests
             // Assert
             Assert.IsFalse(res);
         }
-        
+
         [TestMethod]
         public void IsEquivalentGenericMethodType__Different_closed_type__False()
         {

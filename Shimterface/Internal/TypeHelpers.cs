@@ -18,7 +18,7 @@ namespace Shimterface.Internal
                 .Single();
             return method.IsGenericMethodDefinition ? method.MakeGenericMethod(genericArgs) : method;
         }
-        
+
         /// <summary>
         /// Get attribute of method, including get/set for property
         /// </summary>
@@ -65,9 +65,16 @@ namespace Shimterface.Internal
 
         public static ConstructorInfo? GetConstructor(this Type type, Type[] parameterTypes, Type[] genericArgs)
         {
+            // Must be same kind of generic
+            var genArgs = type.GetGenericArguments();
+            if (type.IsGenericTypeDefinition != genericArgs.Any() || (type.IsGenericTypeDefinition && !genArgs.IsMatch(genericArgs, (a, b) => a.IsEquivalentGenericMethodType(b))))
+            {
+                return null;
+            }
+
             // Find potentials
             var constrs = type.GetConstructors()
-                .Where(m => m.GetParameters().Length == parameterTypes.Length && type.GetGenericArguments().Length == genericArgs.Length)
+                .Where(m => m.GetParameters().Length == parameterTypes.Length)
                 .ToArray();
             if (constrs.Length == 0)
             {
@@ -78,13 +85,7 @@ namespace Shimterface.Internal
             constrs = constrs.Where(m =>
                 {
                     var pars = m.GetParameters().Select(p => p.ParameterType).ToArray();
-                    if (!pars.IsMatch(parameterTypes, (a, b) => a.IsAssignableFrom(b) || a.IsEquivalentGenericMethodType(b)))
-                    {
-                        return false;
-                    }
-
-                    var genArgs = type.GetGenericArguments();
-                    return genArgs.IsMatch(genericArgs, (a, b) => a.IsEquivalentGenericMethodType(b));
+                    return pars.IsMatch(parameterTypes, (a, b) => a.IsAssignableFrom(b) || a.IsEquivalentGenericMethodType(b));
                 }).ToArray();
             if (constrs.Length > 1)
             {
