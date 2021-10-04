@@ -93,7 +93,7 @@ namespace Shimterface.Internal
             // Constructors don't provide other functionality
             if (isConstructor)
             {
-                ImplementedMember = implType.GetConstructor(paramTypes);
+                ImplementedMember = implType.GetConstructor(paramTypes, InterfaceMethod.GetGenericArguments());
                 return ImplementedMember != null;
             }
 

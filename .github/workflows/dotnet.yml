@@ -17,10 +17,6 @@ jobs:
       uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 5.0.x
-    - name: Setup .NET Core 3.1
-      uses: actions/setup-dotnet@v1.7.2
-      with:
-        dotnet-version: 3.1.x
     - name: Restore dependencies
       run: dotnet restore
     - name: Restore tools
@@ -31,13 +27,13 @@ jobs:
 #    - name: Test
 #      run: dotnet test --no-build --verbosity normal
     - name: Coverlet coverage test
-      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/netcoreapp3.1/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format lcov
+      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/net5.0/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format lcov
     - name: Publish to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: coverage.info
-#      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/netcoreapp3.1/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format cobertura
+#      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/net5.0/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format cobertura
 #    - name: Codecov
 #      uses: codecov/codecov-action@v1.3.1
 #      with:

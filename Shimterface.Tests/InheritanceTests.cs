@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable CA1822 // Mark members as static
 namespace Shimterface.Tests
 {
 	[TestClass]

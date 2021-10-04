@@ -4,13 +4,14 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>IFYates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.6.4</Version>
-        <AssemblyVersion>1.6.4</AssemblyVersion>
-        <FileVersion>1.6.4</FileVersion>
+        <Version>1.6.5</Version>
+        <AssemblyVersion>1.6.5</AssemblyVersion>
+        <FileVersion>1.6.5</FileVersion>
         <PackageProjectUrl>https://github.com/IFYates/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>[v1.6.4] Can specify true implementation type in attribute, to work around explicit implementation hiding
+        <PackageReleaseNotes>[v1.6.5] Generic method can be used to construct a generic type (Issue #14)
+[v1.6.4] Can specify true implementation type in attribute, to work around explicit implementation hiding
 [v1.6.3] Fixed issue #12 - shim of hidden property
 [v1.6.2] Fixed issue #11 - shim of hidden method
 [v1.6.1] Property and field overrides/adds can be done with methods.
