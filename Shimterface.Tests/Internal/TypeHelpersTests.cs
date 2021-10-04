@@ -40,6 +40,7 @@ namespace Shimterface.Internal.Tests
         #region GetMethod
 
 #pragma warning disable IDE0060 // Remove unused parameter
+#pragma warning disable CA1822 // Mark members as static
         [ExcludeFromCodeCoverage]
         public class TestClass1
         {
@@ -57,6 +58,7 @@ namespace Shimterface.Internal.Tests
             public void GenericParam<U>(U s) { }
             public void DeepGenericParam<U>(List<U> s) { }
         }
+#pragma warning restore CA1822 // Mark members as static
 #pragma warning restore IDE0060 // Remove unused parameter
 
         [TestMethod]

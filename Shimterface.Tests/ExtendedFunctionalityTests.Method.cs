@@ -187,10 +187,12 @@ namespace Shimterface.Tests
 		[ExcludeFromCodeCoverage]
 		public class TestClass_MethodFails
 		{
+#pragma warning disable CA1822 // Mark members as static
 			public void Fail()
 			{
 				throw new InvalidOperationException();
 			}
+#pragma warning restore CA1822 // Mark members as static
 		}
 		public interface ITestShim_MethodFails
 		{
