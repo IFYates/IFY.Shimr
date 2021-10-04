@@ -9,14 +9,16 @@ namespace Shimterface.Internal
     {
         public static MethodInfo BindStaticMethod(this Type type, string methodName, Type[] genericArgs, Type[] paramTypes)
         {
-            return type.GetMethods(BindingFlags.Public | BindingFlags.Static)
-                .Where(m => m.Name == methodName && m.IsGenericMethod
+            var method = type.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Where(m => m.Name == methodName
+                    && m.IsGenericMethodDefinition == (genericArgs.Length > 0)
                     && m.GetGenericArguments().Length == genericArgs.Length
                     && m.GetParameters().Length == paramTypes.Length
                     && m.GetParameters().Select(p => p.ParameterType).SequenceEqual(paramTypes))
-                .Single().MakeGenericMethod(genericArgs);
+                .Single();
+            return method.IsGenericMethodDefinition ? method.MakeGenericMethod(genericArgs) : method;
         }
-
+        
         /// <summary>
         /// Get attribute of method, including get/set for property
         /// </summary>
@@ -61,6 +63,35 @@ namespace Shimterface.Internal
             return propInfo ?? implType.GetProperty(propertyName);
         }
 
+        public static ConstructorInfo? GetConstructor(this Type type, Type[] parameterTypes, Type[] genericArgs)
+        {
+            // Find potentials
+            var constrs = type.GetConstructors()
+                .Where(m => m.GetParameters().Length == parameterTypes.Length && type.GetGenericArguments().Length == genericArgs.Length)
+                .ToArray();
+            if (constrs.Length == 0)
+            {
+                return null;
+            }
+
+            // Compare parameters
+            constrs = constrs.Where(m =>
+                {
+                    var pars = m.GetParameters().Select(p => p.ParameterType).ToArray();
+                    if (!pars.IsMatch(parameterTypes, (a, b) => a.IsAssignableFrom(b) || a.IsEquivalentGenericMethodType(b)))
+                    {
+                        return false;
+                    }
+
+                    var genArgs = type.GetGenericArguments();
+                    return genArgs.IsMatch(genericArgs, (a, b) => a.IsEquivalentGenericMethodType(b));
+                }).ToArray();
+            if (constrs.Length > 1)
+            {
+                throw new AmbiguousMatchException($"Found {constrs.Length} methods matching given criteria");
+            }
+            return constrs.SingleOrDefault();
+        }
         public static MethodInfo? GetMethod(this Type type, string name, Type[] parameterTypes, Type[] genericArgs)
             => GetMethod(type, name, null, parameterTypes, genericArgs);
         public static MethodInfo? GetMethod(this Type type, string name, Type? returnType, Type[] parameterTypes, Type[] genericArgs)
@@ -122,7 +153,7 @@ namespace Shimterface.Internal
         public static bool IsEquivalentGenericMethodType(this Type type, Type other)
         {
             return type == other
-                || (type.IsGenericMethodParameter && other.IsGenericMethodParameter)
+                || ((type.IsGenericMethodParameter || type.IsGenericParameter) && other.IsGenericMethodParameter)
                 || IsEquivalentGenericType(type, other);
         }
 
@@ -182,13 +213,13 @@ namespace Shimterface.Internal
         public static Type RebuildGenericType(this Type type, Type[] generics)
         {
             // Method generic argument
-            if (type.IsGenericMethodParameter)
+            if (type.IsGenericParameter || type.IsGenericMethodParameter)
             {
                 return generics[type.GenericParameterPosition];
             }
 
             // Fixed type
-            if (!type.IsGenericType)
+            if (!type.IsGenericTypeDefinition)
             {
                 return type;
             }
