@@ -109,7 +109,7 @@ namespace Shimterface.Tests
 
 			// Act
 			Assert.IsFalse(inst.WasCalled);
-			var res = shim.FullTest<string>(val);
+			var res = shim.FullTest(val);
 
 			// Assert
 			Assert.IsTrue(inst.WasCalled);
@@ -133,7 +133,7 @@ namespace Shimterface.Tests
 
 			// Act
 			Assert.IsFalse(inst.WasCalled);
-			var res = shim.DeepTest<string>(() => val);
+			var res = shim.DeepTest(() => val);
 
 			// Assert
 			Assert.IsTrue(inst.WasCalled);

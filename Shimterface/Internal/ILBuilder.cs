@@ -106,9 +106,9 @@ namespace Shimterface.Internal
                 returnType, paramTypes?.ToArray() ?? Array.Empty<Type>());
             return factory.GetILGenerator();
         }
-        public static ILGenerator DefinePublicMethod(this TypeBuilder tb, MethodInfo method, out GenericTypeParameterBuilder[] genericParams)
+        public static MethodBuilder DefinePublicMethod(this TypeBuilder tb, MethodInfo method, out Type[] paramTypes)
         {
-            var paramTypes = method.GetParameters().Select(p => p.ParameterType).ToArray();
+            paramTypes = method.GetParameters().Select(p => p.ParameterType).ToArray();
             var factory = tb.DefineMethod(method.Name, MethodAttributes.Public
                 | MethodAttributes.HideBySig
                 | MethodAttributes.Virtual,
@@ -118,8 +118,7 @@ namespace Shimterface.Internal
             {
                 // Define generic arguments and constraints
                 var genParams = method.GetGenericArguments().Cast<TypeInfo>().ToArray();
-                genericParams = factory.DefineGenericParameters(genParams.Select(a => a.Name).ToArray());
-                var methodGenPars = genericParams;
+                var methodGenPars = factory.DefineGenericParameters(genParams.Select(a => a.Name).ToArray());
                 for (var i = 0; i < methodGenPars.Length; ++i)
                 {
                     // HACK: Reflection is reporting constraint interface hierarchy, which breaks compilation
@@ -139,12 +138,8 @@ namespace Shimterface.Internal
                 // Resolve T in return
                 factory.SetReturnType(factory.ReturnType.RebuildGenericType(methodGenPars));
             }
-            else
-            {
-                genericParams = Array.Empty<GenericTypeParameterBuilder>();
-            }
 
-            return factory.GetILGenerator();
+            return factory;
         }
 
         public static void EmitTypeShim(this ILGenerator impl, Type fromType, Type resultType)
@@ -180,35 +175,28 @@ namespace Shimterface.Internal
 
         public static void WrapConstructor(this TypeBuilder tb, ShimBinding binding, ConstructorInfo constrInfo)
         {
-            var impl = tb.DefinePublicMethod(binding.InterfaceMethod, out var genericParams);
-            var argsArr = impl.DeclareLocal(typeof(object[]));
-
+            var factory = tb.DefinePublicMethod(binding.InterfaceMethod, out var args);
+            var impl = factory.GetILGenerator();
+            var genericParams = factory.GetGenericArguments();
 
             if (constrInfo.DeclaringType.IsGenericTypeDefinition)
             {
                 // Build args array
-                var args = constrInfo.GetParameters();
+                var argsArr = impl.DeclareLocal(typeof(object[]));
                 impl.Emit(OpCodes.Ldc_I4, args.Length);
                 impl.Emit(OpCodes.Newarr, typeof(object));
                 impl.Emit(OpCodes.Dup);
                 for (var i = 0; i < args.Length; ++i)
                 {
-                    var argType = args[0].ParameterType;
-                    if (argType.IsGenericParameter)
-                    {
-                        argType = genericParams.First(p => p.Name == argType.Name);
-                    }
-
                     impl.Emit(OpCodes.Ldc_I4, i);
                     impl.Ldarg((byte)(i + 1));
-                    impl.Emit(OpCodes.Box, argType);
+                    impl.Emit(OpCodes.Box, args[i]);
                     impl.Emit(OpCodes.Stelem_Ref);
                 }
                 impl.Emit(OpCodes.Stloc, argsArr.LocalIndex);
 
                 // Build target type
-                var tgtType = constrInfo.DeclaringType.RebuildGenericType(genericParams);
-                impl.Emit(OpCodes.Ldtoken, tgtType);
+                impl.Emit(OpCodes.Ldtoken, constrInfo.DeclaringType.RebuildGenericType(genericParams));
                 impl.Emit(OpCodes.Ldloc, argsArr.LocalIndex);
                 impl.Emit(OpCodes.Call, typeof(Activator).GetMethod(nameof(Activator.CreateInstance), new[] { typeof(Type), typeof(object[]) }));
             }
@@ -219,7 +207,7 @@ namespace Shimterface.Internal
             }
 
             // Shim
-            var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { binding.InterfaceMethod.ReturnType.RebuildGenericType(genericParams) }, new[] { typeof(object) });
+            var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { factory.ReturnType }, new[] { typeof(object) });
             impl.Emit(OpCodes.Call, shimMethod);
 
             impl.Emit(OpCodes.Ret);
@@ -235,7 +223,7 @@ namespace Shimterface.Internal
                 return;
             }
 
-            var impl = tb.DefinePublicMethod(binding.InterfaceMethod, out _);
+            var impl = tb.DefinePublicMethod(binding.InterfaceMethod, out _).GetILGenerator();
 
             if (binding.ProxyImplementationMember != null)
             {
@@ -248,7 +236,7 @@ namespace Shimterface.Internal
 
         public static void WrapMethod(this TypeBuilder tb, FieldInfo? instField, ShimBinding binding, MethodInfo methodInfo)
         {
-            var impl = tb.DefinePublicMethod(binding.InterfaceMethod, out _);
+            var impl = tb.DefinePublicMethod(binding.InterfaceMethod, out _).GetILGenerator();
 
             if (binding.ProxyImplementationMember != null)
             {
@@ -348,7 +336,7 @@ namespace Shimterface.Internal
         public static void MethodThrowException<T>(this TypeBuilder tb, MethodInfo methodInfo)
             where T : Exception
         {
-            var impl = tb.DefinePublicMethod(methodInfo, out _);
+            var impl = tb.DefinePublicMethod(methodInfo, out _).GetILGenerator();
             impl.Emit(OpCodes.Ldarg_0); // this
 
             var notImplementedConstr = typeof(T).GetConstructor(new Type[0]);
