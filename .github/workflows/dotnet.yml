@@ -13,10 +13,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Setup .NET 5
       uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 5.0.x
+
     - name: Restore dependencies
       run: dotnet restore
     - name: Restore tools
@@ -28,7 +30,8 @@ jobs:
 #      run: dotnet test --no-build --verbosity normal
     - name: Coverlet coverage test
       run: dotnet coverlet ./Shimterface.Tests/bin/Debug/net5.0/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format lcov
-    - name: Publish to Coveralls
+
+    - name: Publish coverage results to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -49,3 +52,8 @@ jobs:
       with:
         name: mutation-report.html
         path: ./**/mutation-report.html
+
+    - name: Publish package
+      uses: actions/upload-artifact@v2
+      with:
+        path: ./**/Shimterface.Standard.*.nupkg
