@@ -185,9 +185,9 @@ namespace Shimterface.Internal
                 var argsArr = impl.DeclareLocal(typeof(object[]));
                 impl.Emit(OpCodes.Ldc_I4, args.Length);
                 impl.Emit(OpCodes.Newarr, typeof(object));
-                impl.Emit(OpCodes.Dup);
                 for (var i = 0; i < args.Length; ++i)
                 {
+                    impl.Emit(OpCodes.Dup);
                     impl.Emit(OpCodes.Ldc_I4, i);
                     impl.Ldarg((byte)(i + 1));
                     impl.Emit(OpCodes.Box, args[i]);

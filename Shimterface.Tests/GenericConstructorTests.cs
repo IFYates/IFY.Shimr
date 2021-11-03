@@ -1,10 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
 
 namespace Shimterface.Tests
 {
@@ -14,6 +11,7 @@ namespace Shimterface.Tests
         public interface IInstanceInterface<T>
         {
             T Value { get; }
+            string Text { get; }
             int Count { get; }
         }
         public interface IFactoryInterface
@@ -22,12 +20,15 @@ namespace Shimterface.Tests
             IInstanceInterface<T> Create<T>(T value);
             [ConstructorShim(typeof(TestClass<>))]
             IInstanceInterface<T> Create<T>(IEnumerable<T> value);
+            [ConstructorShim(typeof(TestClass<>))]
+            IInstanceInterface<T> Create<T>(int a, int b, int c, int d, int e);
         }
 
         [ExcludeFromCodeCoverage]
         public class TestClass<T>
         {
             public T Value { get; private set; }
+            public string Text { get; set; }
             public int Count { get; set; }
 
             public TestClass(T value)
@@ -39,6 +40,11 @@ namespace Shimterface.Tests
             {
                 Value = value.First();
                 Count = value.Count();
+            }
+            public TestClass(int a, int b, int c, int d, int e)
+            {
+                Value = default;
+                Count = a + b + c + d + e;
             }
         }
 
@@ -73,6 +79,18 @@ namespace Shimterface.Tests
             Assert.AreEqual(2, instB.Value);
             Assert.AreEqual(4, instB.Count);
             Assert.IsInstanceOfType(((IShim)instA).Unshim(), typeof(TestClass<string>));
+        }
+
+        [TestMethod]
+        public void Can_shim_to_constructor_with_multiple_args()
+        {
+            var shim = ShimBuilder.Create<IFactoryInterface>();
+
+            var inst = shim.Create<string>(1, 2, 3, 4, 5);
+
+            Assert.IsNull(inst.Value);
+            Assert.AreEqual(1 + 2 + 3 + 4 + 5, inst.Count);
+            Assert.IsInstanceOfType(((IShim)inst).Unshim(), typeof(TestClass<string>));
         }
     }
 }
