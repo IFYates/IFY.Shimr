@@ -4,6 +4,7 @@ Utility for creating a dynamic object facade/proxy to allow for using an object 
 [![Build & Test](https://github.com/IFYates/Shimterface/actions/workflows/dotnet.yml/badge.svg)](https://github.com/IFYates/Shimterface/actions/workflows/dotnet.yml)
 [![Coverage Status](https://coveralls.io/repos/github/IFYates/Shimterface/badge.svg?branch=master)](https://coveralls.io/github/IFYates/Shimterface?branch=master)
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2FIFYates%2FShimterface%2Frefs%2Fheads%2Fmaster)](https://dashboard.stryker-mutator.io/reports/github.com/IFYates/Shimterface/refs/heads/master)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/8f5585dd2c4f402893420e0ff7edf5f6)](https://www.codacy.com/gh/IFYates/Shimterface/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IFYates/Shimterface&amp;utm_campaign=Badge_Grade)
 
 [![NuGet Version](https://img.shields.io/nuget/v/Shimterface.Standard)](https://www.nuget.org/packages/Shimterface.Standard/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/Shimterface.Standard)](https://www.nuget.org/packages/Shimterface.Standard/)
