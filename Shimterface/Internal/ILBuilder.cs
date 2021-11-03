@@ -25,7 +25,7 @@ namespace Shimterface.Internal
                     impl.Emit(OpCodes.Ldarg_3);
                     break;
                 default:
-                    impl.Emit(OpCodes.Ldarg, num);
+                    impl.Emit(OpCodes.Ldarg_S, num);
                     break;
             }
         }
@@ -182,6 +182,7 @@ namespace Shimterface.Internal
             if (constrInfo.DeclaringType.IsGenericTypeDefinition)
             {
                 // Build args array
+                var pars = binding.InterfaceMethod.GetParameters();
                 var argsArr = impl.DeclareLocal(typeof(object[]));
                 impl.Emit(OpCodes.Ldc_I4, args.Length);
                 impl.Emit(OpCodes.Newarr, typeof(object));

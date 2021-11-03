@@ -16,8 +16,8 @@ namespace Shimterface.Internal.Tests
         [DataRow((byte)1, 1)]
         [DataRow((byte)2, 1)]
         [DataRow((byte)3, 1)]
-        [DataRow((byte)4, 3)]
-        [DataRow((byte)5, 3)]
+        [DataRow((byte)4, 2)]
+        [DataRow((byte)5, 2)]
         public void Ldarg__Provides_efficient_bytecode(byte input, int expOffset)
         {
             // Arrange
