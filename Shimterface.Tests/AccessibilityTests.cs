@@ -3,7 +3,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable IDE0051 // Remove unused private members
-#pragma warning disable IDE1006 // Naming Styles
 namespace Shimterface.Tests
 {
 	[TestClass]
@@ -44,10 +43,12 @@ namespace Shimterface.Tests
 		{
 			var obj = new PrivateTestClass();
 
-			Assert.ThrowsException<TypeLoadException>(() =>
+			var ex = Assert.ThrowsException<TypeLoadException>(() =>
 			{
 				ShimBuilder.Shim<IPrivateInterface>(obj);
 			});
+
+			Assert.IsTrue(ex.Message.Contains(" attempting to implement an inaccessible interface."), ex.Message);
 		}
 
 		[TestMethod]
@@ -57,10 +58,12 @@ namespace Shimterface.Tests
 
 			var shim = ShimBuilder.Shim<IPublicInterface>(obj);
 
-			Assert.ThrowsException<MethodAccessException>(() =>
+			var ex = Assert.ThrowsException<MethodAccessException>(() =>
 			{
 				shim.Test();
 			});
+
+			Assert.IsTrue(ex.Message.Contains(" access method 'Shimterface.Tests.AccessibilityTests+PrivateTestClass.Test()' failed."), ex.Message);
 		}
 
 		[TestMethod]
@@ -68,10 +71,12 @@ namespace Shimterface.Tests
 		{
 			var obj = new PublicTestClass();
 
-			Assert.ThrowsException<MissingMemberException>(() =>
+			var ex = Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				ShimBuilder.Shim<IPublicInterface>(obj);
 			});
+
+			Assert.IsTrue(ex.Message.Contains(" missing method: Void Test()"), ex.Message);
 		}
 
 		[TestMethod]
@@ -95,5 +100,4 @@ namespace Shimterface.Tests
 		}
 	}
 }
-#pragma warning restore IDE1006 // Naming Styles
 #pragma warning restore IDE0051 // Remove unused private members

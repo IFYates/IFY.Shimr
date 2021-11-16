@@ -85,19 +85,23 @@ namespace Shimterface.Tests
 		[TestMethod]
 		public void Must_only_define_static_methods()
 		{
-			Assert.ThrowsException<InvalidCastException>(() =>
+			var ex = Assert.ThrowsException<InvalidCastException>(() =>
 			{
 				ShimBuilder.Create<IBadStaticMethod>();
 			});
+
+			Assert.AreEqual("Factory shim cannot implement non-static member: Shimterface.Tests.StaticMemberTests+IBadStaticMethod Test", ex.Message);
 		}
 
 		[TestMethod]
 		public void Normal_shims_cannot_use_StaticShimAttribute()
 		{
-			Assert.ThrowsException<InvalidCastException>(() =>
+			var ex = Assert.ThrowsException<InvalidCastException>(() =>
 			{
 				ShimBuilder.Shim<IStaticMethod>(new object());
 			});
+
+			Assert.AreEqual("Instance shim cannot implement static member: Shimterface.Tests.StaticMemberTests+IStaticMethod Test", ex.Message);
 		}
 	}
 }

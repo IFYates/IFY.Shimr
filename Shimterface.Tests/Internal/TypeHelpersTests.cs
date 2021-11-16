@@ -211,10 +211,12 @@ namespace Shimterface.Internal.Tests
             var params2 = method2.GetParameters().Select(p => p.ParameterType).ToArray();
 
             // Act
-            Assert.ThrowsException<AmbiguousMatchException>(() =>
+            var ex = Assert.ThrowsException<AmbiguousMatchException>(() =>
             {
                 typeof(IMethods1).GetMethod(method2.Name, params2, genArgs2);
             });
+
+            Assert.AreEqual("Found 2 methods matching given criteria", ex.Message);
         }
 
         #endregion GetMethod

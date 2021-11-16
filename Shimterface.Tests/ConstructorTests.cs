@@ -1,8 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks.Dataflow;
 
 namespace Shimterface.Tests
 {
@@ -70,10 +68,12 @@ namespace Shimterface.Tests
         [TestMethod]
         public void Can_not_shim_to_constructor_with_void_return_type()
         {
-            Assert.ThrowsException<ArgumentException>(() =>
+            var ex = Assert.ThrowsException<ArgumentException>(() =>
             {
                 ShimBuilder.Create<IFactoryInterface2>();
             });
+
+            Assert.AreEqual("The type 'System.Void' may not be used as a type argument.", ex.Message);
         }
 
         public interface IFactoryInterface3
@@ -84,10 +84,12 @@ namespace Shimterface.Tests
         [TestMethod]
         public void Can_not_shim_to_constructor_with_incorrect_return_type()
         {
-            Assert.ThrowsException<ArgumentException>(() =>
-            {
-                ShimBuilder.Create<IFactoryInterface3>();
-            });
+            var ex = Assert.ThrowsException<ArgumentException>(() =>
+             {
+                 ShimBuilder.Create<IFactoryInterface3>();
+             });
+
+            Assert.IsTrue(ex.Message.Contains(" violates the constraint of type 'TInterface'."), ex.Message);
         }
 
         [StaticShim(typeof(TestClass))]
@@ -114,10 +116,12 @@ namespace Shimterface.Tests
         [TestMethod]
         public void Can_not_shim_to_missing_constructor()
         {
-            Assert.ThrowsException<MissingMemberException>(() =>
+            var ex = Assert.ThrowsException<MissingMemberException>(() =>
             {
                 ShimBuilder.Create<IFactoryInterface5>();
             });
+
+            Assert.IsTrue(ex.Message.Contains(" missing method:"), ex.Message);
         }
     }
 }

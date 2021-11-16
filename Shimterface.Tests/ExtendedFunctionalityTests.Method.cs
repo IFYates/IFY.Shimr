@@ -513,10 +513,12 @@ namespace Shimterface.Tests
 			var obj = new TestClass_OnlyMethodA();
 
 			// Act
-			Assert.ThrowsException<MissingMemberException>(() =>
+			var ex = Assert.ThrowsException<MissingMemberException>(() =>
 			{
 				obj.Shim<ITestShim_BadImpl>();
 			});
+
+			Assert.IsTrue(ex.Message.Contains(" missing method:"), ex.Message);
 		}
 
 		#endregion Add

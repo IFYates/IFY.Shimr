@@ -134,10 +134,12 @@ namespace Shimterface.Tests
 		{
 			var shim = ShimBuilder.Create<IReadonlyFieldTest>();
 
-			Assert.ThrowsException<InvalidOperationException>(() =>
+			var ex = Assert.ThrowsException<InvalidOperationException>(() =>
 			{
 				shim.Immutable = "new_value";
 			});
+
+			Assert.IsTrue(ex.Message.Contains("Operation is not valid "), ex.Message);
 		}
 
 		[TestMethod]
@@ -147,10 +149,12 @@ namespace Shimterface.Tests
 
 			var shim = ShimBuilder.Create<IStaticOverrideFieldTest>();
 
-			Assert.ThrowsException<InvalidCastException>(() =>
+			var ex = Assert.ThrowsException<InvalidCastException>(() =>
 			{
 				shim.Child.ToString(); // Throws exception on auto-shim
 			});
+
+			Assert.AreEqual("Instance shim cannot implement static member: Shimterface.Tests.StaticFieldShimTests+IGetSetFieldTest get_VValue", ex.Message);
 		}
 
 		[TestMethod]

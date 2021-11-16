@@ -79,10 +79,12 @@ namespace Shimterface.Tests
 			var obj = new TestClass_HasField();
 
 			// Act
-			Assert.ThrowsException<InvalidCastException>(() =>
+			var ex = Assert.ThrowsException<InvalidCastException>(() =>
 			{
 				obj.Shim<ITestShim_AddField>();
 			});
+
+			Assert.IsTrue(ex.Message.Contains(" adding existing method:"), ex.Message);
 		}
 
 		public interface ITestShim_OverrideField
@@ -144,10 +146,12 @@ namespace Shimterface.Tests
 			var obj = new TestClass_NoField();
 
 			// Act
-			Assert.ThrowsException<InvalidCastException>(() =>
+			var ex = Assert.ThrowsException<InvalidCastException>(() =>
 			{
 				obj.Shim<ITestShim_OverrideField>();
 			});
+
+			Assert.IsTrue(ex.Message.Contains(" override of missing method:"), ex.Message);
 		}
 
 		public interface ITestShim_OverrideFieldAlias
