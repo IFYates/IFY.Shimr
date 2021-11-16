@@ -4,13 +4,14 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>IFYates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.6.6</Version>
-        <AssemblyVersion>1.6.6</AssemblyVersion>
-        <FileVersion>1.6.6</FileVersion>
+        <Version>1.6.7</Version>
+        <AssemblyVersion>1.6.7</AssemblyVersion>
+        <FileVersion>1.6.7</FileVersion>
         <PackageProjectUrl>https://github.com/IFYates/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>[v1.6.6] Fixed issue #16 - invalid shim for multiple args to generic type constructor
+        <PackageReleaseNotes>[v1.6.7] Fixed issue #17 - .NET 6 support for constructors on generic types
+[v1.6.6] Fixed issue #16 - invalid shim for multiple args to generic type constructor
 [v1.6.5] Generic method can be used to construct a generic type (Issue #14)
 [v1.6.4] Can specify true implementation type in attribute, to work around explicit implementation hiding
 [v1.6.3] Fixed issue #12 - shim of hidden property
