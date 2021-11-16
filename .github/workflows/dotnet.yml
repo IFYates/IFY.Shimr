@@ -53,13 +53,13 @@ jobs:
 #        files: coverage.cobertura.xml
 #        verbose: true
 
-#    - name: Run Stryker.NET
-#      run: cd ./Shimterface.Tests/; dotnet stryker --project Shimterface.Standard.Tests.csproj --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/Shimterface --dashboard-version $GITHUB_REF
-#    - name: Upload mutation report
-#      uses: actions/upload-artifact@v2.2.2
-#      with:
-#        name: mutation-report.html
-#        path: ./**/mutation-report.html
+    - name: Run Stryker.NET
+      run: dotnet stryker --solution "Shimterface.Standard.sln" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/Shimterface --dashboard-version $GITHUB_REF
+    - name: Upload mutation report
+      uses: actions/upload-artifact@v2.2.2
+      with:
+        name: mutation-report.html
+        path: ./**/mutation-report.html
 
     - name: Publish package
       uses: actions/upload-artifact@v2
