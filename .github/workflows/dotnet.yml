@@ -14,10 +14,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Setup .NET Core 3.1
+      uses: actions/setup-dotnet@v1.7.2
+      with:
+        dotnet-version: 3.1.x
     - name: Setup .NET 5
       uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 5.0.x
+    - name: Setup .NET 6
+      uses: actions/setup-dotnet@v1.7.2
+      with:
+        dotnet-version: 6.0.x
 
     - name: Restore dependencies
       run: dotnet restore
@@ -45,13 +53,13 @@ jobs:
 #        files: coverage.cobertura.xml
 #        verbose: true
 
-    - name: Run Stryker.NET
-      run: cd ./Shimterface.Tests/; dotnet stryker --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/Shimterface --dashboard-version $GITHUB_REF
-    - name: Upload mutation report
-      uses: actions/upload-artifact@v2.2.2
-      with:
-        name: mutation-report.html
-        path: ./**/mutation-report.html
+#    - name: Run Stryker.NET
+#      run: cd ./Shimterface.Tests/; dotnet stryker --project Shimterface.Standard.Tests.csproj --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/Shimterface --dashboard-version $GITHUB_REF
+#    - name: Upload mutation report
+#      uses: actions/upload-artifact@v2.2.2
+#      with:
+#        name: mutation-report.html
+#        path: ./**/mutation-report.html
 
     - name: Publish package
       uses: actions/upload-artifact@v2

@@ -12,28 +12,6 @@ namespace Shimterface.Internal.Tests
     public class ILBuilderTests
     {
         [TestMethod]
-        [DataRow((byte)0, 1)]
-        [DataRow((byte)1, 1)]
-        [DataRow((byte)2, 1)]
-        [DataRow((byte)3, 1)]
-        [DataRow((byte)4, 2)]
-        [DataRow((byte)5, 2)]
-        public void Ldarg__Provides_efficient_bytecode(byte input, int expOffset)
-        {
-            // Arrange
-            var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Shimterface.Tests.dynamic"), AssemblyBuilderAccess.Run);
-            var mod = asm.DefineDynamicModule("Shimterface.Tests.dynamic");
-            var tb = mod.DefineType($"TestClass", TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout, null, null);
-
-            // Act
-            var impl = tb.DefinePublicMethod("TestMethod", typeof(bool), new List<Type> { typeof(string), typeof(int) });
-            ILBuilder.Ldarg(impl, input);
-
-            // Assert
-            Assert.AreEqual(expOffset, impl.ILOffset);
-        }
-
-        [TestMethod]
         public void DefinePublicMethod__With_paramTypes__Creates_method()
         {
             // Arrange

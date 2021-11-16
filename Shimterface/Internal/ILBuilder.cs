@@ -8,28 +8,6 @@ namespace Shimterface.Internal
 {
     internal static class ILBuilder
     {
-        public static void Ldarg(this ILGenerator impl, byte num)
-        {
-            switch (num)
-            {
-                case 0:
-                    impl.Emit(OpCodes.Ldarg_0);
-                    break;
-                case 1:
-                    impl.Emit(OpCodes.Ldarg_1);
-                    break;
-                case 2:
-                    impl.Emit(OpCodes.Ldarg_2);
-                    break;
-                case 3:
-                    impl.Emit(OpCodes.Ldarg_3);
-                    break;
-                default:
-                    impl.Emit(OpCodes.Ldarg_S, num);
-                    break;
-            }
-        }
-
         private static bool resolveIfInstance(bool isStatic, ILGenerator impl, FieldInfo? instField)
         {
             if (isStatic || instField == null)
@@ -175,7 +153,7 @@ namespace Shimterface.Internal
 
         public static void WrapConstructor(this TypeBuilder tb, ShimBinding binding, ConstructorInfo constrInfo)
         {
-            var factory = tb.DefinePublicMethod(binding.InterfaceMethod, out var args);
+            var factory = tb.DefinePublicMethod(binding.InterfaceMethod, out var argTypes);
             var impl = factory.GetILGenerator();
             var genericParams = factory.GetGenericArguments();
 
@@ -184,21 +162,23 @@ namespace Shimterface.Internal
                 // Build args array
                 var pars = binding.InterfaceMethod.GetParameters();
                 var argsArr = impl.DeclareLocal(typeof(object[]));
-                impl.Emit(OpCodes.Ldc_I4, args.Length);
+                impl.Ldc_I4(argTypes.Length);
                 impl.Emit(OpCodes.Newarr, typeof(object));
-                for (var i = 0; i < args.Length; ++i)
+                for (var i = 0; i < argTypes.Length; ++i)
                 {
                     impl.Emit(OpCodes.Dup);
-                    impl.Emit(OpCodes.Ldc_I4, i);
+                    impl.Ldc_I4(i);
                     impl.Ldarg((byte)(i + 1));
-                    impl.Emit(OpCodes.Box, args[i]);
+                    impl.Emit(OpCodes.Box, argTypes[i]);
                     impl.Emit(OpCodes.Stelem_Ref);
                 }
-                impl.Emit(OpCodes.Stloc, argsArr.LocalIndex);
+                impl.Stloc(argsArr.LocalIndex);
 
                 // Build target type
-                impl.Emit(OpCodes.Ldtoken, constrInfo.DeclaringType.RebuildGenericType(genericParams));
-                impl.Emit(OpCodes.Ldloc, argsArr.LocalIndex);
+                var resultType = constrInfo.DeclaringType.RebuildGenericType(genericParams);
+                impl.Emit(OpCodes.Ldtoken, resultType);
+                impl.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle), new[] { typeof(RuntimeTypeHandle) }));
+                impl.Ldloc(argsArr.LocalIndex);
                 impl.Emit(OpCodes.Call, typeof(Activator).GetMethod(nameof(Activator.CreateInstance), new[] { typeof(Type), typeof(object[]) }));
             }
             else
