@@ -17,6 +17,8 @@ namespace Shimterface.Tests
         public interface IFactoryInterface
         {
             [ConstructorShim(typeof(TestClass<>))]
+            IInstanceInterface<T> Create<T>();
+            [ConstructorShim(typeof(TestClass<>))]
             IInstanceInterface<T> Create<T>(T value);
             [ConstructorShim(typeof(TestClass<>))]
             IInstanceInterface<T> Create<T>(IEnumerable<T> value);
@@ -31,6 +33,10 @@ namespace Shimterface.Tests
             public string Text { get; set; }
             public int Count { get; set; }
 
+            public TestClass()
+            {
+                Count = 0;
+            }
             public TestClass(T value)
             {
                 Value = value;
@@ -51,6 +57,17 @@ namespace Shimterface.Tests
         public interface ITest
         {
             object Exec();
+        }
+
+        [TestMethod]
+        public void Can_shim_to_constructor_without_args()
+        {
+            var shim = ShimBuilder.Create<IFactoryInterface>();
+
+            var inst = shim.Create<string>();
+
+            Assert.AreEqual(0, inst.Count);
+            Assert.IsInstanceOfType(((IShim)inst).Unshim(), typeof(TestClass<string>));
         }
 
         [TestMethod]
