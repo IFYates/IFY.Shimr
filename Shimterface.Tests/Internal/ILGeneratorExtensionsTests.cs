@@ -46,8 +46,13 @@ namespace Shimterface.Internal.Tests
         [DataRow((byte)6, 1)]
         [DataRow((byte)7, 1)]
         [DataRow((byte)8, 1)]
+#if NETCOREAPP3_1
+        [DataRow((byte)9, 5)]
+        [DataRow((byte)10, 5)]
+#else
         [DataRow((byte)9, 2)]
         [DataRow((byte)10, 2)]
+#endif
         public void Ldc_I4__Provides_efficient_bytecode(byte input, int expOffset)
         {
             // Arrange

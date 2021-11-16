@@ -177,12 +177,9 @@ namespace Shimterface.Internal
                 // Build target type
                 var resultType = constrInfo.DeclaringType.RebuildGenericType(genericParams);
                 impl.Emit(OpCodes.Ldtoken, resultType);
-                //impl.Emit(OpCodes.Call, typeof(Type).
+                impl.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle), new[] { typeof(RuntimeTypeHandle) }));
                 impl.Ldloc(argsArr.LocalIndex);
                 impl.Emit(OpCodes.Call, typeof(Activator).GetMethod(nameof(Activator.CreateInstance), new[] { typeof(Type), typeof(object[]) }));
-                //impl.Emit(OpCodes.Castclass, resultType);
-                //impl.Stloc(1);
-                //impl.Ldloc(1);
             }
             else
             {
