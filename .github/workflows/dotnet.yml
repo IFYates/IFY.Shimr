@@ -54,7 +54,7 @@ jobs:
 #        verbose: true
 
     - name: Run Stryker.NET
-      run: dotnet stryker --solution "Shimterface.Standard.sln" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/Shimterface --dashboard-version $GITHUB_REF
+      run: dotnet stryker -s "Shimterface.Standard.sln" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/Shimterface --dashboard-version $GITHUB_REF
     - name: Upload mutation report
       uses: actions/upload-artifact@v2.2.2
       with:
