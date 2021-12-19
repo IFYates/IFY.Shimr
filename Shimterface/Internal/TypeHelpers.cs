@@ -60,7 +60,14 @@ namespace Shimterface.Internal
                 .Where(p => p.Name == propertyName && p.PropertyType.IsEquivalentType(propertyType))
                 .SingleOrDefault();
 
-            return propInfo ?? implType.GetProperty(propertyName);
+            try
+            {
+                return propInfo ?? implType.GetProperty(propertyName);
+            }
+            catch (AmbiguousMatchException)
+            {
+                throw new AmbiguousMatchException($"Found more than 1 property called '{propertyName}' in the hierarchy for type '{implType.FullName}'. Consider using ShimAttribute to specify the definition type of the property to shim.");
+            }
         }
 
         public static ConstructorInfo? GetConstructor(this Type type, Type[] parameterTypes, Type[] genericArgs)
@@ -89,7 +96,7 @@ namespace Shimterface.Internal
                 }).ToArray();
             if (constrs.Length > 1)
             {
-                throw new AmbiguousMatchException($"Found {constrs.Length} methods matching given criteria");
+                throw new AmbiguousMatchException($"Found {constrs.Length} constructors matching given criteria for type '{type.FullName}'.");
             }
             return constrs.SingleOrDefault();
         }
@@ -125,7 +132,7 @@ namespace Shimterface.Internal
                 }).ToArray();
             if (methods.Length > 1)
             {
-                throw new AmbiguousMatchException($"Found {methods.Length} methods matching given criteria");
+                throw new AmbiguousMatchException($"Found {methods.Length} methods matching criteria for '{name}' in the hierarchy for type '{type.FullName}'. Consider using ShimAttribute to specify the definition type of the property to shim.");
             }
             return methods.SingleOrDefault();
         }
