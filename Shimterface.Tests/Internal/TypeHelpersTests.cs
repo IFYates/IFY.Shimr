@@ -216,7 +216,7 @@ namespace Shimterface.Internal.Tests
                 typeof(IMethods1).GetMethod(method2.Name, params2, genArgs2);
             });
 
-            Assert.AreEqual("Found 2 methods matching given criteria", ex.Message);
+            Assert.AreEqual("Found 2 methods matching criteria for 'Method' in the hierarchy for type 'Shimterface.Internal.Tests.TypeHelpersTests+IMethods1'. Consider using ShimAttribute to specify the definition type of the property to shim.", ex.Message);
         }
 
         #endregion GetMethod
