@@ -57,7 +57,7 @@ namespace Shimterface.Internal
 
             // Support explicitly implemented interface members (non-public)
             propInfo ??= implType.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(p => p.Name == propertyName && p.PropertyType.IsEquivalentType(propertyType))
+                .Where(p => p.Name.EndsWith("." + propertyName) && p.PropertyType.IsEquivalentType(propertyType))
                 .SingleOrDefault();
 
             try

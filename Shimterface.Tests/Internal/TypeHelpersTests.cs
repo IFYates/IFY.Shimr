@@ -13,6 +13,46 @@ namespace Shimterface.Internal.Tests
     [TestClass]
     public class TypeHelpersTests
     {
+        [TestMethod]
+        public void BindStaticMethod__Supports_nongeneric()
+        {
+            // Act
+            var res = typeof(DateTime).BindStaticMethod(nameof(DateTime.Parse), Array.Empty<Type>(), new[] { typeof(string) });
+
+            // Assert
+            Assert.AreEqual(nameof(DateTime.Parse), res.Name);
+            Assert.AreEqual(typeof(string), res.GetParameters().Single().ParameterType);
+        }
+
+        [ExcludeFromCodeCoverage]
+        public class FindPropertyTestBaseClass
+        {
+            public long Value { get; set; }
+        }
+        public interface IFindPropertyTestInterface
+        {
+            long Value { get; set; }
+        }
+        [ExcludeFromCodeCoverage]
+        public class FindPropertyTestClass : FindPropertyTestBaseClass, IFindPropertyTestInterface
+        {
+            long IFindPropertyTestInterface.Value { get; set; }
+            public new string Value { get; set; }
+        }
+
+        [TestMethod]
+        public void FindProperty__Different_property_type_Multiple_matches__Fail()
+        {
+            // Act
+            var ex = Assert.ThrowsException<AmbiguousMatchException>(() =>
+            {
+                _ = typeof(FindPropertyTestClass).FindProperty(nameof(FindPropertyTestClass.Value), typeof(int));
+            });
+
+            // Assert
+            Assert.AreEqual("Found more than 1 property called 'Value' in the hierarchy for type 'Shimterface.Internal.Tests.TypeHelpersTests+FindPropertyTestClass'. Consider using ShimAttribute to specify the definition type of the property to shim.", ex.Message);
+        }
+
         #region GetAttribute
 
         [TestMethod]
@@ -85,27 +125,23 @@ namespace Shimterface.Internal.Tests
 
         #region GetMethod
 
-#pragma warning disable IDE0060 // Remove unused parameter
-#pragma warning disable CA1822 // Mark members as static
         [ExcludeFromCodeCoverage]
         public class TestClass1
         {
             public void Generic() { } // Must not match
             public void Generic<T>() { }
-            public void FixedParam<T>(string s) { }
-            public void GenericParam<T>(T s) { }
-            public void DeepGenericParam<T>(List<T> s) { }
+            public void FixedParam<T>(string s) { _ = s; }
+            public void GenericParam<T>(T s) { _ = s; }
+            public void DeepGenericParam<T>(List<T> s) { _ = s; }
         }
         [ExcludeFromCodeCoverage]
         public class TestClass2
         {
             public void Generic<U>() { }
-            public void FixedParam<U>(string s) { }
-            public void GenericParam<U>(U s) { }
-            public void DeepGenericParam<U>(List<U> s) { }
+            public void FixedParam<U>(string s) { _ = s; }
+            public void GenericParam<U>(U s) { _ = s; }
+            public void DeepGenericParam<U>(List<U> s) { _ = s; }
         }
-#pragma warning restore CA1822 // Mark members as static
-#pragma warning restore IDE0060 // Remove unused parameter
 
         [TestMethod]
         public void GetMethod__Generic_method_No_parameter__Match()

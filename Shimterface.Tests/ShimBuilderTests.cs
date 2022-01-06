@@ -8,7 +8,7 @@ using System.Reflection;
 
 namespace Shimterface.Tests
 {
-    // NOTE: Not aiming at full coverage here, due to the complexity of what TypeHelpers does.
+    // NOTE: Not aiming at full coverage here
     // Full coverage is provided when combined with the rest of the test suite.
     [TestClass]
     public class ShimBuilderTests
@@ -16,14 +16,21 @@ namespace Shimterface.Tests
         [ExcludeFromCodeCoverage]
         public class TestClass
         {
+            public void Test()
+            {
+            }
         }
         [ExcludeFromCodeCoverage]
         public class ShimClass : ITestShim
         {
+            public void Test()
+            {
+            }
         }
 
         public interface ITestShim
         {
+            void Test();
         }
 
         [StaticShim(typeof(TestClass))]
@@ -134,12 +141,25 @@ namespace Shimterface.Tests
         }
 
         [TestMethod]
+        public void Create__Non_static_members__Fail()
+        {
+            // Act
+            var ex = Assert.ThrowsException<InvalidCastException>(() =>
+            {
+                _ = ShimBuilder.Create<ITestShim>();
+            });
+
+            // Assert
+            Assert.AreEqual("Factory shim cannot implement non-static member: Shimterface.Tests.ShimBuilderTests+ITestShim Test", ex.Message);
+        }
+
+        [TestMethod]
         public void Create__No_static_type__Fail()
         {
             // Act
             Assert.ThrowsException<MissingMemberException>(() =>
             {
-                ShimBuilder.Create<IInvalidStaticShim>();
+                _ = ShimBuilder.Create<IInvalidStaticShim>();
             });
         }
 

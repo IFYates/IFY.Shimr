@@ -7,7 +7,7 @@ namespace Shimterface.Tests
 {
     // Specific issues around these structures
     [TestClass]
-    public class MultLevelInheritanceTests
+    public class MultiLevelInheritanceTests
     {
         [TestInitialize]
         public void Reset()

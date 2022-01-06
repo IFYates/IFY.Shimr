@@ -243,7 +243,7 @@ namespace Shimterface.Examples
 
 			// Act
 			inst.Start(action, TimeSpan.FromSeconds(5));
-			threadAction?.Invoke();
+			threadAction!.Invoke();
 
 			// Assert
 			Assert.AreEqual(1, count);
