@@ -134,7 +134,11 @@ namespace Shimterface.Internal
             {
                 throw new AmbiguousMatchException($"Found {methods.Length} methods matching criteria for '{name}' in the hierarchy for type '{type.FullName}'. Consider using ShimAttribute to specify the definition type of the property to shim.");
             }
-            return methods.SingleOrDefault();
+
+            // Get the base definition of the method, unless it's from Object
+            var method = methods.FirstOrDefault()?.GetBaseDefinition();
+            return method != null && method.DeclaringType != typeof(object)
+                ? method : methods.FirstOrDefault();
         }
 
         /// <summary>

@@ -24,27 +24,6 @@ namespace Shimterface.Tests.Issues
             var obj = System.Security.Cryptography.RSA.Create();
             var shim = obj.Shim<IRSA_Issue>();
             shim.FromXmlString(KEY); // Works as expected
-
-            Assert.ThrowsException<MethodAccessException>(() =>
-            {
-                _ = shim.Encrypt(data, System.Security.Cryptography.RSAEncryptionPadding.OaepSHA1); // Fails here
-            });
-        }
-
-        public interface IRSA_Workaround : IDisposable
-        {
-            void FromXmlString(string xmlString);
-            [Shim(typeof(System.Security.Cryptography.RSA))]
-            byte[] Encrypt(byte[] data, System.Security.Cryptography.RSAEncryptionPadding padding);
-        }
-
-        [TestMethod]
-        public void Issue19__Workaround()
-        {
-            var data = BitConverter.GetBytes(DateTime.UtcNow.Ticks);
-            var obj = System.Security.Cryptography.RSA.Create();
-            var shim = obj.Shim<IRSA_Workaround>();
-            shim.FromXmlString(KEY); // Works as expected
             var output = shim.Encrypt(data, System.Security.Cryptography.RSAEncryptionPadding.OaepSHA1); // Fails here
             Assert.IsNotNull(output);
         }
