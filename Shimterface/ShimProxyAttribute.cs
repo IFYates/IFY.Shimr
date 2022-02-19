@@ -20,16 +20,23 @@ namespace Shimterface
         /// The behaviour of this proxy member.
         /// </summary>
         public ProxyBehaviour Behaviour { get; }
-        
-        public ShimProxyAttribute(Type implType, ProxyBehaviour behaviour)
+
+        public ShimProxyAttribute(Type implementationType)
+            : this(implementationType, null!, ProxyBehaviour.Default)
         {
-            ImplementationType = implType;
-            Behaviour = behaviour;
         }
-        public ShimProxyAttribute(Type implType, string? implName = null, ProxyBehaviour behaviour = ProxyBehaviour.Default)
+        public ShimProxyAttribute(Type implementationType, ProxyBehaviour behaviour)
+            : this(implementationType, null!, behaviour)
         {
-            ImplementationType = implType;
-            ImplementationName = implName;
+        }
+        public ShimProxyAttribute(Type implementationType, string implementationName)
+            : this(implementationType, implementationName, ProxyBehaviour.Default)
+        {
+        }
+        public ShimProxyAttribute(Type implementationType, string implementationName, ProxyBehaviour behaviour)
+        {
+            ImplementationType = implementationType;
+            ImplementationName = implementationName;
             Behaviour = behaviour;
         }
     }

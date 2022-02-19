@@ -20,17 +20,15 @@ namespace Shimterface
         {
             // TODO: handle shim compilation failures by removing from dynamic assembly
 
-            _asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Shimterface.dynamic"), AssemblyBuilderAccess.Run);
-            _mod = _asm.DefineDynamicModule("Shimterface.dynamic");
-            //_mod = asm.DefineDynamicModule("Shimterface.dynamic", "Shimterface.dynamic.dll", true);
+            var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Shimterface.dynamic"), AssemblyBuilderAccess.Run);
+            _mod = asm.DefineDynamicModule("Shimterface.dynamic");
             _dynamicTypeCache.Clear();
             _ignoreMissingMembers.Clear();
         }
 
         private static readonly List<Type> _ignoreMissingMembers = new List<Type>();
-
-        private static AssemblyBuilder _asm;
         private static ModuleBuilder _mod;
+
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         static ShimBuilder()
         {
@@ -157,7 +155,8 @@ namespace Shimterface
             }
 
             // Generate proxy
-            switch (binding.ImplementedMember ?? binding.ProxyImplementationMember)
+            var member = binding.ImplementedMember ?? binding.ProxyImplementationMember!;
+            switch (member)
             {
                 case ConstructorInfo constrInfo:
                     tb.WrapConstructor(binding, constrInfo);
@@ -165,8 +164,8 @@ namespace Shimterface
                 case FieldInfo fieldInfo:
                     tb.WrapField(instField, binding, fieldInfo);
                     return;
-                case MethodInfo methodInfo:
-                    tb.WrapMethod(instField, binding, methodInfo);
+                default:
+                    tb.WrapMethod(instField, binding, (MethodInfo)member);
                     return;
             }
         }
@@ -252,7 +251,7 @@ namespace Shimterface
             }
 
             var shimType = getShimType(interfaceType, inst.GetType());
-            var shim = Activator.CreateInstance(shimType, new object[] { inst });
+            var shim = Activator.CreateInstance(shimType, new[] { inst });
             return shim;
         }
 

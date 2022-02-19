@@ -160,7 +160,6 @@ namespace Shimterface.Internal
             if (constrInfo.DeclaringType.IsGenericTypeDefinition)
             {
                 // Build args array
-                var pars = binding.InterfaceMethod.GetParameters();
                 var argsArr = impl.DeclareLocal(typeof(object[]));
                 impl.Ldc_I4(argTypes.Length);
                 impl.Emit(OpCodes.Newarr, typeof(object));
@@ -282,14 +281,13 @@ namespace Shimterface.Internal
             impl.Emit(OpCodes.Ldarg_0); // this
             impl.Emit(OpCodes.Ldfld, proxyField);
             impl.Emit(OpCodes.Brfalse, jmpProxyCall);
-            switch (binding.ImplementedMember)
+            if (binding.ImplementedMember is FieldInfo fi)
             {
-                case FieldInfo fi:
-                    implFieldCall(impl, instField, binding, fi);
-                    break;
-                case MethodInfo mi:
-                    implMethodCall(impl, instField, binding.InterfaceMethod, mi);
-                    break;
+                implFieldCall(impl, instField, binding, fi);
+            }
+            else
+            {
+                implMethodCall(impl, instField, binding.InterfaceMethod, (MethodInfo)binding.ImplementedMember);
             }
 
             // Set proxy context

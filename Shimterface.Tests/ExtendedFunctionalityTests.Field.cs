@@ -49,7 +49,7 @@ namespace Shimterface.Tests
 
 		public interface ITestShim_AddFieldDefault
 		{
-			[ShimProxy(typeof(TestImpl_AddFieldDefault))]
+			[ShimProxy(typeof(TestImpl_AddFieldDefault), "Field")]
 			string Field { get; set; }
 		}
 		[ExcludeFromCodeCoverage]
