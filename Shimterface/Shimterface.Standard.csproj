@@ -4,22 +4,17 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Authors>IFYates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>1.6.7</Version>
-        <AssemblyVersion>1.6.7</AssemblyVersion>
-        <FileVersion>1.6.7</FileVersion>
+        <Version>1.6.8</Version>
+        <AssemblyVersion>1.6.8</AssemblyVersion>
+        <FileVersion>1.6.8</FileVersion>
         <PackageProjectUrl>https://github.com/IFYates/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>[v1.6.7] Fixed issue #17 - .NET 6 support for constructors on generic types
+        <PackageReleaseNotes>[v.1.6.8] Fixed issue #19 - Exception shimming certain method overrides
+[v1.6.7] Fixed issue #17 - .NET 6 support for constructors on generic types
 [v1.6.6] Fixed issue #16 - invalid shim for multiple args to generic type constructor
 [v1.6.5] Generic method can be used to construct a generic type (Issue #14)
-[v1.6.4] Can specify true implementation type in attribute, to work around explicit implementation hiding
-[v1.6.3] Fixed issue #12 - shim of hidden property
-[v1.6.2] Fixed issue #11 - shim of hidden method
-[v1.6.1] Property and field overrides/adds can be done with methods.
-[v1.6.1] MissingMemberException instead of InvalidCastException thrown for unmatched shim members.
-[v1.6.0] Able to add methods/properties to shims.
-[v1.6.0] Can override shim method/property from underlying implementation.</PackageReleaseNotes>
+[v1.6.4] Can specify true implementation type in attribute, to work around explicit implementation hiding</PackageReleaseNotes>
         <Copyright>(c) IFYates</Copyright>
         <Description>Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.</Description>
         <Nullable>enable</Nullable>
