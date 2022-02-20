@@ -396,10 +396,13 @@ namespace Shimterface.Tests
 		public void Cannot_override_constructor()
 		{
 			// Act
-			Assert.ThrowsException<InvalidCastException>(() =>
+			var ex = Assert.ThrowsException<InvalidCastException>(() =>
 			{
 				ShimBuilder.Create<ITestShim_Constructor>();
 			});
+
+			// Assert
+			Assert.AreEqual("Cannot proxy Shimterface.Tests.ExtendedFunctionalityTests_Method+TestClass_OnlyMethodA constructor in Shimterface.Tests.ExtendedFunctionalityTests_Method+ITestShim_Constructor", ex.Message);
 		}
 
 		#endregion Override

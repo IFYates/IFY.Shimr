@@ -54,13 +54,10 @@ namespace Shimterface
                     if (!_dynamicTypeCache.ContainsKey(className))
                     {
                         var tb = _mod.DefineType($"Shim_{className}", TypeAttributes.Public
-                            | TypeAttributes.Class
                             | TypeAttributes.AutoClass
-                            | TypeAttributes.AnsiClass
-                            | TypeAttributes.BeforeFieldInit
-                            | TypeAttributes.AutoLayout, null, new[] { typeof(IShim), interfaceType });
+                            | TypeAttributes.BeforeFieldInit, null, new[] { typeof(IShim), interfaceType });
 
-                        var instField = tb.DefineField("_inst", implType, FieldAttributes.Private | FieldAttributes.InitOnly);
+                        var instField = tb.DefineField("_inst", implType, FieldAttributes.Private);
 
                         tb.AddConstructor(instField);
                         tb.AddUnshimMethod(instField);
@@ -112,7 +109,6 @@ namespace Shimterface
                         }
 
                         var tb = _mod.DefineType(className, TypeAttributes.Public
-                            | TypeAttributes.Class
                             | TypeAttributes.AutoClass
                             | TypeAttributes.AnsiClass
                             | TypeAttributes.BeforeFieldInit

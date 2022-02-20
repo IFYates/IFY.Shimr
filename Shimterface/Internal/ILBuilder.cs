@@ -10,13 +10,13 @@ namespace Shimterface.Internal
     {
         private static bool resolveIfInstance(bool isStatic, ILGenerator impl, FieldInfo? instField)
         {
-            if (isStatic || instField == null)
+            if (isStatic)
             {
                 return false;
             }
 
             impl.Emit(OpCodes.Ldarg_0); // this
-            impl.Emit(instField.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld, instField);
+            impl.Emit(instField!.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld, instField);
             return true;
         }
         private static void resolveParameters(ILGenerator impl, MethodBase methodInfo, MethodInfo interfaceMethod)
@@ -48,7 +48,7 @@ namespace Shimterface.Internal
                 | MethodAttributes.SpecialName
                 | MethodAttributes.RTSpecialName,
                 CallingConventions.Standard, new[] { instField.FieldType });
-            constr.DefineParameter(1, ParameterAttributes.None, "inst");
+            constr.DefineParameter(1, ParameterAttributes.None, string.Empty);
             var impl = constr.GetILGenerator();
 
             // Call to base()
@@ -196,7 +196,7 @@ namespace Shimterface.Internal
         public static void WrapField(this TypeBuilder tb, FieldInfo? instField, ShimBinding binding, FieldInfo fieldInfo)
         {
             var args = binding.InterfaceMethod.GetParameters();
-            if (args.Length > 0 && (fieldInfo.Attributes & FieldAttributes.InitOnly) > 0)
+            if (args.Length > 0 && (fieldInfo.Attributes & FieldAttributes.InitOnly) != 0)
             {
                 // Set of readonly will be an exception
                 tb.MethodThrowException<InvalidOperationException>(binding.InterfaceMethod);

@@ -86,12 +86,17 @@ namespace Shimterface.Tests
 		[TestMethod]
 		public void Covered_return_type_must_be_interface()
 		{
+			// Arrange
 			var obj = new ReturnTypeTest();
-			
-			Assert.ThrowsException<NotSupportedException>(() =>
+
+			// Act
+			var ex = Assert.ThrowsException<NotSupportedException>(() =>
 			{
 				ShimBuilder.Shim<IBadCoveredMethodTest>(obj);
 			});
+
+			// Assert
+			Assert.AreEqual("Shimmed return type (System.Object) must be an interface, on member: Shimterface.Tests.SignatureChangeTests+IBadCoveredMethodTest.GetValue", ex.Message);
 		}
 
 		[TestMethod]
@@ -120,12 +125,17 @@ namespace Shimterface.Tests
 		[TestMethod]
 		public void Covered_parameter_type_must_be_interface()
 		{
+			// Arrange
 			var obj = new ReturnTypeTest();
 			
-			Assert.ThrowsException<NotSupportedException>(() =>
+			// Act
+			var ex = Assert.ThrowsException<NotSupportedException>(() =>
 			{
 				ShimBuilder.Shim<IBadCoveredParametersTest>(obj);
 			});
+
+			// Assert
+			Assert.AreEqual("Shimmed parameter type must be an interface: Shimterface.Tests.SignatureChangeTests+IBadCoveredParametersTest", ex.Message);
 		}
 		
 		public interface IShimOverloadMethod

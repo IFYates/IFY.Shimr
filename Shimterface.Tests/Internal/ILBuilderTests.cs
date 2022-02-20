@@ -52,5 +52,16 @@ namespace Shimterface.Internal.Tests
                 tb.WrapMethod(null, binding, method);
             });
         }
+
+        [TestMethod]
+        [DataRow("System.String", null)]
+        [DataRow(null, "System.String")]
+        public void EmitTypeShim__Handles_void(string fromTypeStr, string resultTypeStr)
+        {
+            var fromType = fromTypeStr != null ? Type.GetType(fromTypeStr) : typeof(void);
+            var resultType = resultTypeStr != null ? Type.GetType(resultTypeStr) : typeof(void);
+
+            ILBuilder.EmitTypeShim(null, fromType, resultType);
+        }
     }
 }

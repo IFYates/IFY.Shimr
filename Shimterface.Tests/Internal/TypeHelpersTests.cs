@@ -115,10 +115,14 @@ namespace Shimterface.Internal.Tests
         [TestMethod]
         public void GetConstructor__Multiple_constructors__Exception()
         {
-            Assert.ThrowsException<AmbiguousMatchException>(() =>
+            // Act
+            var ex = Assert.ThrowsException<AmbiguousMatchException>(() =>
             {
                 typeof(TestClass3<int>).GetConstructor(new[] { typeof(int) }, Array.Empty<Type>());
             });
+
+            // Assert
+            Assert.IsTrue(ex.Message.StartsWith("Found 2 constructors matching given criteria for type 'Shimterface.Internal.Tests.TypeHelpersTests+TestClass3`1[["));
         }
 
         #endregion GetConstructor
