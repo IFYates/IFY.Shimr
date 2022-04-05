@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -104,7 +105,7 @@ namespace Shimterface.Tests
 		{
 			var obj = new ReturnTypeTest();
 
-			var shim = ShimBuilder.Shim<ICoveredMethodTest>(obj);
+			var shim = ObjectExtensions.Shim<ICoveredMethodTest>(obj);
 			var res = shim.GetValue();
 
 			Assert.AreEqual("Test", ((IShim)res).Unshim());

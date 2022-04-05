@@ -110,9 +110,7 @@ namespace Shimterface
 
                         var tb = _mod.DefineType(className, TypeAttributes.Public
                             | TypeAttributes.AutoClass
-                            | TypeAttributes.AnsiClass
-                            | TypeAttributes.BeforeFieldInit
-                            | TypeAttributes.AutoLayout, null, new[] { interfaceType });
+                            | TypeAttributes.BeforeFieldInit, null, new[] { interfaceType });
 
                         // Proxy all methods (including events, properties, and indexers)
                         foreach (var interfaceMethod in interfaceType.GetMethods())
@@ -188,19 +186,30 @@ namespace Shimterface
         public static TInterface Create<TInterface>()
             where TInterface : class
         {
-            var factoryType = getFactoryType(typeof(TInterface));
-            var factory = Activator.CreateInstance(factoryType);
-            return (TInterface)factory;
+            return (TInterface)Create(typeof(TInterface));
+        }
+
+        /// <summary>
+        /// Create a factory proxy.
+        /// Type <paramref name="interfaceType"/> must only implement methods decorated with <see cref="StaticShimAttribute"/>.
+        /// </summary>
+        public static object Create(Type interfaceType)
+        {
+            var factoryType = getFactoryType(interfaceType);
+            return Activator.CreateInstance(factoryType);
         }
 
         #endregion Create
 
         #region Shim
+        
+        // NOTE: Used internally
 
         /// <summary>
         /// Use a shim to make the given object look like the required type.
         /// Result will also implement <see cref="IShim"/>.
         /// </summary>
+        [Obsolete("Will no longer be an extension method in next version")]
         public static TInterface? Shim<TInterface>(this object? inst)
             where TInterface : class
         {
@@ -210,20 +219,24 @@ namespace Shimterface
         /// Use a shim to make the given objects look like the required type.
         /// Results will also implement <see cref="IShim"/>.
         /// </summary>
+        [Obsolete("Will be removed in next version")]
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public static TInterface?[]? Shim<TInterface>(this object[]? inst)
             where TInterface : class
         {
-            return (TInterface?[]?)Shim<TInterface>((IEnumerable<object>?)inst);
+            return (TInterface?[]?)Shim<TInterface>((IEnumerable<object>?)inst).ToArray();
         }
         /// <summary>
         /// Use a shim to make the given objects look like the required type.
         /// Results will also implement <see cref="IShim"/>.
         /// </summary>
-        public static IEnumerable<TInterface?>? Shim<TInterface>(this IEnumerable<object>? inst)
+        [Obsolete("Will no longer be an extension method in next version")]
+        public static TInterface?[]? Shim<TInterface>(this IEnumerable<object>? inst)
             where TInterface : class
         {
             return inst?.Select(i => (TInterface?)Shim(typeof(TInterface), i)).ToArray();
         }
+
         /// <summary>
         /// Use a shim to make the given object look like the required type.
         /// Result will also implement <see cref="IShim"/>.
@@ -254,6 +267,8 @@ namespace Shimterface
         #endregion Shim
 
         #region Unshim
+        
+        // NOTE: Used internally
 
         /// <summary>
         /// Recast shim to original type.
@@ -267,6 +282,8 @@ namespace Shimterface
         /// Recast shims to original type.
         /// No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="IShim"/> of <typeparamref name="T"/>.
         /// </summary>
+        [Obsolete("Will be removed in next version")]
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
         public static T[] Unshim<T>(object[] shims)
         {
             return Unshim<T>((IEnumerable<object>)shims).ToArray();
@@ -275,7 +292,7 @@ namespace Shimterface
         /// Recast shims to original type.
         /// No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="IShim"/> of <typeparamref name="T"/>.
         /// </summary>
-        public static IEnumerable<T> Unshim<T>(IEnumerable<object> shims)
+        public static T[] Unshim<T>(IEnumerable<object> shims)
         {
             return shims.Select(s => Unshim<T>(s)).ToArray();
         }

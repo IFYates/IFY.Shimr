@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
 using System.Linq;
 
 namespace Shimterface.Tests
@@ -50,7 +51,7 @@ namespace Shimterface.Tests
 			var res = shim.GetArray();
 
 			Assert.AreEqual(3, res.Length);
-			var arr = res.Cast<IShim>().Select(s => s.Unshim()).ToArray();
+			var arr = res.Unshim<string>().ToArray();
 			CollectionAssert.AreEqual(obj.GetArray(), arr);
 		}
 
@@ -62,7 +63,7 @@ namespace Shimterface.Tests
 			var data = new[] { "1", "2", "3" };
 
 			var shim = ShimBuilder.Shim<ICoveredArraySetMethodTest>(obj);
-			var arr = ShimBuilder.Shim<IToString>(data);
+			var arr = ObjectExtensions.Shim<IToString>(data).ToArray();
 			shim.SetArray(arr);
 
 			var res = obj.GetArray();

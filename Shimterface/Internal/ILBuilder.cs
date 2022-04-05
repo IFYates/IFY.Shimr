@@ -132,7 +132,7 @@ namespace Shimterface.Internal
             {
                 impl.Emit(OpCodes.Box, fromType);
             }
-            var valType = resultType.IsArrayType() ? typeof(object[]) : typeof(object);
+            var valType = resultType.IsArrayType() ? typeof(IEnumerable<object>) : typeof(object);
             var shimType = resultType.ResolveType();
             var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { shimType }, new[] { valType });
             impl.Emit(OpCodes.Call, shimMethod);
@@ -145,7 +145,7 @@ namespace Shimterface.Internal
                 return;
             }
 
-            var valType = realType.IsArrayType() ? typeof(object[]) : typeof(object);
+            var valType = realType.IsArrayType() ? typeof(IEnumerable<object>) : typeof(object);
             var resultType = realType.ResolveType();
             var unshimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Unshim), new[] { resultType }, new[] { valType });
             impl.Emit(OpCodes.Call, unshimMethod);

@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
+using Shimterface.Extensions;
 
 namespace Shimterface.Tests
 {
@@ -51,7 +52,7 @@ namespace Shimterface.Tests
 			var res = shim.GetEnum();
 
 			Assert.AreEqual(3, res.Count());
-			var arr = res.Cast<IShim>().Select(s => s.Unshim()).ToArray();
+			var arr = res.Unshim<string>().ToArray();
 			CollectionAssert.AreEqual(obj.GetEnum().ToArray(), arr);
 		}
 
