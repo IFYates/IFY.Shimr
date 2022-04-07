@@ -46,6 +46,11 @@ jobs:
     - name: Coverlet coverage test
       run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --format lcov
 
+    - name: Publish package
+      uses: actions/upload-artifact@v2
+      with:
+        path: ./**/IFY.Shimr.*.*nupkg
+
     - name: Publish coverage results to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
@@ -67,8 +72,3 @@ jobs:
       with:
         name: mutation-report.html
         path: ./**/mutation-report.html
-
-    - name: Publish package
-      uses: actions/upload-artifact@v2
-      with:
-        path: ./**/IFY.Shimr.*.*nupkg
