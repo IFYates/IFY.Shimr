@@ -32,19 +32,26 @@ jobs:
     - name: Restore tools
       run: dotnet tool restore
       
+    - name: Set branch-based environment variables
+      uses: iamtheyammer/branch-env-vars@v1.1.2
+      with:
+        BUILD_CONFIG: |
+          master:Release
+          !default:Debug
+
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --configuration $BUILD_CONFIG --no-restore
 #    - name: Test
 #      run: dotnet test --no-build --verbosity normal
     - name: Coverlet coverage test
-      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/net5.0/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format lcov
+      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --no-build" --format lcov
 
     - name: Publish coverage results to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: coverage.info
-#      run: dotnet coverlet ./Shimterface.Tests/bin/Debug/net5.0/Shimterface.Standard.Tests.dll --target "dotnet" --targetargs "test ./Shimterface.Tests/Shimterface.Standard.Tests.csproj --no-build" --format cobertura
+#      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --no-build" --format cobertura
 #    - name: Codecov
 #      uses: codecov/codecov-action@v1.3.1
 #      with:
@@ -54,7 +61,7 @@ jobs:
 #        verbose: true
 
     - name: Run Stryker.NET
-      run: dotnet stryker -s "Shimterface.Standard.sln" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/Shimterface --dashboard-version $GITHUB_REF
+      run: dotnet stryker -s "IFY.Shimr.sln" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/IFY.Shimr --dashboard-version $GITHUB_REF
     - name: Upload mutation report
       uses: actions/upload-artifact@v2.2.2
       with:
@@ -64,4 +71,4 @@ jobs:
     - name: Publish package
       uses: actions/upload-artifact@v2
       with:
-        path: ./**/Shimterface.Standard.*.nupkg
+        path: ./**/IFY.Shimr.*.nupkg
