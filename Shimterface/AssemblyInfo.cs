@@ -1,3 +1,3 @@
 ﻿using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Shimterface.Standard.Tests")]
+[assembly: InternalsVisibleTo("IFY.Shimr.Tests")] 
