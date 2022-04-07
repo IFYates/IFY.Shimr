@@ -41,11 +41,7 @@ namespace IFY.Shimr.Extensions
         public static IEnumerable<TInterface?>? Shim<TInterface>(this IEnumerable<object>? inst)
             where TInterface : class
         {
-            if (inst == null)
-            {
-                return null;
-            }
-            return inst.Select(i => (TInterface?)ShimBuilder.Shim(typeof(TInterface), i));
+            return inst?.Select(i => (TInterface?)ShimBuilder.Shim(typeof(TInterface), i));
         }
 
         #endregion Shim
@@ -58,9 +54,7 @@ namespace IFY.Shimr.Extensions
         /// </summary>
         public static T Unshim<T>(this object shim)
         {
-            if (shim is T obj)
-                return obj;
-            return (T)((IShim)shim).Unshim();
+            return shim is T obj ? obj : (T)((IShim)shim).Unshim();
         }
 
         /// <summary>
