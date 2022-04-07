@@ -1,7 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
+        <Nullable>enable</Nullable>
+
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
         <Authors>IFYates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Version>2.0.0</Version>
@@ -10,21 +16,24 @@
         <PackageProjectUrl>https://github.com/IFYates/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>[v2.0.0] Rename to IFY.Shimr
-[v1.6.9] New namespace for extension methods
-[v1.6.8] Fixed issue #19 - Exception shimming certain method overrides
-[v1.6.7] Fixed issue #17 - .NET 6 support for constructors on generic types
-[v1.6.6] Fixed issue #16 - invalid shim for multiple args to generic type constructor</PackageReleaseNotes>
+        <PackageReleaseNotes>
+          [v2.0.0] Rename to IFY.Shimr
+          [v1.6.9] New namespace for extension methods
+          [v1.6.8] Fixed issue #19 - Exception shimming certain method overrides
+          [v1.6.7] Fixed issue #17 - .NET 6 support for constructors on generic types
+          [v1.6.6] Fixed issue #16 - invalid shim for multiple args to generic type constructor
+        </PackageReleaseNotes>
         <Copyright>(c) IFYates</Copyright>
         <Description>Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.</Description>
-        <Nullable>enable</Nullable>
     </PropertyGroup>
+
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
       <DocumentationFile>IFY.Shimr.xml</DocumentationFile>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
       <DocumentationFile>IFY.Shimr.xml</DocumentationFile>
     </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     </ItemGroup>
