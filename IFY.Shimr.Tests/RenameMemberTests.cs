@@ -1,9 +1,10 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
+using System;
 
 namespace Shimterface.Tests
 {
-	[TestClass]
+    [TestClass]
 	public class RenameMemberTests
 	{
 		public class TestClass

@@ -196,12 +196,6 @@
             Result will also implement <see cref="T:Shimterface.IShim"/>.
             </summary>
         </member>
-        <member name="M:Shimterface.ShimBuilder.Shim``1(System.Object[])">
-            <summary>
-            Use a shim to make the given objects look like the required type.
-            Results will also implement <see cref="T:Shimterface.IShim"/>.
-            </summary>
-        </member>
         <member name="M:Shimterface.ShimBuilder.Shim``1(System.Collections.Generic.IEnumerable{System.Object})">
             <summary>
             Use a shim to make the given objects look like the required type.
@@ -217,12 +211,6 @@
         <member name="M:Shimterface.ShimBuilder.Unshim``1(System.Object)">
             <summary>
             Recast shim to original type.
-            No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="T:Shimterface.IShim"/> of <typeparamref name="T"/>.
-            </summary>
-        </member>
-        <member name="M:Shimterface.ShimBuilder.Unshim``1(System.Object[])">
-            <summary>
-            Recast shims to original type.
             No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="T:Shimterface.IShim"/> of <typeparamref name="T"/>.
             </summary>
         </member>

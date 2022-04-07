@@ -41,9 +41,13 @@ namespace Shimterface.Extensions
         public static IEnumerable<TInterface?>? Shim<TInterface>(this IEnumerable<object>? inst)
             where TInterface : class
         {
-            return inst?.Select(i => (TInterface?)ShimBuilder.Shim(typeof(TInterface), i));
+            if (inst == null)
+            {
+                return null;
+            }
+            return inst.Select(i => (TInterface?)ShimBuilder.Shim(typeof(TInterface), i));
         }
-        
+
         #endregion Shim
 
         #region Unshim
@@ -54,7 +58,9 @@ namespace Shimterface.Extensions
         /// </summary>
         public static T Unshim<T>(this object shim)
         {
-            return shim is T obj ? obj : (T)((IShim)shim).Unshim();
+            if (shim is T obj)
+                return obj;
+            return (T)((IShim)shim).Unshim();
         }
 
         /// <summary>

@@ -1,10 +1,11 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
+using System;
 
 #pragma warning disable CS0184 // 'is' expression's given expression is never of the provided type
 namespace Shimterface.Examples
 {
-	[TestClass]
+    [TestClass]
 	public class DateTimeExample
 	{
 		public interface ITimeSpan

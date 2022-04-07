@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
 using System;
 
 namespace Shimterface.Tests.Issues

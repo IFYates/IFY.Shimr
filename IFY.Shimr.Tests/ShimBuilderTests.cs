@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Shimterface.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -106,10 +107,23 @@ namespace Shimterface.Tests
             IEnumerable<object> inst = null;
 
             // Act
-            var shim = inst.Shim<ITestShim>();
+            var shim = ShimBuilder.Shim<ITestShim>(inst);
 
             // Assert
             Assert.IsNull(shim);
+        }
+
+        [TestMethod]
+        public void Unshim__Instance_is_type__Return_instance()
+        {
+            // Arrange
+            string obj = "";
+
+            // Act
+            var shim = ShimBuilder.Unshim<string>(obj);
+
+            // Assert
+            Assert.AreSame(obj, shim);
         }
 
         [TestMethod]

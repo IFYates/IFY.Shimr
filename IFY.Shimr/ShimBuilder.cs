@@ -209,29 +209,17 @@ namespace Shimterface
         /// Use a shim to make the given object look like the required type.
         /// Result will also implement <see cref="IShim"/>.
         /// </summary>
-        [Obsolete("Will no longer be an extension method in next version")]
-        public static TInterface? Shim<TInterface>(this object? inst)
+        public static TInterface? Shim<TInterface>(object? inst)
             where TInterface : class
         {
             return (TInterface?)Shim(typeof(TInterface), inst);
         }
+
         /// <summary>
         /// Use a shim to make the given objects look like the required type.
         /// Results will also implement <see cref="IShim"/>.
         /// </summary>
-        [Obsolete("Will be removed in next version")]
-        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-        public static TInterface?[]? Shim<TInterface>(this object[]? inst)
-            where TInterface : class
-        {
-            return (TInterface?[]?)Shim<TInterface>((IEnumerable<object>?)inst).ToArray();
-        }
-        /// <summary>
-        /// Use a shim to make the given objects look like the required type.
-        /// Results will also implement <see cref="IShim"/>.
-        /// </summary>
-        [Obsolete("Will no longer be an extension method in next version")]
-        public static TInterface?[]? Shim<TInterface>(this IEnumerable<object>? inst)
+        public static TInterface?[]? Shim<TInterface>(IEnumerable<object>? inst)
             where TInterface : class
         {
             return inst?.Select(i => (TInterface?)Shim(typeof(TInterface), i)).ToArray();
@@ -278,16 +266,7 @@ namespace Shimterface
         {
             return shim is T obj ? obj : (T)((IShim)shim).Unshim();
         }
-        /// <summary>
-        /// Recast shims to original type.
-        /// No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="IShim"/> of <typeparamref name="T"/>.
-        /// </summary>
-        [Obsolete("Will be removed in next version")]
-        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-        public static T[] Unshim<T>(object[] shims)
-        {
-            return Unshim<T>((IEnumerable<object>)shims).ToArray();
-        }
+
         /// <summary>
         /// Recast shims to original type.
         /// No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="IShim"/> of <typeparamref name="T"/>.

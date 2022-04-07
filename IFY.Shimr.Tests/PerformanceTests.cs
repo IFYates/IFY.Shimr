@@ -1,14 +1,15 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
 using System;
 using System.Diagnostics;
 
 namespace Shimterface.Tests
 {
-	/// <summary>
-	/// Not true tests
-	/// Very rough examples of overall performance
-	/// </summary>
-	[TestClass]
+    /// <summary>
+    /// Not true tests
+    /// Very rough examples of overall performance
+    /// </summary>
+    [TestClass]
 	public class PerformanceTests
 	{
 		public class Impl

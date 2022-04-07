@@ -1,9 +1,10 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
 
 #pragma warning disable CA1822 // Mark members as static
 namespace Shimterface.Tests
 {
-	[TestClass]
+    [TestClass]
 	public class InheritanceTests
 	{
 		public interface IRootShim : IChildShim

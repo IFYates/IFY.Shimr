@@ -1,9 +1,10 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
 using System;
 
 namespace Shimterface.Tests
 {
-	[TestClass]
+    [TestClass]
 	public class FieldShimTests
 	{
 		public interface IGetFieldTest

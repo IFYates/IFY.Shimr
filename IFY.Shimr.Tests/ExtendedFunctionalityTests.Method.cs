@@ -1,14 +1,15 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Shimterface.Tests
 {
-	/// <summary>
-	/// Tests around extending/replacing shim functionality
-	/// https://github.com/IFYates/Shimterface/issues/3
-	/// </summary>
-	[TestClass]
+    /// <summary>
+    /// Tests around extending/replacing shim functionality
+    /// https://github.com/IFYates/Shimterface/issues/3
+    /// </summary>
+    [TestClass]
 	public class ExtendedFunctionalityTests_Method
 	{
 		[TestInitialize]

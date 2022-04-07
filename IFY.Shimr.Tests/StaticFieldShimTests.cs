@@ -1,10 +1,11 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Shimterface.Tests
 {
-	[TestClass]
+    [TestClass]
 	public class StaticFieldShimTests
 	{
 		public interface IGetFieldTest
