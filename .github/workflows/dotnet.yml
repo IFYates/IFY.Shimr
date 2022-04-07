@@ -44,14 +44,14 @@ jobs:
 #    - name: Test
 #      run: dotnet test --no-build --verbosity normal
     - name: Coverlet coverage test
-      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --no-build" --format lcov
+      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --format lcov
 
     - name: Publish coverage results to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         path-to-lcov: coverage.info
-#      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --no-build" --format cobertura
+#      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --format cobertura
 #    - name: Codecov
 #      uses: codecov/codecov-action@v1.3.1
 #      with:
