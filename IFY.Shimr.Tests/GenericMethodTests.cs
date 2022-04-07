@@ -10,7 +10,7 @@ namespace IFY.Shimr.Tests
     {
         public class TestClass
         {
-            public bool WasCalled = false;
+            internal bool WasCalled;
 
             public void BasicTest<T>()
             {

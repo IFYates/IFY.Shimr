@@ -187,7 +187,7 @@ namespace IFY.Shimr.Tests
         [SuppressMessage("Style", "IDE1006:Naming Styles")]
         public class TestImpl_PropertyMethods
         {
-            private static bool _inProxy = false;
+            private static bool _inProxy;
             public static string PropertyValue { get; private set; }
 
             public static string get_Property(ITestShim_PropertyMethods inst)

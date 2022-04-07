@@ -39,7 +39,7 @@ namespace IFY.Shimr.Tests
         [ExcludeFromCodeCoverage]
         public abstract class TestParentClass
         {
-            public bool VoidMethodCalled = false;
+            internal bool VoidMethodCalled;
             public void VoidMethod()
             {
                 VoidMethodCalled = true;
@@ -56,7 +56,7 @@ namespace IFY.Shimr.Tests
         [ExcludeFromCodeCoverage]
         public class TestClass : TestParentClass
         {
-            public object[] VoidMethodArgsCalled = null;
+            internal object[] VoidMethodArgsCalled;
             public void VoidMethodArgs(string arg1, int arg2)
             {
                 VoidMethodArgsCalled = new object[] { arg1, arg2 };
@@ -72,10 +72,9 @@ namespace IFY.Shimr.Tests
                 return arg1 + "-" + arg2;
             }
 
-#pragma warning disable IDE0060 // Remove unused parameter
             public void DifferentMethodSig(int arg1)
-#pragma warning restore IDE0060 // Remove unused parameter
             {
+                _ = arg1;
             }
         }
 

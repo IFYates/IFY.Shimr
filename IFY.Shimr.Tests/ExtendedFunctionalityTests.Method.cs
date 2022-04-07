@@ -26,8 +26,6 @@ namespace IFY.Shimr.Tests
         [ExcludeFromCodeCoverage]
         public class TestClass_OnlyMethodA
         {
-            public TestClass_OnlyMethodA() { }
-
             public bool MethodACalled { get; private set; }
             public void MethodA()
             {
@@ -283,7 +281,7 @@ namespace IFY.Shimr.Tests
             public static string MethodCCalledWith { get; set; }
             public static void MethodC(ITestShim obj, string arg)
             {
-                obj.ToString();
+                _ = obj.ToString();
                 MethodCCalledWith = arg;
             }
         }
@@ -341,6 +339,7 @@ namespace IFY.Shimr.Tests
         {
             public static void MethodB()
             {
+                // Test
             }
         }
 

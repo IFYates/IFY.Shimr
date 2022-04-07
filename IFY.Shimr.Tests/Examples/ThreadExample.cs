@@ -14,9 +14,9 @@ namespace IFY.Shimr.Examples
     public class IntervalAction
     {
         public bool IsRunning => _runningBit > 0;
-        private int _runningBit = 0;
+        private int _runningBit;
 
-        private ICancellationTokenSource? _tokenSource = null;
+        private ICancellationTokenSource? _tokenSource;
 
         private readonly IThreadingFactory _threadingFactory;
 
@@ -144,7 +144,10 @@ namespace IFY.Shimr.Examples
 
             // Act
             inst.Start(action, TimeSpan.FromSeconds(1));
-            while (inst.IsRunning) { }
+            while (inst.IsRunning)
+            {
+                // Wait
+            }
 
             // Assert
             Assert.AreEqual(3, count);

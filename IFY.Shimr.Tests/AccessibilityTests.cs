@@ -22,6 +22,7 @@ namespace IFY.Shimr.Tests
         {
             public void Test()
             {
+                // Test
             }
         }
         [ExcludeFromCodeCoverage]
@@ -29,6 +30,7 @@ namespace IFY.Shimr.Tests
         {
             private void Test()
             {
+                // Test
             }
         }
 

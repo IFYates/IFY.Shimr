@@ -14,14 +14,10 @@ namespace IFY.Shimr.Tests
         {
             public static string Value { get; set; }
 
-            public static bool _HasCalled = false;
+            public static bool _HasCalled;
             public static void Test()
             {
                 _HasCalled = true;
-            }
-
-            public StaticMemberClass()
-            {
             }
         }
 
@@ -30,6 +26,7 @@ namespace IFY.Shimr.Tests
         {
             public static void Test()
             {
+                // Test
             }
         }
 

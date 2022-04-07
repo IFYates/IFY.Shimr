@@ -9,11 +9,11 @@ namespace IFY.Shimr.Tests
     public class StaticMemberTests
     {
         [ExcludeFromCodeCoverage]
-        public class StaticMemberClass
+        public static class StaticMemberClass
         {
             public static string Value { get; set; }
 
-            public static bool _HasCalled = false;
+            internal static bool _HasCalled;
             public static void Test()
             {
                 _HasCalled = true;
