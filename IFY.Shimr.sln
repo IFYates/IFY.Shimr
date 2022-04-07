@@ -10,9 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr", "Shimterface\IFY.Shimr.csproj", "{2706BAF7-5673-4C6C-BA1F-924E7451B3FF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr", "IFY.Shimr\IFY.Shimr.csproj", "{2706BAF7-5673-4C6C-BA1F-924E7451B3FF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr.Tests", "Shimterface.Tests\IFY.Shimr.Tests.csproj", "{A0C6A6F5-57FC-4825-890A-DD1D062B9EAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr.Tests", "IFY.Shimr.Tests\IFY.Shimr.Tests.csproj", "{A0C6A6F5-57FC-4825-890A-DD1D062B9EAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
