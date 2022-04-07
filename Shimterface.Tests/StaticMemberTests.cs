@@ -1,6 +1,7 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Shimterface.Extensions;
+using System;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Shimterface.Tests
 {
@@ -18,7 +19,7 @@ namespace Shimterface.Tests
 				_HasCalled = true;
 			}
 		}
-		
+
 		public interface IStaticMethod
 		{
 			[StaticShim(typeof(StaticMemberClass))]
@@ -80,6 +81,16 @@ namespace Shimterface.Tests
 			Assert.AreEqual("one", factory.Value);
 			factory.Value = "two";
 			Assert.AreEqual("two", StaticMemberClass.Value);
+		}
+
+		[TestMethod]
+		public void Works_from_type_extension()
+		{
+			var factory = (IStaticMethod)typeof(IStaticMethod).CreateProxy();
+
+			Assert.IsFalse(StaticMemberClass._HasCalled);
+			factory.Test();
+			Assert.IsTrue(StaticMemberClass._HasCalled);
 		}
 
 		[TestMethod]

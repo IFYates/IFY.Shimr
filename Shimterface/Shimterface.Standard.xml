@@ -9,6 +9,41 @@
             Mark a method as being a shim of a constructor.
             </summary>
         </member>
+        <member name="T:Shimterface.Extensions.ObjectExtensions">
+            <summary>
+            Useful extension methods, in separate namespace to reduce pollution.
+            </summary>
+        </member>
+        <member name="M:Shimterface.Extensions.ObjectExtensions.CreateProxy(System.Type)">
+            <summary>
+            Create a factory proxy.
+            Type <paramref name="interfaceType"/> must only implement methods decorated with <see cref="T:Shimterface.StaticShimAttribute"/>.
+            </summary>
+        </member>
+        <member name="M:Shimterface.Extensions.ObjectExtensions.Shim``1(System.Object)">
+            <summary>
+            Use a shim to make the given object look like the required type.
+            Result will also implement <see cref="T:Shimterface.IShim"/>.
+            </summary>
+        </member>
+        <member name="M:Shimterface.Extensions.ObjectExtensions.Shim``1(System.Collections.Generic.IEnumerable{System.Object})">
+            <summary>
+            Use a shim to make the given objects look like the required type.
+            Results will also implement <see cref="T:Shimterface.IShim"/>.
+            </summary>
+        </member>
+        <member name="M:Shimterface.Extensions.ObjectExtensions.Unshim``1(System.Object)">
+            <summary>
+            Recast shim to original type.
+            No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="T:Shimterface.IShim"/> of <typeparamref name="T"/>.
+            </summary>
+        </member>
+        <member name="M:Shimterface.Extensions.ObjectExtensions.Unshim``1(System.Collections.Generic.IEnumerable{System.Object})">
+            <summary>
+            Recast shims to original type.
+            No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="T:Shimterface.IShim"/> of <typeparamref name="T"/>.
+            </summary>
+        </member>
         <member name="M:Shimterface.Internal.TypeHelpers.GetAttribute``1(System.Reflection.MemberInfo)">
             <summary>
             Get attribute of method, including get/set for property
@@ -147,6 +182,12 @@
             <summary>
             Create a factory proxy.
             <typeparamref name="TInterface"/> must only implement methods decorated with <see cref="T:Shimterface.StaticShimAttribute"/>.
+            </summary>
+        </member>
+        <member name="M:Shimterface.ShimBuilder.Create(System.Type)">
+            <summary>
+            Create a factory proxy.
+            Type <paramref name="interfaceType"/> must only implement methods decorated with <see cref="T:Shimterface.StaticShimAttribute"/>.
             </summary>
         </member>
         <member name="M:Shimterface.ShimBuilder.Shim``1(System.Object)">
