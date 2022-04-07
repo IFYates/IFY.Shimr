@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
-namespace Shimterface.Internal
+namespace IFY.Shimr.Internal
 {
     internal class ShimBinding
     {

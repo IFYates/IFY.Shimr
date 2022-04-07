@@ -1,8 +1,8 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shimterface.Extensions;
+﻿using IFY.Shimr.Extensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace Shimterface.Tests.Issues
+namespace IFY.Shimr.Tests.Issues
 {
     /// <summary>
     /// https://github.com/IFYates/Shimterface/issues/19

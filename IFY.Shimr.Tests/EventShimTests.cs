@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Shimterface.Tests
+namespace IFY.Shimr.Tests
 {
     [TestClass]
     public class EventShimTests
@@ -42,7 +42,7 @@ namespace Shimterface.Tests
 
             var shim = ShimBuilder.Shim<IEventTest>(obj);
 
-            bool eventFired = false;
+            var eventFired = false;
             shim.ConsoleCancelEvent += (s, a) =>
             {
                 eventFired = true;

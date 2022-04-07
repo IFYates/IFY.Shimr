@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Shimterface.Internal.Tests
+namespace IFY.Shimr.Internal.Tests
 {
     // NOTE: Not aiming at full coverage here, due to the complexity of what ILBuilder does.
     // Full coverage is provided when combined with the rest of the test suite.
@@ -15,8 +15,8 @@ namespace Shimterface.Internal.Tests
         public void DefinePublicMethod__With_paramTypes__Creates_method()
         {
             // Arrange
-            var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Shimterface.Tests.dynamic"), AssemblyBuilderAccess.Run);
-            var mod = asm.DefineDynamicModule("Shimterface.Tests.dynamic");
+            var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("IFY.Shimr.Tests.dynamic"), AssemblyBuilderAccess.Run);
+            var mod = asm.DefineDynamicModule("IFY.Shimr.Tests.dynamic");
             var tb = mod.DefineType($"TestClass", TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout, null, null);
 
             // Act
@@ -35,8 +35,8 @@ namespace Shimterface.Internal.Tests
         public void WrapMethod__Proxy_without_method_implementation__NRE()
         {
             // Arrange
-            var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Shimterface.Tests.dynamic"), AssemblyBuilderAccess.Run);
-            var mod = asm.DefineDynamicModule("Shimterface.Tests.dynamic");
+            var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("IFY.Shimr.Tests.dynamic"), AssemblyBuilderAccess.Run);
+            var mod = asm.DefineDynamicModule("IFY.Shimr.Tests.dynamic");
             var tb = mod.DefineType($"TestClass", TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout, null, null);
 
             var method = typeof(ILBuilderTests).GetMethod(nameof(WrapMethod__Proxy_without_method_implementation__NRE));

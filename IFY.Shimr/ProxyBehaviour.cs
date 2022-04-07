@@ -1,4 +1,4 @@
-﻿namespace Shimterface
+﻿namespace IFY.Shimr
 {
     /// <summary>
     /// Specify how the <see cref="ShimProxyAttribute"/> member is expected to behave.

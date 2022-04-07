@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Shimterface.Extensions.Tests
+namespace IFY.Shimr.Extensions.Tests
 {
     [TestClass]
     public class ObjectExtensionsTests

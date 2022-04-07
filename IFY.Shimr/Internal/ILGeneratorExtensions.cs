@@ -1,6 +1,6 @@
 ﻿using System.Reflection.Emit;
 
-namespace Shimterface.Internal
+namespace IFY.Shimr.Internal
 {
     internal static class ILGeneratorExtensions
     {

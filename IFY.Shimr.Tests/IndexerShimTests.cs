@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Shimterface.Tests
+namespace IFY.Shimr.Tests
 {
     [TestClass]
     public class IndexerShimTests

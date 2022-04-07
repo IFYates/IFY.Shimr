@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
-namespace Shimterface.Internal.Tests
+namespace IFY.Shimr.Internal.Tests
 {
     // NOTE: Not aiming at full coverage here, due to the complexity of what TypeHelpers does.
     // Full coverage is provided when combined with the rest of the test suite.
@@ -50,7 +50,7 @@ namespace Shimterface.Internal.Tests
             });
 
             // Assert
-            Assert.AreEqual("Found more than 1 property called 'Value' in the hierarchy for type 'Shimterface.Internal.Tests.TypeHelpersTests+FindPropertyTestClass'. Consider using ShimAttribute to specify the definition type of the property to shim.", ex.Message);
+            Assert.AreEqual("Found more than 1 property called 'Value' in the hierarchy for type 'IFY.Shimr.Internal.Tests.TypeHelpersTests+FindPropertyTestClass'. Consider using ShimAttribute to specify the definition type of the property to shim.", ex.Message);
         }
 
         #region GetAttribute
@@ -122,7 +122,7 @@ namespace Shimterface.Internal.Tests
             });
 
             // Assert
-            Assert.IsTrue(ex.Message.StartsWith("Found 2 constructors matching given criteria for type 'Shimterface.Internal.Tests.TypeHelpersTests+TestClass3`1[["));
+            Assert.IsTrue(ex.Message.StartsWith("Found 2 constructors matching given criteria for type 'IFY.Shimr.Internal.Tests.TypeHelpersTests+TestClass3`1[["));
         }
 
         #endregion GetConstructor
@@ -256,7 +256,7 @@ namespace Shimterface.Internal.Tests
                 typeof(IMethods1).GetMethod(method2.Name, params2, genArgs2);
             });
 
-            Assert.AreEqual("Found 2 methods matching criteria for 'Method' in the hierarchy for type 'Shimterface.Internal.Tests.TypeHelpersTests+IMethods1'. Consider using ShimAttribute to specify the definition type of the property to shim.", ex.Message);
+            Assert.AreEqual("Found 2 methods matching criteria for 'Method' in the hierarchy for type 'IFY.Shimr.Internal.Tests.TypeHelpersTests+IMethods1'. Consider using ShimAttribute to specify the definition type of the property to shim.", ex.Message);
         }
 
         #endregion GetMethod

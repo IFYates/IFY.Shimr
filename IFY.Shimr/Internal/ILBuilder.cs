@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Shimterface.Internal
+namespace IFY.Shimr.Internal
 {
     internal static class ILBuilder
     {

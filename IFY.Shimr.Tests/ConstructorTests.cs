@@ -2,7 +2,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Shimterface.Tests
+namespace IFY.Shimr.Tests
 {
     [TestClass]
     public class ConstructorTests

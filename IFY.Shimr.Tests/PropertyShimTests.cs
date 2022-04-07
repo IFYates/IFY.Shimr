@@ -1,11 +1,11 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shimterface.Extensions;
+﻿using IFY.Shimr.Extensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable CA1822 // Mark members as static
 #pragma warning disable IDE1006 // Naming Styles
-namespace Shimterface.Tests
+namespace IFY.Shimr.Tests
 {
     [TestClass]
     public class PropertyShimTests

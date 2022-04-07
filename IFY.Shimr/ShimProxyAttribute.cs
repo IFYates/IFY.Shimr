@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shimterface
+namespace IFY.Shimr
 {
     /// <summary>
     /// Mark a shim member as being a proxy to an implementation elsewhere.

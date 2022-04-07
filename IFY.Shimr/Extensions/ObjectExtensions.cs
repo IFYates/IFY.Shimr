@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Shimterface.Extensions
+namespace IFY.Shimr.Extensions
 {
     /// <summary>
     /// Useful extension methods, in separate namespace to reduce pollution.

@@ -1,10 +1,10 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shimterface.Extensions;
+﻿using IFY.Shimr.Extensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace Shimterface.Tests
+namespace IFY.Shimr.Tests
 {
     // Specific issues around these structures
     [TestClass]

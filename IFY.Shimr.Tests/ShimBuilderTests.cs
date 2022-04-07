@@ -1,13 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using IFY.Shimr.Extensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Shimterface.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
-namespace Shimterface.Tests
+namespace IFY.Shimr.Tests
 {
     // NOTE: Not aiming at full coverage here
     // Full coverage is provided when combined with the rest of the test suite.
@@ -117,7 +117,7 @@ namespace Shimterface.Tests
         public void Unshim__Instance_is_type__Return_instance()
         {
             // Arrange
-            string obj = "";
+            var obj = "";
 
             // Act
             var shim = ShimBuilder.Unshim<string>(obj);
@@ -164,7 +164,7 @@ namespace Shimterface.Tests
             });
 
             // Assert
-            Assert.AreEqual("Factory shim cannot implement non-static member: Shimterface.Tests.ShimBuilderTests+ITestShim Test", ex.Message);
+            Assert.AreEqual("Factory shim cannot implement non-static member: IFY.Shimr.Tests.ShimBuilderTests+ITestShim Test", ex.Message);
         }
 
         [TestMethod]

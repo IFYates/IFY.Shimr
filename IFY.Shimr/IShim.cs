@@ -1,4 +1,4 @@
-﻿namespace Shimterface
+﻿namespace IFY.Shimr
 {
     /// <summary>
     /// Interface for all shimmed types

@@ -1,11 +1,11 @@
-﻿using Shimterface.Internal;
+﻿using IFY.Shimr.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Shimterface
+namespace IFY.Shimr
 {
     /// <summary>
     /// Provides facility to create a shim that guarantees an object can be treated as the specified interface type.
@@ -20,8 +20,8 @@ namespace Shimterface
         {
             // TODO: handle shim compilation failures by removing from dynamic assembly
 
-            var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Shimterface.dynamic"), AssemblyBuilderAccess.Run);
-            _mod = asm.DefineDynamicModule("Shimterface.dynamic");
+            var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("IFY.Shimr.dynamic"), AssemblyBuilderAccess.Run);
+            _mod = asm.DefineDynamicModule("IFY.Shimr.dynamic");
             _dynamicTypeCache.Clear();
             _ignoreMissingMembers.Clear();
         }
@@ -141,7 +141,7 @@ namespace Shimterface
             {
                 if (_ignoreMissingMembers.Contains(interfaceMethod.DeclaringType))
                 {
-                    ILBuilder.MethodThrowException<NotImplementedException>(tb, interfaceMethod);
+                    tb.MethodThrowException<NotImplementedException>(interfaceMethod);
                     return;
                 }
 
@@ -202,7 +202,7 @@ namespace Shimterface
         #endregion Create
 
         #region Shim
-        
+
         // NOTE: Used internally
 
         /// <summary>
@@ -255,7 +255,7 @@ namespace Shimterface
         #endregion Shim
 
         #region Unshim
-        
+
         // NOTE: Used internally
 
         /// <summary>

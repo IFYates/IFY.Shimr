@@ -4,15 +4,15 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Shimterface.Internal.Tests
+namespace IFY.Shimr.Internal.Tests
 {
     [TestClass]
     public class ILGeneratorExtensionsTests
     {
         private static ILGenerator getGenerator()
         {
-            var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("Shimterface.Tests.dynamic"), AssemblyBuilderAccess.Run);
-            var mod = asm.DefineDynamicModule("Shimterface.Tests.dynamic");
+            var asm = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("IFY.Shimr.Tests.dynamic"), AssemblyBuilderAccess.Run);
+            var mod = asm.DefineDynamicModule("IFY.Shimr.Tests.dynamic");
             var tb = mod.DefineType($"TestClass", TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout, null, null);
             return tb.DefinePublicMethod("TestMethod", typeof(bool), new List<Type> { typeof(string), typeof(int) });
         }

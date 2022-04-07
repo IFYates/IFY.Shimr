@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Shimterface.Examples
+namespace IFY.Shimr.Examples
 {
     [TestClass]
     public class FileSystemExample

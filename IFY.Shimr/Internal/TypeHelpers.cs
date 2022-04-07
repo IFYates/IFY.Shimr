@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Shimterface.Internal
+namespace IFY.Shimr.Internal
 {
     internal static class TypeHelpers
     {
@@ -101,7 +101,7 @@ namespace Shimterface.Internal
             return constrs.SingleOrDefault();
         }
         public static MethodInfo? GetMethod(this Type type, string name, Type[] parameterTypes, Type[] genericArgs)
-            => GetMethod(type, name, null, parameterTypes, genericArgs);
+            => type.GetMethod(name, null, parameterTypes, genericArgs);
         public static MethodInfo? GetMethod(this Type type, string name, Type? returnType, Type[] parameterTypes, Type[] genericArgs)
         {
             // Find potentials
@@ -152,7 +152,7 @@ namespace Shimterface.Internal
         {
             return type == other
                 || type.IsAssignableFrom(other)
-                || IsEquivalentGenericType(type, other);
+                || type.IsEquivalentGenericType(other);
         }
 
         /// <summary>
@@ -165,8 +165,8 @@ namespace Shimterface.Internal
         public static bool IsEquivalentGenericMethodType(this Type type, Type other)
         {
             return type == other
-                || ((type.IsGenericMethodParameter || type.IsGenericParameter) && other.IsGenericMethodParameter)
-                || IsEquivalentGenericType(type, other);
+                || (type.IsGenericMethodParameter || type.IsGenericParameter) && other.IsGenericMethodParameter
+                || type.IsEquivalentGenericType(other);
         }
 
         /// <summary>

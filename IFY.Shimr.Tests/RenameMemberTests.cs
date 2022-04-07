@@ -1,157 +1,157 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Shimterface.Extensions;
+﻿using IFY.Shimr.Extensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 
-namespace Shimterface.Tests
+namespace IFY.Shimr.Tests
 {
     [TestClass]
-	public class RenameMemberTests
-	{
-		public class TestClass
-		{
-			public static string StaticField;
-			public static string StaticValue { get; set; }
-			public static string StaticTest() { return StaticValue; }
-			
-			public string InstanceField;
-			public string InstanceValue { get; set; }
-			public string InstanceTest() { return InstanceValue; }
-		}
+    public class RenameMemberTests
+    {
+        public class TestClass
+        {
+            public static string StaticField;
+            public static string StaticValue { get; set; }
+            public static string StaticTest() { return StaticValue; }
 
-		public interface IStaticMembers
-		{
-			[StaticShim(typeof(TestClass))]
-			[Shim(nameof(TestClass.StaticField))]
-			string Field { get; set; }
-			[StaticShim(typeof(TestClass))]
-			[Shim(nameof(TestClass.StaticValue))]
-			string Value { get; set; }
-			[StaticShim(typeof(TestClass))]
-			[Shim(nameof(TestClass.StaticTest))]
-			string Test();
-		}
+            public string InstanceField;
+            public string InstanceValue { get; set; }
+            public string InstanceTest() { return InstanceValue; }
+        }
 
-		public interface IInstanceMembers
-		{
-			[Shim(nameof(TestClass.InstanceField))]
-			string Field { get; set; }
-			[Shim(nameof(TestClass.InstanceValue))]
-			string Value { get; set; }
-			[Shim(nameof(TestClass.InstanceTest))]
-			string Test();
-		}
-		
-		[TestMethod]
-		public void Can_get_from_renamed_field()
-		{
-			var obj = new TestClass
-			{
-				InstanceField = DateTime.UtcNow.ToString("o")
-			};
+        public interface IStaticMembers
+        {
+            [StaticShim(typeof(TestClass))]
+            [Shim(nameof(TestClass.StaticField))]
+            string Field { get; set; }
+            [StaticShim(typeof(TestClass))]
+            [Shim(nameof(TestClass.StaticValue))]
+            string Value { get; set; }
+            [StaticShim(typeof(TestClass))]
+            [Shim(nameof(TestClass.StaticTest))]
+            string Test();
+        }
 
-			var shim = obj.Shim<IInstanceMembers>();
+        public interface IInstanceMembers
+        {
+            [Shim(nameof(TestClass.InstanceField))]
+            string Field { get; set; }
+            [Shim(nameof(TestClass.InstanceValue))]
+            string Value { get; set; }
+            [Shim(nameof(TestClass.InstanceTest))]
+            string Test();
+        }
 
-			Assert.AreSame(obj.InstanceField, shim.Field);
-		}
+        [TestMethod]
+        public void Can_get_from_renamed_field()
+        {
+            var obj = new TestClass
+            {
+                InstanceField = DateTime.UtcNow.ToString("o")
+            };
 
-		[TestMethod]
-		public void Can_get_from_renamed_static_field()
-		{
-			TestClass.StaticField = DateTime.UtcNow.ToString("o");
+            var shim = obj.Shim<IInstanceMembers>();
 
-			var factory = ShimBuilder.Create<IStaticMembers>();
+            Assert.AreSame(obj.InstanceField, shim.Field);
+        }
 
-			Assert.AreSame(TestClass.StaticField, factory.Field);
-		}
+        [TestMethod]
+        public void Can_get_from_renamed_static_field()
+        {
+            TestClass.StaticField = DateTime.UtcNow.ToString("o");
 
-		[TestMethod]
-		public void Can_set_renamed_field()
-		{
-			var obj = new TestClass();
+            var factory = ShimBuilder.Create<IStaticMembers>();
 
-			var shim = obj.Shim<IInstanceMembers>();
-			shim.Field = DateTime.UtcNow.ToString("o");
+            Assert.AreSame(TestClass.StaticField, factory.Field);
+        }
 
-			Assert.AreSame(shim.Field, obj.InstanceField);
-		}
+        [TestMethod]
+        public void Can_set_renamed_field()
+        {
+            var obj = new TestClass();
 
-		[TestMethod]
-		public void Can_set_renamed_static_field()
-		{
-			TestClass.StaticField = null;
+            var shim = obj.Shim<IInstanceMembers>();
+            shim.Field = DateTime.UtcNow.ToString("o");
 
-			var factory = ShimBuilder.Create<IStaticMembers>();
-			factory.Field = DateTime.UtcNow.ToString("o");
+            Assert.AreSame(shim.Field, obj.InstanceField);
+        }
 
-			Assert.AreSame(factory.Field, TestClass.StaticField);
-		}
+        [TestMethod]
+        public void Can_set_renamed_static_field()
+        {
+            TestClass.StaticField = null;
 
-		[TestMethod]
-		public void Can_get_from_renamed_property()
-		{
-			var obj = new TestClass
-			{
-				InstanceValue = DateTime.UtcNow.ToString("o")
-			};
+            var factory = ShimBuilder.Create<IStaticMembers>();
+            factory.Field = DateTime.UtcNow.ToString("o");
 
-			var shim = obj.Shim<IInstanceMembers>();
+            Assert.AreSame(factory.Field, TestClass.StaticField);
+        }
 
-			Assert.AreSame(obj.InstanceValue, shim.Value);
-		}
+        [TestMethod]
+        public void Can_get_from_renamed_property()
+        {
+            var obj = new TestClass
+            {
+                InstanceValue = DateTime.UtcNow.ToString("o")
+            };
 
-		[TestMethod]
-		public void Can_get_from_renamed_static_property()
-		{
-			TestClass.StaticValue = DateTime.UtcNow.ToString("o");
+            var shim = obj.Shim<IInstanceMembers>();
 
-			var factory = ShimBuilder.Create<IStaticMembers>();
+            Assert.AreSame(obj.InstanceValue, shim.Value);
+        }
 
-			Assert.AreSame(TestClass.StaticValue, factory.Value);
-		}
+        [TestMethod]
+        public void Can_get_from_renamed_static_property()
+        {
+            TestClass.StaticValue = DateTime.UtcNow.ToString("o");
 
-		[TestMethod]
-		public void Can_set_renamed_property()
-		{
-			var obj = new TestClass();
+            var factory = ShimBuilder.Create<IStaticMembers>();
 
-			var shim = obj.Shim<IInstanceMembers>();
-			shim.Value = DateTime.UtcNow.ToString("o");
+            Assert.AreSame(TestClass.StaticValue, factory.Value);
+        }
 
-			Assert.AreSame(shim.Value, obj.InstanceValue);
-		}
+        [TestMethod]
+        public void Can_set_renamed_property()
+        {
+            var obj = new TestClass();
 
-		[TestMethod]
-		public void Can_set_renamed_static_property()
-		{
-			TestClass.StaticValue = null;
+            var shim = obj.Shim<IInstanceMembers>();
+            shim.Value = DateTime.UtcNow.ToString("o");
 
-			var factory = ShimBuilder.Create<IStaticMembers>();
-			factory.Value = DateTime.UtcNow.ToString("o");
+            Assert.AreSame(shim.Value, obj.InstanceValue);
+        }
 
-			Assert.AreSame(factory.Value, TestClass.StaticValue);
-		}
+        [TestMethod]
+        public void Can_set_renamed_static_property()
+        {
+            TestClass.StaticValue = null;
 
-		[TestMethod]
-		public void Can_call_renamed_method()
-		{
-			var obj = new TestClass
-			{
-				InstanceValue = DateTime.UtcNow.ToString("o")
-			};
+            var factory = ShimBuilder.Create<IStaticMembers>();
+            factory.Value = DateTime.UtcNow.ToString("o");
 
-			var shim = obj.Shim<IInstanceMembers>();
+            Assert.AreSame(factory.Value, TestClass.StaticValue);
+        }
 
-			Assert.AreSame(obj.InstanceTest(), shim.Test());
-		}
+        [TestMethod]
+        public void Can_call_renamed_method()
+        {
+            var obj = new TestClass
+            {
+                InstanceValue = DateTime.UtcNow.ToString("o")
+            };
 
-		[TestMethod]
-		public void Can_call_renamed_static_method()
-		{
-			TestClass.StaticValue = DateTime.UtcNow.ToString("o");
+            var shim = obj.Shim<IInstanceMembers>();
 
-			var factory = ShimBuilder.Create<IStaticMembers>();
+            Assert.AreSame(obj.InstanceTest(), shim.Test());
+        }
 
-			Assert.AreSame(TestClass.StaticTest(), factory.Test());
-		}
-	}
+        [TestMethod]
+        public void Can_call_renamed_static_method()
+        {
+            TestClass.StaticValue = DateTime.UtcNow.ToString("o");
+
+            var factory = ShimBuilder.Create<IStaticMembers>();
+
+            Assert.AreSame(TestClass.StaticTest(), factory.Test());
+        }
+    }
 }
