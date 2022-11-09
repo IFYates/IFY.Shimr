@@ -44,7 +44,7 @@ jobs:
 #    - name: Test
 #      run: dotnet test --no-build --verbosity normal
     - name: Coverlet coverage test
-      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --format lcov
+      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --format lcov
 
     - name: Publish package
       uses: actions/upload-artifact@v2
@@ -66,7 +66,7 @@ jobs:
 #        verbose: true
 
     - name: Run Stryker.NET
-      run: dotnet stryker -s "IFY.Shimr.sln" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/IFY.Shimr --dashboard-version $GITHUB_REF
+      run: dotnet stryker -s "IFY.Shimr.sln" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/IFY.Shimr --dashboard-version $GITHUB_BASE_REF
     - name: Upload mutation report
       uses: actions/upload-artifact@v2.2.2
       with:
