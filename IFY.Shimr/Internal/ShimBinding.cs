@@ -32,7 +32,7 @@ namespace IFY.Shimr.Internal
                         throw new NotSupportedException($"Shimmed parameter type must be an interface: {InterfaceMethod.DeclaringType.FullName}");
                     }
                     return paramAttr?.RealType ?? p.ParameterType;
-                }).ToArray(); ;
+                }).ToArray();
         }
         private void doResolveProxy(Type implType, bool isConstructor, MemberInfo reflectMember, out ShimBinding? proxiedBinding, out ShimProxyAttribute? proxyAttr)
         {
