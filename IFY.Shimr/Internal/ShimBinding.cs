@@ -21,6 +21,52 @@ namespace IFY.Shimr.Internal
             return resolve(implType, isConstructor, true);
         }
 
+        private Type[] getParameterTypes()
+        {
+            return InterfaceMethod.GetParameters()
+                .Select(p =>
+                {
+                    var paramAttr = p.GetCustomAttribute<TypeShimAttribute>();
+                    if (paramAttr != null && !p.ParameterType.IsInterfaceType())
+                    {
+                        throw new NotSupportedException($"Shimmed parameter type must be an interface: {InterfaceMethod.DeclaringType.FullName}");
+                    }
+                    return paramAttr?.RealType ?? p.ParameterType;
+                }).ToArray(); ;
+        }
+        private void doResolveProxy(Type implType, bool isConstructor, MemberInfo reflectMember, out ShimBinding? proxiedBinding, out ShimProxyAttribute? proxyAttr)
+        {
+            proxiedBinding = null;
+            proxyAttr = reflectMember.GetCustomAttribute<ShimProxyAttribute>(false);
+            if (proxyAttr != null)
+            {
+                // Cannot proxy constructor
+                if (isConstructor)
+                {
+                    throw new InvalidCastException($"Cannot proxy {implType.FullName} constructor in {InterfaceMethod.DeclaringType.FullName}");
+                }
+
+                proxiedBinding = new ShimBinding(InterfaceMethod);
+                proxiedBinding.resolve(implType, false, false);
+
+                // Confirm behaviour is valid
+                if (proxyAttr.Behaviour != ProxyBehaviour.Default)
+                {
+                    if (proxyAttr.Behaviour == ProxyBehaviour.Add)
+                    {
+                        if (proxiedBinding.ImplementedMember != null)
+                        {
+                            throw new InvalidCastException($"Cannot proxy {implType.FullName} as {InterfaceMethod.DeclaringType.FullName}; adding existing method: {InterfaceMethod}");
+                        }
+                    }
+                    else if (proxiedBinding.ImplementedMember == null)
+                    {
+                        throw new InvalidCastException($"Cannot proxy {implType.FullName} as {InterfaceMethod.DeclaringType.FullName}; override of missing method: {InterfaceMethod}");
+                    }
+                }
+            }
+        }
+
         private bool resolve(Type implType, bool isConstructor, bool resolveProxy)
         {
             // If really a property, will need to get attributes from PropertyInfo
@@ -42,53 +88,11 @@ namespace IFY.Shimr.Internal
             ShimProxyAttribute? proxyAttr = null;
             if (resolveProxy)
             {
-                proxyAttr = reflectMember.GetCustomAttribute<ShimProxyAttribute>(false);
-                if (proxyAttr != null)
-                {
-                    // Cannot proxy constructor
-                    if (isConstructor)
-                    {
-                        throw new InvalidCastException($"Cannot proxy {implType.FullName} constructor in {InterfaceMethod.DeclaringType.FullName}");
-                    }
-
-                    proxiedBinding = new ShimBinding(InterfaceMethod);
-                    proxiedBinding.resolve(implType, false, false);
-
-                    // Confirm behaviour is valid
-                    if (proxyAttr.Behaviour != ProxyBehaviour.Default)
-                    {
-                        if (proxyAttr.Behaviour == ProxyBehaviour.Add)
-                        {
-                            if (proxiedBinding.ImplementedMember != null)
-                            {
-                                throw new InvalidCastException($"Cannot proxy {implType.FullName} as {InterfaceMethod.DeclaringType.FullName}; adding existing method: {InterfaceMethod}");
-                            }
-                        }
-                        else if (proxiedBinding.ImplementedMember == null)
-                        {
-                            throw new InvalidCastException($"Cannot proxy {implType.FullName} as {InterfaceMethod.DeclaringType.FullName}; override of missing method: {InterfaceMethod}");
-                        }
-                    }
-                }
+                doResolveProxy(implType, isConstructor, reflectMember, out proxiedBinding, out proxyAttr);
             }
 
             // Workout real parameter types
-            var paramTypes = InterfaceMethod.GetParameters()
-                .Select(p =>
-                {
-                    var paramAttr = p.GetCustomAttribute<TypeShimAttribute>();
-                    if (paramAttr != null && !p.ParameterType.IsInterfaceType())
-                    {
-                        throw new NotSupportedException($"Shimmed parameter type must be an interface: {InterfaceMethod.DeclaringType.FullName}");
-                    }
-                    return paramAttr?.RealType ?? p.ParameterType;
-                }).ToArray();
-            void addInstanceParam(Type type)
-            {
-                var paramList = paramTypes.ToList();
-                paramList.Insert(0, type);
-                paramTypes = paramList.ToArray();
-            }
+            var paramTypes = getParameterTypes();
 
             // Constructors don't provide other functionality
             if (isConstructor)
@@ -199,6 +203,13 @@ namespace IFY.Shimr.Internal
             }
 
             return ImplementedMember != null;
+
+            void addInstanceParam(Type type)
+            {
+                var paramList = paramTypes.ToList();
+                paramList.Insert(0, type);
+                paramTypes = paramList.ToArray();
+            }
         }
     }
 }
