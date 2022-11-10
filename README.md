@@ -2,9 +2,9 @@
 Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.
 
 [![Build & Test](https://github.com/IFYates/IFY.Shimr/actions/workflows/dotnet.yml/badge.svg)](https://github.com/IFYates/IFY.Shimr/actions/workflows/dotnet.yml)
-[![Coverage Status](https://coveralls.io/repos/github/IFYates/IFY.Shimr/badge.svg?branch=master)](https://coveralls.io/github/IFYates/IFY.Shimr?branch=master)
+[![Code Coverage](https://app.codacy.com/project/badge/Coverage/8f5585dd2c4f402893420e0ff7edf5f6)](https://www.codacy.com/gh/IFYates/IFY.Shimr/dashboard?utm_source=github.com&utm_medium=referral&utm_content=IFYates/IFY.Shimr&utm_campaign=Badge_Coverage)
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2FIFYates%2FIFY.Shimr%2Fmaster)](https://dashboard.stryker-mutator.io/reports/github.com/IFYates/IFY.Shimr/master)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/8f5585dd2c4f402893420e0ff7edf5f6)](https://www.codacy.com/gh/IFYates/IFY.Shimr/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IFYates/IFY.Shimr&amp;utm_campaign=Badge_Grade)
+[![Code Quality](https://app.codacy.com/project/badge/Grade/8f5585dd2c4f402893420e0ff7edf5f6)](https://www.codacy.com/gh/IFYates/IFY.Shimr/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IFYates/IFY.Shimr&amp;utm_campaign=Badge_Grade)
 
 [![NuGet Version](https://img.shields.io/nuget/v/IFY.Shimr)](https://www.nuget.org/packages/IFY.Shimr/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Shimr)](https://www.nuget.org/packages/IFY.Shimr/)
