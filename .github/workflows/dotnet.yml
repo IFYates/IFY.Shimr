@@ -2,16 +2,21 @@ name: Build & Test
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+    paths:
+      - src
   pull_request:
-    branches: [ master ]
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - master
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
+    # Setup
     - uses: actions/checkout@v2
 
     - name: Setup .NET Core 3.1
@@ -39,34 +44,45 @@ jobs:
           master:Release
           !default:Debug
 
+    # Build
     - name: Build
       run: dotnet build --configuration $BUILD_CONFIG --no-restore
-#    - name: Test
-#      run: dotnet test --no-build --verbosity normal
-    - name: Coverlet coverage test
-      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --format lcov
 
     - name: Publish package
-      uses: actions/upload-artifact@v2
+      uses: nanoufo/action-upload-artifacts-and-release-assets@v1.4
       with:
         path: ./**/IFY.Shimr.*.*nupkg
 
-    - name: Publish coverage results to Coveralls
-      uses: coverallsapp/github-action@v1.1.2
+    # Test & coverage
+    - name: Test and coverage
+      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --format lcov -o cover.lcov
+    - name: Report coverage to Codacy
+      uses: codacy/codacy-coverage-reporter-action@v1.3.0
       with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: coverage.info
-#      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --format cobertura
-#    - name: Codecov
-#      uses: codecov/codecov-action@v1.3.1
-#      with:
-#        token: ${{ secrets.GITHUB_TOKEN }}
-#        flags: unittests
-#        files: coverage.cobertura.xml
-#        verbose: true
+        project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        coverage-reports: cover.lcov
 
+    # Mutation test
+    - name: Configure Stryker.NET for IFY.Phorm
+      uses: DamianReeves/write-file-action@v1.0
+      with:
+        path: stryker-config.json
+        write-mode: overwrite
+        contents: |
+          {
+            "stryker-config": {
+              "project": "IFY.Shimr.csproj",
+              "test-projects": ["./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj"],
+              "project-info": {
+                "name": "github.com/IFYates/IFY.Shimr",
+                "module": "IFY.Shimr",
+                "version": "${{ github.base_ref }}"
+              },
+              "reporters": ["cleartext", "html", "dashboard"]
+            }
+          }
     - name: Run Stryker.NET
-      run: dotnet stryker -s "IFY.Shimr.sln" --reporters "['cleartext','html','dashboard']" --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }} --dashboard-project github.com/IFYates/IFY.Shimr --dashboard-version $GITHUB_BASE_REF
+      run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
     - name: Upload mutation report
       uses: actions/upload-artifact@v2.2.2
       with:
