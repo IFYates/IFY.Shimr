@@ -9,6 +9,10 @@ Utility for creating a dynamic object facade/proxy to allow for using an object 
 [![NuGet Version](https://img.shields.io/nuget/v/IFY.Shimr)](https://www.nuget.org/packages/IFY.Shimr/)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Shimr)](https://www.nuget.org/packages/IFY.Shimr/)
 
+Formerly known as Shimterface:
+[![NuGet Version](https://img.shields.io/nuget/v/Shimterface.Standard)](https://www.nuget.org/packages/Shimterface.Standard/)
+![NuGet Downloads](https://img.shields.io/nuget/dt/Shimterface.Standard)
+
 ## Description
 I'm sure we've all been in the situation where we've had to make use of a class from an external library (including mscorlib) that either doesn't implement any interface or doesn't implement one that can be used for any kind of Inversion of Control usage.
 One approach is to implement a series of proxy objects that handle all of the required functionality, including proxies around returned values, and this can even be scripted (Powershell, T4, etc.) to prevent the arduous task of proxying every class you need.
