@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	
+
 	<PropertyGroup>
 		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
 		<LangVersion>10.0</LangVersion>
@@ -9,7 +9,7 @@
 		<CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
-	
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
 		<PackageReference Include="MSTest.TestAdapter" Version="2.2.8" />
@@ -17,9 +17,9 @@
 		<PackageReference Include="coverlet.collector" Version="3.1.2" />
 		<PackageReference Include="Moq" Version="4.16.1" />
 	</ItemGroup>
-	
-	<ItemGroup>
-		<ProjectReference Include="..\IFY.Shimr\IFY.Shimr.csproj" />
-	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\IFY.Shimr.Gen\IFY.Shimr.Gen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+	</ItemGroup>
+	
 </Project>

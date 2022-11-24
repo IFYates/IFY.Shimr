@@ -1,0 +1,59 @@
+namespace _Shimr;
+internal class UnitTest1_ITestShim__UnitTest1_TestClass : IFY.Shimr.Gen.Tests.UnitTest1.ITestShim
+{
+	private readonly IFY.Shimr.Gen.Tests.UnitTest1.TestClass _obj;
+	public UnitTest1_ITestShim__UnitTest1_TestClass(IFY.Shimr.Gen.Tests.UnitTest1.TestClass obj)
+	{
+		_obj = obj;
+	}
+	public System.String Value { get => _obj.Value; set => _obj.Value = value; }
+	public void Test()
+	{
+		_obj.Test();
+	}
+	public void Test2(System.String arg)
+	{
+		_obj.Test2(arg);
+	}
+	public System.Int32 Test3(System.String arg, System.Int32 id, System.Boolean test)
+	{
+		return _obj.Test3(arg, id, test);
+	}
+}
+namespace _Shimr;
+internal class UnitTest1_ITestShim2__UnitTest1_TestClass : IFY.Shimr.Gen.Tests.UnitTest1.ITestShim2
+{
+	private readonly IFY.Shimr.Gen.Tests.UnitTest1.TestClass _obj;
+	public UnitTest1_ITestShim2__UnitTest1_TestClass(IFY.Shimr.Gen.Tests.UnitTest1.TestClass obj)
+	{
+		_obj = obj;
+	}
+	public void Test()
+	{
+		_obj.Test();
+	}
+}
+using System.Diagnostics.CodeAnalysis;
+namespace IFY.Shimr.Gen.Tests
+{
+	public static class UnitTest1_TestClassShimrExtension
+	{
+		[return: NotNullIfNotNull("obj")]
+		public static T? Shim<T>(this IFY.Shimr.Gen.Tests.UnitTest1.TestClass? obj)
+		{
+			if (obj == null)
+			{
+				return default;
+			}
+			else if (typeof(T) == typeof(IFY.Shimr.Gen.Tests.UnitTest1.ITestShim))
+			{
+				return (T)(object)new _Shimr.UnitTest1_ITestShim__UnitTest1_TestClass(obj);
+			}
+			else if (typeof(T) == typeof(IFY.Shimr.Gen.Tests.UnitTest1.ITestShim2))
+			{
+				return (T)(object)new _Shimr.UnitTest1_ITestShim2__UnitTest1_TestClass(obj);
+			}
+			throw new Exception("Invalid shim target type for this object: " + typeof(T).FullName);
+		}
+	}
+}

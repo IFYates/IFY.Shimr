@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>10.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Include="..\IFY.Shimr\ConstructorShimAttribute.cs" Link="Core\ConstructorShimAttribute.cs" />
+	  <Compile Include="..\IFY.Shimr\ProxyBehaviour.cs" Link="Core\ProxyBehaviour.cs" />
+	  <Compile Include="..\IFY.Shimr\ShimAttribute.cs" Link="Core\ShimAttribute.cs" />
+	  <Compile Include="..\IFY.Shimr\ShimProxyAttribute.cs" Link="Core\ShimProxyAttribute.cs" />
+	  <Compile Include="..\IFY.Shimr\StaticShimAttribute.cs" Link="Core\StaticShimAttribute.cs" />
+	  <Compile Include="..\IFY.Shimr\TypeShimAttribute.cs" Link="Core\TypeShimAttribute.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.9.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Properties\" />
+	</ItemGroup>
+</Project>
