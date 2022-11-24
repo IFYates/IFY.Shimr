@@ -31,6 +31,9 @@ public class UnitTest1
         {
             return new SubClass { Value = inp };
         }
+        public void Test5(SubClass v)
+        {
+        }
     }
 
     [Shimr(typeof(TestClass))]
@@ -82,18 +85,14 @@ public class UnitTest1
     public interface ITestShim2
     {
         void Test();
+        void Test5([TypeShim(typeof(SubClass))] ISubTest v);
     }
 
-    //[TestMethod]
-    //public void TestMethod1()
-    //{
-    //    var obj = new TestClass();
-    //    var s = obj.Shim<ITestShim>();
-
-    //    s.Value = "A";
-    //    s.Test3("arg", 1, false);
-
-    //    Assert.AreEqual("A", obj.Value);
-    //    Assert.IsTrue(obj.Called);
-    //}
+    [TestMethod]
+    public void TestMethod1()
+    {
+        var obj = new TestClass();
+        var s = obj.Shim<ITestShim2>();
+        s.Test5(new SubClass { Value = "A" }.Shim<ISubTest>());
+    }
 }

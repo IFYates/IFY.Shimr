@@ -78,14 +78,20 @@ internal class ShimWriter
             {
                 var returnTypeFullName = method.ReturnType?.FullName();
                 _src.Append($"\t\tpublic {returnTypeFullName ?? "void"} {method.Name}(");
-                _src.Append(string.Join(", ", method.Parameters.Select(p => $"{p.Value} {p.Key}")));
+                _src.Append(string.Join(", ", method.Parameters.Select(p => $"{p.Value.ParameterTypeFullName} {p.Key}")));
                 _src.AppendLine(")");
-
                 _src.AppendLine("\t\t{");
+
+                var argList = method.Parameters.Values
+                    .Select(p => p.TargetTypeFullName != null
+                        ? $"({p.TargetTypeFullName})((IShim){p.Name}).Unshim()"
+                        : p.Name)
+                    .ToArray();
+
                 if (method.ReturnType != null)
                 {
                     _src.Append($"\t\t\treturn _obj.{method.TargetName ?? method.Name}(");
-                    _src.Append(string.Join(", ", method.Parameters.Keys));
+                    _src.Append(string.Join(", ", argList));
                     if (method.IsReturnShim)
                     {
                         _src.Append($").Shim<{returnTypeFullName}>(");
@@ -95,7 +101,7 @@ internal class ShimWriter
                 else
                 {
                     _src.Append($"\t\t\t_obj.{method.TargetName ?? method.Name}(");
-                    _src.Append(string.Join(", ", method.Parameters.Keys));
+                    _src.Append(string.Join(", ", argList));
                     _src.AppendLine(");");
                 }
                 _src.AppendLine("\t\t}");

@@ -15,7 +15,7 @@ internal class ShimMemberDefinition
     public bool CanRead { get; }
     public bool CanWrite { get; }
 
-    public Dictionary<string, string> Parameters { get; } = new();
+    public Dictionary<string, MethodParameterDefinition> Parameters { get; } = new();
 
     public ShimMemberDefinition(IPropertySymbol property)
     {
@@ -46,7 +46,7 @@ internal class ShimMemberDefinition
         // Parameters
         foreach (var parameter in method.Parameters)
         {
-            parseParameter(parameter);
+            Parameters.Add(parameter.Name, new MethodParameterDefinition(parameter));
         }
 
         // Attributes
@@ -56,8 +56,7 @@ internal class ShimMemberDefinition
     private void parseAttributes(ISymbol symbol)
     {
         // ShimAttribute
-        var shimAttr = symbol.GetAttributes()
-            .SingleOrDefault(a => a.AttributeClass.FullName() == typeof(ShimAttribute).FullName);
+        var shimAttr = symbol.GetAttribute<ShimAttribute>();
         if (shimAttr != null)
         {
             // TODO: support definitionType arg
@@ -66,12 +65,5 @@ internal class ShimMemberDefinition
                 TargetName = targetName?.ToString();
             }
         }
-    }
-
-    private void parseParameter(IParameterSymbol parameter)
-    {
-        // TODO: defaults, params, out, ref
-        // TODO: auto-shim
-        Parameters.Add(parameter.Name, parameter.Type.TryFullName());
     }
 }
