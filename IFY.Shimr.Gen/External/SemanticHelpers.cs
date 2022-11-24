@@ -129,6 +129,12 @@ internal static class SemanticHelper
         }
 
         var prefix = FullNamespace(symbol);
+
+        if (symbol.ContainingType != null)
+        {
+            prefix += "." + GetName(symbol.ContainingType);// TODO: "+" class, etc.
+        }
+
         var suffix = "";
         if (symbol.Arity > 0)
         {

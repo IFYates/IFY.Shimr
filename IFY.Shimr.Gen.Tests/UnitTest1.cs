@@ -1,16 +1,20 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace IFY.Shimr.Gen.Tests;
 
 [TestClass]
 public class UnitTest1
 {
+    public class SubClass
+    {
+        public string Value { get; set; }
+    }
+
     public class TestClass
     {
         public bool Called;
 
-        public string Value { get; set; }
+        public string Value;
         public string Value2 { get; set; }
+        public SubClass Value3 { get; set; }
 
         public void Test()
         {
@@ -23,37 +27,69 @@ public class UnitTest1
         {
             return 1;
         }
+        public SubClass Test4(string inp)
+        {
+            return new SubClass { Value = inp };
+        }
     }
 
     [Shimr(typeof(TestClass))]
-    public interface ITestShim
+    public interface ITestSub
     {
-        string Value { get; set; }
-        [Shim(nameof(TestClass.Value2))]
-        string ValueX { get; set; }
-        [Shim(nameof(TestClass.Test))]
-        void TestX();
-        void Test2(string arg);
-        int Test3(string arg, int id);
-        int Test3(string arg, int id, bool test = true);
+        ISubTest Value3 { get; set; }
+        ISubTest Test4(string inp = "test");
     }
-
-    [Shimr(typeof(TestClass))]
-    public interface ITestShim2
+    public interface ISubTest
     {
-        void Test();
+        [Shim(nameof(SubClass.Value))]
+        string Name { get; }
     }
 
     [TestMethod]
-    public void TestMethod1()
+    public void MyTestMethod()
     {
-        var obj = new TestClass();
-        var s = obj.Shim<ITestShim>();
+        var obj = new TestClass
+        {
+            Value3 = new SubClass { Value = "X" }
+        };
+        var shim = obj.Shim<ITestSub>();
 
-        s.Value = "A";
-        s.Test3("arg", 1, false);
+        var r = shim.Test4();
+        var s = shim.Value3;
 
-        Assert.AreEqual("A", obj.Value);
-        Assert.IsTrue(obj.Called);
+        Assert.AreEqual("test", r.Name);
+        Assert.AreEqual(obj.Value3.Value, s.Name);
     }
+
+    //[Shimr(typeof(TestClass))]
+    //public interface ITestShim
+    //{
+    //    string Value { get; set; }
+    //    [Shim(nameof(TestClass.Value2))]
+    //    string ValueX { get; set; }
+    //    [Shim(nameof(TestClass.Test))]
+    //    void TestX();
+    //    void Test2(string arg);
+    //    int Test3(string arg, int id);
+    //    int Test3(string arg, int id, bool test = true);
+    //}
+
+    ////[Shimr(typeof(TestClass))]
+    ////public interface ITestShim2
+    ////{
+    ////    void Test();
+    ////}
+
+    //[TestMethod]
+    //public void TestMethod1()
+    //{
+    //    var obj = new TestClass();
+    //    var s = obj.Shim<ITestShim>();
+
+    //    s.Value = "A";
+    //    s.Test3("arg", 1, false);
+
+    //    Assert.AreEqual("A", obj.Value);
+    //    Assert.IsTrue(obj.Called);
+    //}
 }

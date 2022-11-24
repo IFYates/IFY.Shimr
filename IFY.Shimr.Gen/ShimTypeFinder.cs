@@ -28,7 +28,10 @@ internal class ShimTypeFinder : ISyntaxContextReceiver
             // Add to list for generation
             foreach (var attr in shimrAttrs)
             {
-                ShimTypes.Add(new ShimTypeDefinition(interfaceDef, attr));
+                if (attr.TryGetAttributeConstructorValue("targetType", out var targetType))
+                {
+                    ShimTypes.Add(new ShimTypeDefinition(interfaceDef, (INamedTypeSymbol)targetType!));
+                }
             }
         }
     }

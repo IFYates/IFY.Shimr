@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis.Text;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen;
 
@@ -21,10 +22,23 @@ internal class ShimGenerator : ISourceGenerator
             Execute(receiver.ShimTypes, context.AddSource);
         }
     }
-    public void Execute(IEnumerable<ShimTypeDefinition> shimTypes, Action<string, SourceText> addSource)
+    public void Execute(IList<ShimTypeDefinition> shimTypes, Action<string, SourceText> addSource)
     {
         var src = new StringBuilder();
         var writer = GetShimWriter(src);
+
+        // Union with additional shims detected
+        var additionalShims = shimTypes.SelectMany(s => s.AdditionalShims)
+            .Distinct().ToArray();
+        foreach (var shimType in additionalShims)
+        {
+            var shimFullName = shimType.ShimType.FullName();
+            var targetFullName = shimType.TargetType.FullName();
+            if (!shimTypes.Any(t => t.ShimFullName == shimFullName && t.TargetFullName == targetFullName))
+            {
+                shimTypes.Add(new ShimTypeDefinition(shimType.ShimType, shimType.TargetType));
+            }
+        }
 
 #if DEBUG
         const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput.txt";
