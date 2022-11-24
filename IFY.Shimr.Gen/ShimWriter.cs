@@ -169,4 +169,28 @@ internal class ShimWriter
 
         _src.AppendLine("}");
     }
+
+    public void CreateStaticShimCreator(ShimTypeDefinition[] shims)
+    {
+        _src.AppendLine("namespace IFY.Shimr;");
+        _src.AppendLine($"[System.CodeDom.Compiler.GeneratedCode(\"IFY.Shimr\", \"{_fileVersion}\")]");
+        _src.AppendLine("public static class ShimBuilder");
+        _src.AppendLine("{");
+
+        _src.AppendLine($"\tpublic static T Create<T>()");
+        _src.AppendLine("\t{");
+        var first = true;
+        foreach (var shim in shims)
+        {
+            _src.AppendLine($"\t\t{(first ? "if" : "else if")} (typeof(T) == typeof({shim.ShimFullName}))");
+            _src.AppendLine("\t\t{");
+            _src.AppendLine($"\t\t\treturn (T)(object)new {shim.TargetNamespace}.{shim.TargetSafeName}ShimrExtension.{shim.ShimrName}();");
+            _src.AppendLine("\t\t}");
+            first = false;
+        }
+        _src.AppendLine("\t\tthrow new System.NotImplementedException(\"Unable to create a static shim of type \" + typeof(T).FullName);");
+        _src.AppendLine("\t}");
+
+        _src.AppendLine("}");
+    }
 }

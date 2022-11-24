@@ -41,7 +41,6 @@ internal class ShimTypeDefinition
         ShimName = interfaceDef.GetName().TrimEnd('?');
         ShimSafeName = MakeSafeName(ShimName);
 
-        IsStatic = isStatic;
         TargetNamespace = targetType.FullNamespace().TrimEnd('?');
         TargetName = targetType.GetName().TrimEnd('?');
         TargetSafeName = MakeSafeName(TargetName);
@@ -100,11 +99,6 @@ internal class ShimTypeDefinition
             }
         }
 
-        // TODO: properties
-        // TODO: methods
-        // TODO: constructors
-        // TODO: auto-shim parameters
-        // TODO: aliases
-        // TODO: other changes
+        IsStatic = isStatic || Members.Any(m => m.IsStatic);
     }
 }

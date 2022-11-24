@@ -62,6 +62,14 @@ internal class ShimGenerator : ISourceGenerator
             src.Clear();
         }
 
+        // Generate static creators
+        writer.CreateStaticShimCreator(shimTypes.Where(s => s.IsStatic).ToArray());
+        addSource("StaticCreatorShims", SourceText.From(src.ToString(), Encoding.UTF8));
+#if DEBUG
+        File.AppendAllText(GenOut_File, src.ToString());
+#endif
+        src.Clear();
+
         Debugger.Log(1, typeof(ShimGenerator).FullName, "Shimr generation complete.\r\n");
     }
 

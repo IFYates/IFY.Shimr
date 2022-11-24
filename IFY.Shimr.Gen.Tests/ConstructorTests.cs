@@ -1,6 +1,4 @@
-﻿using IFY.Shimr.Gen.Core;
-
-namespace IFY.Shimr.Gen.Tests;
+﻿namespace IFY.Shimr.Gen.Tests;
 
 [TestClass]
 public class ConstructorTests

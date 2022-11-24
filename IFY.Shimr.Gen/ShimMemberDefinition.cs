@@ -16,6 +16,7 @@ internal class ShimMemberDefinition
     public bool CanWrite { get; }
 
     public INamedTypeSymbol? StaticType { get; set; }
+    public bool IsStatic { get; private set; }
     public bool IsConstructor { get; private set; }
 
     public Dictionary<string, MethodParameterDefinition> Parameters { get; } = new();
@@ -74,6 +75,7 @@ internal class ShimMemberDefinition
         if (staticAttr?.TryGetAttributeConstructorValue("targetType", out var staticTargetType) == true)
         {
             StaticType = (INamedTypeSymbol?)staticTargetType;
+            IsStatic = true;
         }
 
         // ConstructorShimAttribute
@@ -81,6 +83,7 @@ internal class ShimMemberDefinition
         if (constrAttr != null)
         {
             IsConstructor = true;
+            IsStatic = true;
             constrAttr.TryGetAttributeConstructorValue("targetType", out var constrTargetType);
             StaticType = (INamedTypeSymbol?)constrTargetType;
             TargetReturnType = (INamedTypeSymbol?)constrTargetType;
