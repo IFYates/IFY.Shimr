@@ -7,13 +7,18 @@ internal class UnitTest1_ITestShim__UnitTest1_TestClass : IFY.Shimr.Gen.Tests.Un
 		_obj = obj;
 	}
 	public System.String Value { get => _obj.Value; set => _obj.Value = value; }
-	public void Test()
+	public System.String ValueX { get => _obj.Value2; set => _obj.Value2 = value; }
+	public void TestX()
 	{
 		_obj.Test();
 	}
 	public void Test2(System.String arg)
 	{
 		_obj.Test2(arg);
+	}
+	public System.Int32 Test3(System.String arg, System.Int32 id)
+	{
+		return _obj.Test3(arg, id);
 	}
 	public System.Int32 Test3(System.String arg, System.Int32 id, System.Boolean test)
 	{

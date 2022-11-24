@@ -49,6 +49,8 @@ internal class ShimWriter
         // TODO: usings?
 
         // TODO: better way to show target doesn't implement shim (if strict)
+        // TODO: type checking
+        // TODO: pull through documentation
 
         _src.AppendLine($"namespace _Shimr;");
         _src.AppendLine($"internal class {shim.ShimrName} : {shim.ShimFullName}");
@@ -65,11 +67,11 @@ internal class ShimWriter
             _src.Append($"\tpublic {property.ReturnTypeFullName} {property.Name} {{ ");
             if (property.CanRead)
             {
-                _src.Append($"get => _obj.{property.Name}; ");
+                _src.Append($"get => _obj.{property.TargetName ?? property.Name}; ");
             }
             if (property.CanWrite)
             {
-                _src.Append($"set => _obj.{property.Name} = value; ");
+                _src.Append($"set => _obj.{property.TargetName ?? property.Name} = value; ");
             }
             _src.AppendLine("}");
         }
@@ -84,13 +86,13 @@ internal class ShimWriter
             _src.AppendLine("\t{");
             if (method.ReturnTypeFullName != null)
             {
-                _src.Append($"\t\treturn _obj.{method.Name}(");
+                _src.Append($"\t\treturn _obj.{method.TargetName ?? method.Name}(");
                 _src.Append(string.Join(", ", method.Parameters.Keys));
                 _src.AppendLine(");");
             }
             else
             {
-                _src.Append($"\t\t_obj.{method.Name}(");
+                _src.Append($"\t\t_obj.{method.TargetName ?? method.Name}(");
                 _src.Append(string.Join(", ", method.Parameters.Keys));
                 _src.AppendLine(");");
             }

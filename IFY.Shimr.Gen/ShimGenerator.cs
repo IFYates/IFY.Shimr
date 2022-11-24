@@ -66,8 +66,6 @@ internal class ShimGenerator : ISourceGenerator
         => Initialize(context.RegisterForSyntaxNotifications);
     public void Initialize(Action<SyntaxContextReceiverCreator> registerCreator)
     {
-        //Debugger.Launch(); // NOTE: Comment out and re-build before closing VS
-
         Debugger.Log(1, typeof(ShimGenerator).FullName, "Parsing source for Shimr targets...\r\n");
         registerCreator(() => new ShimTypeFinder());
     }

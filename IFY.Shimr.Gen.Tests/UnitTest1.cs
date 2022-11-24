@@ -10,6 +10,7 @@ public class UnitTest1
         public bool Called;
 
         public string Value { get; set; }
+        public string Value2 { get; set; }
 
         public void Test()
         {
@@ -18,7 +19,7 @@ public class UnitTest1
         public void Test2(string arg)
         {
         }
-        public int Test3(string arg, int id, bool test = true)
+        public int Test3(string arg, int id, bool test = false)
         {
             return 1;
         }
@@ -28,8 +29,12 @@ public class UnitTest1
     public interface ITestShim
     {
         string Value { get; set; }
-        void Test();
+        [Shim(nameof(TestClass.Value2))]
+        string ValueX { get; set; }
+        [Shim(nameof(TestClass.Test))]
+        void TestX();
         void Test2(string arg);
+        int Test3(string arg, int id);
         int Test3(string arg, int id, bool test = true);
     }
 
@@ -46,17 +51,9 @@ public class UnitTest1
         var s = obj.Shim<ITestShim>();
 
         s.Value = "A";
-        s.Test();
+        s.Test3("arg", 1, false);
 
         Assert.AreEqual("A", obj.Value);
         Assert.IsTrue(obj.Called);
-    }
-}
-
-public static class X
-{
-    public static object ShimX<T>(this UnitTest1.TestClass c)
-    {
-        return null!;
     }
 }
