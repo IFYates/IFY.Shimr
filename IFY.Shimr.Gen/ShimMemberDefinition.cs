@@ -8,14 +8,14 @@ internal class ShimMemberDefinition
     public SymbolKind Kind { get; }
     public string Name { get; }
     public string? TargetName { get; private set; }
-    public INamedTypeSymbol? ReturnType { get; }
+    public INamedTypeSymbol? ReturnType { get; private set; }
     public INamedTypeSymbol? TargetReturnType { get; set; }
     public bool IsReturnShim => TargetReturnType != null && TargetReturnType != ReturnType;
 
     public bool CanRead { get; }
     public bool CanWrite { get; }
 
-    public string? StaticTypeFullName { get; private set; }
+    public INamedTypeSymbol? StaticType { get; set; }
     public bool IsConstructor { get; private set; }
 
     public Dictionary<string, MethodParameterDefinition> Parameters { get; } = new();
@@ -73,7 +73,17 @@ internal class ShimMemberDefinition
         var staticAttr = symbol.GetAttribute<StaticShimAttribute>();
         if (staticAttr?.TryGetAttributeConstructorValue("targetType", out var staticTargetType) == true)
         {
-            StaticTypeFullName = ((INamedTypeSymbol)staticTargetType!).FullName();
+            StaticType = (INamedTypeSymbol?)staticTargetType;
+        }
+
+        // ConstructorShimAttribute
+        var constrAttr = symbol.GetAttribute<ConstructorShimAttribute>();
+        if (constrAttr != null)
+        {
+            IsConstructor = true;
+            constrAttr.TryGetAttributeConstructorValue("targetType", out var constrTargetType);
+            StaticType = (INamedTypeSymbol?)constrTargetType;
+            TargetReturnType = (INamedTypeSymbol?)constrTargetType;
         }
     }
 }

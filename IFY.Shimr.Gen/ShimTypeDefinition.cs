@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Diagnostics;
 using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen;
@@ -75,10 +76,22 @@ internal class ShimTypeDefinition
             if (def.ReturnType?.TypeKind == TypeKind.Interface)
             {
                 var defReturnTypeName = def.ReturnType.TryFullName();
+
+                if (def.IsConstructor)
+                {
+                    def.StaticType ??= targetType;
+                    def.TargetReturnType = targetType;
+                    if (!targetType.AllInterfaces.Any(i => i.FullName() == defReturnTypeName))
+                    {
+                        AdditionalShims.Add((def.ReturnType, targetType));
+                    }
+                    continue;
+                }
+
                 var targetMember = targetType.GetMembers()
                     .Where(m => m.Kind == def.Kind && m.Name == (def.TargetName ?? def.Name))
                     .FirstOrDefault();
-                if (targetMember.TryGetReturnType(out var targetReturnType)
+                if (targetMember?.TryGetReturnType(out var targetReturnType) == true
                     && !targetReturnType.AllInterfaces.Any(i => i.FullName() == defReturnTypeName))
                 {
                     AdditionalShims.Add((def.ReturnType, targetReturnType));

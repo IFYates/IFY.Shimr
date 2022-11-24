@@ -54,7 +54,7 @@ internal class ShimWriter
             // Properties
             foreach (var property in shim.Members.Where(m => m.Kind == SymbolKind.Property))
             {
-                var memRefName = property.StaticTypeFullName ?? refName;
+                var memRefName = property.StaticType?.FullName() ?? refName;
                 var returnTypeFullName = property.ReturnType!.FullName();
                 _src.AppendLine($"\t\tpublic {returnTypeFullName} {property.Name}");
                 _src.AppendLine("\t\t{");
@@ -86,7 +86,7 @@ internal class ShimWriter
             // Methods
             foreach (var method in shim.Members.Where(m => m.Kind == SymbolKind.Method))
             {
-                var memRefName = method.StaticTypeFullName ?? refName;
+                var memRefName = method.StaticType?.FullName() ?? refName;
                 var returnTypeFullName = method.ReturnType?.FullName();
                 _src.Append($"\t\tpublic {returnTypeFullName ?? "void"} {method.Name}(");
                 _src.Append(string.Join(", ", method.Parameters.Select(p => $"{p.Value.ParameterTypeFullName} {p.Key}")));
@@ -101,7 +101,15 @@ internal class ShimWriter
 
                 if (method.ReturnType != null)
                 {
-                    _src.Append($"\t\t\treturn {memRefName}.{method.TargetName ?? method.Name}(");
+                    _src.Append("\t\t\treturn ");
+                    if (method.IsConstructor)
+                    {
+                        _src.Append($"new {method.StaticType?.FullName() ?? shim.TargetFullName}(");
+                    }
+                    else
+                    {
+                        _src.Append($"{memRefName}.{method.TargetName ?? method.Name}(");
+                    }
                     _src.Append(string.Join(", ", argList));
                     if (method.IsReturnShim)
                     {
