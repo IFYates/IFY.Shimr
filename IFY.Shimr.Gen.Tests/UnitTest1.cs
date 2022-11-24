@@ -38,6 +38,7 @@ public class UnitTest1
     {
         ISubTest Value3 { get; set; }
         ISubTest Test4(string inp = "test");
+        public void TestZ() { }
     }
     public interface ISubTest
     {
@@ -55,10 +56,13 @@ public class UnitTest1
         var shim = obj.Shim<ITestSub>();
 
         var r = shim.Test4();
-        var s = shim.Value3;
+        var s1 = shim.Value3;
+        shim.Value3 = new SubClass { Value = "Y" }.Shim<ISubTest>();
+        var s2 = shim.Value3;
 
         Assert.AreEqual("test", r.Name);
-        Assert.AreEqual(obj.Value3.Value, s.Name);
+        Assert.AreEqual("X", s1.Name);
+        Assert.AreEqual("Y", s2.Name);
     }
 
     //[Shimr(typeof(TestClass))]

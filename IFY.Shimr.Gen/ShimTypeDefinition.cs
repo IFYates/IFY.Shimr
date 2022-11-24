@@ -41,7 +41,8 @@ internal class ShimTypeDefinition
         // Parse interface members
         foreach (var member in interfaceDef.GetMembers())
         {
-            if (member.DeclaredAccessibility != Accessibility.Public)
+            if (member.DeclaredAccessibility != Accessibility.Public
+                || !member.IsAbstract)
             {
                 continue;
             }

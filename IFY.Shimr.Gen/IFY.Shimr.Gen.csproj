@@ -9,6 +9,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 	  <Compile Include="..\IFY.Shimr\ConstructorShimAttribute.cs" Link="Core\ConstructorShimAttribute.cs" />
+	  <Compile Include="..\IFY.Shimr\IShim.cs" Link="Core\IShim.cs" />
 	  <Compile Include="..\IFY.Shimr\ProxyBehaviour.cs" Link="Core\ProxyBehaviour.cs" />
 	  <Compile Include="..\IFY.Shimr\ShimAttribute.cs" Link="Core\ShimAttribute.cs" />
 	  <Compile Include="..\IFY.Shimr\ShimProxyAttribute.cs" Link="Core\ShimProxyAttribute.cs" />

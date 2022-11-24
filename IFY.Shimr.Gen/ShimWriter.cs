@@ -55,7 +55,7 @@ internal class ShimWriter
         _src.AppendLine($"using {shim.TargetNamespace};");
         _src.AppendLine($"namespace _Shimr;");
         _src.AppendLine($"[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]");
-        _src.AppendLine($"internal class {shim.ShimrName} : {shim.ShimFullName}");
+        _src.AppendLine($"internal class {shim.ShimrName} : {shim.ShimFullName}, IFY.Shimr.IShim");
         _src.AppendLine("{");
         _src.AppendLine($"\tprivate readonly {shim.TargetFullName} _obj;");
 
@@ -82,10 +82,13 @@ internal class ShimWriter
                 _src.Append($"set => _obj.{property.TargetName ?? property.Name} = ");
                 if (property.IsReturnShim)
                 {
-                    // TODO: this is fake
-                    _src.Append($"({property.TargetReturnType.FullName()})(object)");
+                    var targetReturnTypeFullName = property.TargetReturnType.FullName();
+                    _src.Append($"(value as {targetReturnTypeFullName}) ?? ({targetReturnTypeFullName})((IFY.Shimr.IShim)value).Unshim(); ");
                 }
-                _src.Append("value; ");
+                else
+                {
+                    _src.Append("value; ");
+                }
             }
             _src.AppendLine("}");
         }
@@ -116,6 +119,11 @@ internal class ShimWriter
             }
             _src.AppendLine("\t}");
         }
+
+        _src.AppendLine("\tpublic object Unshim()");
+        _src.AppendLine("\t{");
+        _src.AppendLine("\t\treturn _obj;");
+        _src.AppendLine("\t}");
 
         _src.AppendLine("}");
     }
