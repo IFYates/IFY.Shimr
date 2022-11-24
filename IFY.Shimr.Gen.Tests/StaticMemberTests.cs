@@ -39,7 +39,7 @@ public class StaticMemberTests
     [TestMethod]
     public void DoTest()
     {
-        IStaticTest factory = Core.ShimBuilder.Create<IStaticTest>();
+        IStaticTest factory = ShimBuilder.Create<IStaticTest>();
         factory.Test();
     }
 }

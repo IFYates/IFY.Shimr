@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using System.IO.IsolatedStorage;
 using System.Reflection;
 using System.Text;
 using Tortuga.TestMonkey;
