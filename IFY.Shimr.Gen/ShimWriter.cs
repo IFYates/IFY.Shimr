@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Reflection;
 using System.Text;
 using Tortuga.TestMonkey;
 
@@ -7,14 +8,12 @@ namespace IFY.Shimr.Gen;
 internal class ShimWriter
 {
     private readonly StringBuilder _src;
+    private readonly string _fileVersion;
 
     public ShimWriter(StringBuilder src)
     {
         _src = src;
-    }
-
-    public void CreateExtensionMethod(ShimTypeDefinition[] shims)
-    {
+        _fileVersion = GetType().Assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version ?? "0.0.0.0"; // TODO
     }
 
     internal void CreateShim(ShimTypeDefinition[] shims)
@@ -24,6 +23,7 @@ internal class ShimWriter
         // TODO: pull through documentation
 
         _src.AppendLine($"namespace {shims[0].TargetNamespace};");
+        _src.AppendLine($"[System.CodeDom.Compiler.GeneratedCode(\"IFY.Shimr\", \"{_fileVersion}\")]");
         _src.AppendLine("[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]");
         _src.AppendLine($"internal static class {shims[0].TargetSafeName}ShimrExtension");
         _src.AppendLine("{");
@@ -31,6 +31,7 @@ internal class ShimWriter
         // Implementation per shim
         foreach (var shim in shims)
         {
+            // TODO: pass through some target attributes, like DebuggerDisplay
             _src.AppendLine("\t[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]");
             _src.AppendLine($"\tinternal class {shim.ShimrName} : {shim.ShimFullName}, IFY.Shimr.IShim");
             _src.AppendLine("\t{");
@@ -103,6 +104,11 @@ internal class ShimWriter
             _src.AppendLine("\t\tpublic object Unshim()");
             _src.AppendLine("\t\t{");
             _src.AppendLine("\t\t\treturn _obj;");
+            _src.AppendLine("\t\t}");
+
+            _src.AppendLine("\t\tpublic string? ToString()");
+            _src.AppendLine("\t\t{");
+            _src.AppendLine("\t\t\treturn _obj.ToString();");
             _src.AppendLine("\t\t}");
 
             _src.AppendLine("\t}");

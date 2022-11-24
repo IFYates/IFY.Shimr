@@ -41,8 +41,8 @@ internal class ShimGenerator : ISourceGenerator
         }
 
 #if DEBUG
-        const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput2.txt";
-        File.WriteAllText(GenOut_File, "");
+        const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput.txt";
+        File.WriteAllText(GenOut_File, $"// {DateTime.Now.ToString("O")}\r\n");
 #endif
 
         // Generate each shim
