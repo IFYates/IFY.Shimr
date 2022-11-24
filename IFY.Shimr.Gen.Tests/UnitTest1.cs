@@ -36,7 +36,7 @@ public class UnitTest1
         }
     }
 
-    [Shimr(typeof(TestClass))]
+    [ShimOf(typeof(TestClass))]
     public interface ITestSub
     {
         ISubTest? Value3 { get; set; }
@@ -81,7 +81,7 @@ public class UnitTest1
     //    int Test3(string arg, int id, bool test = true);
     //}
 
-    [Shimr(typeof(TestClass))]
+    [ShimOf(typeof(TestClass))]
     public interface ITestShim2
     {
         void Test();

@@ -15,6 +15,9 @@ internal class ShimMemberDefinition
     public bool CanRead { get; }
     public bool CanWrite { get; }
 
+    public string? StaticTypeFullName { get; private set; }
+    public bool IsConstructor { get; private set; }
+
     public Dictionary<string, MethodParameterDefinition> Parameters { get; } = new();
 
     public ShimMemberDefinition(IPropertySymbol property)
@@ -64,6 +67,13 @@ internal class ShimMemberDefinition
             {
                 TargetName = targetName?.ToString();
             }
+        }
+
+        // StaticShimAttribute
+        var staticAttr = symbol.GetAttribute<StaticShimAttribute>();
+        if (staticAttr?.TryGetAttributeConstructorValue("targetType", out var staticTargetType) == true)
+        {
+            StaticTypeFullName = ((INamedTypeSymbol)staticTargetType!).FullName();
         }
     }
 }

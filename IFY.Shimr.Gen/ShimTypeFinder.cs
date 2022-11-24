@@ -16,22 +16,21 @@ internal class ShimTypeFinder : ISyntaxContextReceiver
         {
             var interfaceDef = (INamedTypeSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node)!;
 
-            // Must be decorated with ShimrAttribute
-            var shimrAttrs = interfaceDef.GetAttributes()
-                .Where(a => a.AttributeClass?.FullName() == typeof(ShimrAttribute).FullName)
-                .ToArray();
-            if (!shimrAttrs.Any())
-            {
-                return;
-            }
-
-            // Add to list for generation
+            // Add each shimmed type to list
+            var shimrAttrs = interfaceDef.GetAttributes<ShimOfAttribute>().ToArray();
             foreach (var attr in shimrAttrs)
             {
                 if (attr.TryGetAttributeConstructorValue("targetType", out var targetType))
                 {
-                    ShimTypes.Add(new ShimTypeDefinition(interfaceDef, (INamedTypeSymbol)targetType!));
+                    ShimTypes.Add(new ShimTypeDefinition(interfaceDef, (INamedTypeSymbol)targetType!, false));
                 }
+            }
+
+            // Add each shimmed type to list
+            var staticAttr = interfaceDef.GetAttribute<StaticShimAttribute>();
+            if (staticAttr?.TryGetAttributeConstructorValue("targetType", out var staticTargetType) == true)
+            {
+                ShimTypes.Add(new ShimTypeDefinition(interfaceDef, (INamedTypeSymbol)staticTargetType!, true));
             }
         }
     }

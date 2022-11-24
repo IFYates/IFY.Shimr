@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.IO.IsolatedStorage;
 using System.Reflection;
 using System.Text;
 using Tortuga.TestMonkey;
@@ -33,24 +34,33 @@ internal class ShimWriter
         {
             // TODO: pass through some target attributes, like DebuggerDisplay
             _src.AppendLine("\t[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]");
-            _src.AppendLine($"\tinternal class {shim.ShimrName} : {shim.ShimFullName}, IFY.Shimr.IShim");
-            _src.AppendLine("\t{");
-            _src.AppendLine($"\t\tprivate readonly {shim.TargetName} _obj;");
+            _src.Append($"\tinternal class {shim.ShimrName} : {shim.ShimFullName}");
+            if (!shim.IsStatic)
+            {
+                _src.Append(", IFY.Shimr.IShim");
+            }
+            _src.AppendLine().AppendLine("\t{");
 
-            _src.AppendLine($"\t\tpublic {shim.ShimrName}({shim.TargetName} obj)");
-            _src.AppendLine("\t\t{");
-            _src.AppendLine("\t\t\t_obj = obj;");
-            _src.AppendLine("\t\t}");
+            var refName = shim.IsStatic ? shim.TargetFullName : "_obj";
+            if (!shim.IsStatic)
+            {
+                _src.AppendLine($"\t\tprivate readonly {shim.TargetName} _obj;");
+                _src.AppendLine($"\t\tpublic {shim.ShimrName}({shim.TargetName} obj)");
+                _src.AppendLine("\t\t{");
+                _src.AppendLine("\t\t\t_obj = obj;");
+                _src.AppendLine("\t\t}");
+            }
 
             // Properties
             foreach (var property in shim.Members.Where(m => m.Kind == SymbolKind.Property))
             {
+                var memRefName = property.StaticTypeFullName ?? refName;
                 var returnTypeFullName = property.ReturnType!.FullName();
                 _src.AppendLine($"\t\tpublic {returnTypeFullName} {property.Name}");
                 _src.AppendLine("\t\t{");
                 if (property.CanRead)
                 {
-                    _src.Append($"\t\t\tget => _obj.{property.TargetName ?? property.Name}");
+                    _src.Append($"\t\t\tget => {memRefName}.{property.TargetName ?? property.Name}");
                     if (property.IsReturnShim)
                     {
                         _src.Append($".Shim<{returnTypeFullName}>()");
@@ -59,7 +69,7 @@ internal class ShimWriter
                 }
                 if (property.CanWrite)
                 {
-                    _src.Append($"\t\t\tset => _obj.{property.TargetName ?? property.Name} = ");
+                    _src.Append($"\t\t\tset => {memRefName}.{property.TargetName ?? property.Name} = ");
                     if (property.IsReturnShim)
                     {
                         var targetReturnTypeFullName = property.TargetReturnType.FullName();
@@ -76,6 +86,7 @@ internal class ShimWriter
             // Methods
             foreach (var method in shim.Members.Where(m => m.Kind == SymbolKind.Method))
             {
+                var memRefName = method.StaticTypeFullName ?? refName;
                 var returnTypeFullName = method.ReturnType?.FullName();
                 _src.Append($"\t\tpublic {returnTypeFullName ?? "void"} {method.Name}(");
                 _src.Append(string.Join(", ", method.Parameters.Select(p => $"{p.Value.ParameterTypeFullName} {p.Key}")));
@@ -90,7 +101,7 @@ internal class ShimWriter
 
                 if (method.ReturnType != null)
                 {
-                    _src.Append($"\t\t\treturn _obj.{method.TargetName ?? method.Name}(");
+                    _src.Append($"\t\t\treturn {memRefName}.{method.TargetName ?? method.Name}(");
                     _src.Append(string.Join(", ", argList));
                     if (method.IsReturnShim)
                     {
@@ -100,46 +111,53 @@ internal class ShimWriter
                 }
                 else
                 {
-                    _src.Append($"\t\t\t_obj.{method.TargetName ?? method.Name}(");
+                    _src.Append($"\t\t\t{memRefName}.{method.TargetName ?? method.Name}(");
                     _src.Append(string.Join(", ", argList));
                     _src.AppendLine(");");
                 }
                 _src.AppendLine("\t\t}");
             }
 
-            _src.AppendLine("\t\tpublic object Unshim()");
-            _src.AppendLine("\t\t{");
-            _src.AppendLine("\t\t\treturn _obj;");
-            _src.AppendLine("\t\t}");
+            if (!shim.IsStatic)
+            {
+                _src.AppendLine("\t\tpublic object Unshim()");
+                _src.AppendLine("\t\t{");
+                _src.AppendLine("\t\t\treturn _obj;");
+                _src.AppendLine("\t\t}");
 
-            _src.AppendLine("\t\tpublic string? ToString()");
-            _src.AppendLine("\t\t{");
-            _src.AppendLine("\t\t\treturn _obj.ToString();");
-            _src.AppendLine("\t\t}");
+                _src.AppendLine("\t\tpublic string? ToString()");
+                _src.AppendLine("\t\t{");
+                _src.AppendLine("\t\t\treturn _obj.ToString();");
+                _src.AppendLine("\t\t}");
+            }
 
             _src.AppendLine("\t}");
         }
 
         // Shim extension
-        _src.AppendLine("\t[return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"obj\")]");
-        _src.AppendLine($"\tpublic static T? Shim<T>(this {shims[0].TargetName}? obj)");
-        _src.AppendLine("\t{");
-
-        _src.AppendLine("\t\tif (obj == null)");
-        _src.AppendLine("\t\t{");
-        _src.AppendLine("\t\t\treturn default;");
-        _src.AppendLine("\t\t}");
-
-        foreach (var shim in shims)
+        var instShims = shims.Where(s => !s.IsStatic).ToArray();
+        if (instShims.Any())
         {
-            _src.AppendLine($"\t\telse if (typeof(T) == typeof({shim.ShimFullName}))");
-            _src.AppendLine("\t\t{");
-            _src.AppendLine($"\t\t\treturn (T)(object)new {shim.ShimrName}(obj);");
-            _src.AppendLine("\t\t}");
-        }
+            _src.AppendLine("\t[return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"obj\")]");
+            _src.AppendLine($"\tpublic static T? Shim<T>(this {shims[0].TargetName}? obj)");
+            _src.AppendLine("\t{");
 
-        _src.AppendLine($"\t\tthrow new Exception(\"Invalid shim target type for this object: \" + typeof(T).FullName);");
-        _src.AppendLine("\t}");
+            _src.AppendLine("\t\tif (obj == null)");
+            _src.AppendLine("\t\t{");
+            _src.AppendLine("\t\t\treturn default;");
+            _src.AppendLine("\t\t}");
+
+            foreach (var shim in instShims)
+            {
+                _src.AppendLine($"\t\telse if (typeof(T) == typeof({shim.ShimFullName}))");
+                _src.AppendLine("\t\t{");
+                _src.AppendLine($"\t\t\treturn (T)(object)new {shim.ShimrName}(obj);");
+                _src.AppendLine("\t\t}");
+            }
+
+            _src.AppendLine($"\t\tthrow new Exception(\"Invalid shim target type for this object: \" + typeof(T).FullName);");
+            _src.AppendLine("\t}");
+        }
 
         _src.AppendLine("}");
     }

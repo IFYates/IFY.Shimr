@@ -13,6 +13,7 @@ internal class ShimTypeDefinition
     public string ShimSafeName { get; }
     public string ShimFullName => $"{ShimNamespace}.{ShimName}";
 
+    public bool IsStatic { get; }
     public string TargetNamespace { get; }
     public string TargetName { get; }
     public string TargetSafeName { get; }
@@ -32,13 +33,14 @@ internal class ShimTypeDefinition
         return str.Replace('+', '_').Replace('.', '_').Replace("`", "").TrimEnd('?');
     }
 
-    public ShimTypeDefinition(INamedTypeSymbol interfaceDef, INamedTypeSymbol targetType)
+    public ShimTypeDefinition(INamedTypeSymbol interfaceDef, INamedTypeSymbol targetType, bool isStatic)
     {
         // Parse interface for details
         ShimNamespace = interfaceDef.FullNamespace().TrimEnd('?');
         ShimName = interfaceDef.GetName().TrimEnd('?');
         ShimSafeName = MakeSafeName(ShimName);
 
+        IsStatic = isStatic;
         TargetNamespace = targetType.FullNamespace().TrimEnd('?');
         TargetName = targetType.GetName().TrimEnd('?');
         TargetSafeName = MakeSafeName(TargetName);

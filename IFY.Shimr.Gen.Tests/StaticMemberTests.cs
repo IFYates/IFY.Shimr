@@ -3,7 +3,7 @@
 [TestClass]
 public class StaticMemberTests
 {
-    public class TestClass
+    public static class TestClass
     {
         public static string Value { get; set; }
         public static void Test()
@@ -12,15 +12,15 @@ public class StaticMemberTests
 
         // Instance members
     }
-    public class AnotherTestClass
+    public static class AnotherTestClass
     {
         public static void AnotherTest()
         {
         }
     }
+    [StaticShim(typeof(TestClass))]
     public interface IStaticTest
     {
-        [StaticShim(typeof(TestClass))]
         string Value { get; set; }
         [StaticShim(typeof(TestClass))]
         void Test();
@@ -36,10 +36,10 @@ public class StaticMemberTests
         void AnotherTest();
     }
 
+    [TestMethod]
     public void DoTest()
     {
-        // TODO
-        //IStaticTest factory = ShimBuilder.Create<IStaticTest>();
-        //factory.Test();
+        IStaticTest factory = Core.ShimBuilder.Create<IStaticTest>();
+        factory.Test();
     }
 }

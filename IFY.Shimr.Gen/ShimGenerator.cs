@@ -36,7 +36,7 @@ internal class ShimGenerator : ISourceGenerator
             var targetFullName = shimType.TargetType.FullName();
             if (!shimTypes.Any(t => t.ShimFullName == shimFullName && t.TargetFullName == targetFullName))
             {
-                shimTypes.Add(new ShimTypeDefinition(shimType.ShimType, shimType.TargetType));
+                shimTypes.Add(new ShimTypeDefinition(shimType.ShimType, shimType.TargetType, false));
             }
         }
 
