@@ -36,7 +36,7 @@ public class UnitTest1
     [Shimr(typeof(TestClass))]
     public interface ITestSub
     {
-        ISubTest Value3 { get; set; }
+        ISubTest? Value3 { get; set; }
         ISubTest Test4(string inp = "test");
         public void TestZ() { }
     }
@@ -78,11 +78,11 @@ public class UnitTest1
     //    int Test3(string arg, int id, bool test = true);
     //}
 
-    ////[Shimr(typeof(TestClass))]
-    ////public interface ITestShim2
-    ////{
-    ////    void Test();
-    ////}
+    [Shimr(typeof(TestClass))]
+    public interface ITestShim2
+    {
+        void Test();
+    }
 
     //[TestMethod]
     //public void TestMethod1()

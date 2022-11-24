@@ -47,30 +47,20 @@ internal class ShimGenerator : ISourceGenerator
 
         // Generate each shim
         Debugger.Log(1, typeof(ShimGenerator).FullName, $"Generating shims ({shimTypes.Count()})...\r\n");
-        foreach (var shim in shimTypes)
+        foreach (var typeShims in shimTypes.GroupBy(s => s.TargetFullName))
         {
-            shim.ShimrName = $"{shim.ShimSafeName}__{shim.TargetSafeName}";
-            writer.CreateShim(shim);
+            var targetType = typeShims.Key;
+            var shims = typeShims.ToArray();
+            writer.CreateShim(shims);
 
             // Add to the compilation
-            Debugger.Log(1, typeof(ShimGenerator).FullName, $"Generated shim for {shim.ShimNamespace}.{shim.ShimName}\r\n");
-            addSource(shim.ShimName + "Shim", SourceText.From(src.ToString(), Encoding.UTF8));
+            Debugger.Log(1, typeof(ShimGenerator).FullName, $"Generated {shims.Length} shim(s) for {targetType}\r\n");
+            addSource(shims[0].TargetSafeName + "Shims", SourceText.From(src.ToString(), Encoding.UTF8));
 #if DEBUG
             File.AppendAllText(GenOut_File, src.ToString());
 #endif
             src.Clear();
         }
-
-        // Generate shim extensions
-        Debugger.Log(1, typeof(ShimGenerator).FullName, "Generating Shimr extension methods...\r\n");
-        foreach (var shims in shimTypes.GroupBy(s => s.TargetFullName))
-        {
-            writer.CreateExtensionMethod(shims.ToArray());
-        }
-        addSource("ShimrExtensions", SourceText.From(src.ToString(), Encoding.UTF8));
-#if DEBUG
-        File.AppendAllText(GenOut_File, src.ToString());
-#endif
 
         Debugger.Log(1, typeof(ShimGenerator).FullName, "Shimr generation complete.\r\n");
     }

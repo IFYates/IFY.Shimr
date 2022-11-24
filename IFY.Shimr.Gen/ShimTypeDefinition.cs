@@ -18,7 +18,7 @@ internal class ShimTypeDefinition
     public string TargetSafeName { get; }
     public string TargetFullName => $"{TargetNamespace}.{TargetName}";
 
-    public string ShimrName { get; set; } = string.Empty;
+    public string ShimrName { get; }
 
     public List<ShimMemberDefinition> Members { get; } = new();
 
@@ -27,16 +27,23 @@ internal class ShimTypeDefinition
     /// </summary>
     public List<(INamedTypeSymbol ShimType, INamedTypeSymbol TargetType)> AdditionalShims { get; } = new();
 
+    private static string MakeSafeName(string str)
+    {
+        return str.Replace('+', '_').Replace('.', '_').Replace("`", "").TrimEnd('?');
+    }
+
     public ShimTypeDefinition(INamedTypeSymbol interfaceDef, INamedTypeSymbol targetType)
     {
         // Parse interface for details
-        ShimNamespace = interfaceDef.FullNamespace();
-        ShimName = interfaceDef.GetName();
-        ShimSafeName = ShimName.Replace('+', '_').Replace('.', '_').Replace("`", "");
+        ShimNamespace = interfaceDef.FullNamespace().TrimEnd('?');
+        ShimName = interfaceDef.GetName().TrimEnd('?');
+        ShimSafeName = MakeSafeName(ShimName);
 
-        TargetNamespace = targetType.FullNamespace();
-        TargetName = targetType.GetName();
-        TargetSafeName = TargetName.Replace('+', '_').Replace('.', '_').Replace("`", "");
+        TargetNamespace = targetType.FullNamespace().TrimEnd('?');
+        TargetName = targetType.GetName().TrimEnd('?');
+        TargetSafeName = MakeSafeName(TargetName);
+
+        ShimrName = $"{ShimSafeName}__{TargetSafeName}";
 
         // Parse interface members
         foreach (var member in interfaceDef.GetMembers())

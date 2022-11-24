@@ -5,6 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D260D65D-0F00-4D2C-9E72-38EC9D2E3F41}"
 	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
 		.config\dotnet-tools.json = .config\dotnet-tools.json
 		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
 		README.md = README.md
@@ -14,9 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr", "IFY.Shimr\IFY.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr.Tests", "IFY.Shimr.Tests\IFY.Shimr.Tests.csproj", "{A0C6A6F5-57FC-4825-890A-DD1D062B9EAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFY.Shimr.Gen", "IFY.Shimr.Gen\IFY.Shimr.Gen.csproj", "{D24ABBE3-DB95-4707-9CE2-9884E0D2A324}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr.Gen", "IFY.Shimr.Gen\IFY.Shimr.Gen.csproj", "{D24ABBE3-DB95-4707-9CE2-9884E0D2A324}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFY.Shimr.Gen.Tests", "IFY.Shimr.Gen.Tests\IFY.Shimr.Gen.Tests.csproj", "{9D891971-8990-4066-AC60-6F5023729908}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr.Gen.Tests", "IFY.Shimr.Gen.Tests\IFY.Shimr.Gen.Tests.csproj", "{9D891971-8990-4066-AC60-6F5023729908}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
