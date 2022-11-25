@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.Text;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Versioning;
 using System.Text;
 using Tortuga.TestMonkey;
 
@@ -30,19 +31,26 @@ internal class ShimGenerator : ISourceGenerator
         // Union with additional shims detected
         var additionalShims = shimTypes.SelectMany(s => s.AdditionalShims)
             .Distinct().ToArray();
-        foreach (var shimType in additionalShims)
+        foreach (var (ShimType, TargetType) in additionalShims)
         {
-            var shimFullName = shimType.ShimType.FullName();
-            var targetFullName = shimType.TargetType.FullName();
+            var shimFullName = ShimType.FullName();
+            var targetFullName = TargetType.FullName();
             if (!shimTypes.Any(t => t.ShimFullName == shimFullName && t.TargetFullName == targetFullName))
             {
-                shimTypes.Add(new ShimTypeDefinition(shimType.ShimType, shimType.TargetType, false));
+                shimTypes.Add(new ShimTypeDefinition(ShimType, TargetType, false));
             }
         }
 
 #if DEBUG
         const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput.txt";
-        File.WriteAllText(GenOut_File, $"// {DateTime.Now.ToString("O")}\r\n");
+        File.WriteAllText(GenOut_File, $"// {DateTime.Now:O}\r\n");
+
+        foreach (var shim in shimTypes)
+        {
+            src.AppendLine($"// * {shim.TargetFullName} -> {shim.ShimFullName}");
+        }
+        File.AppendAllText(GenOut_File, src.ToString());
+        src.Clear();
 #endif
 
         // Generate each shim

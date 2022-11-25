@@ -40,11 +40,6 @@ public class MethodShimTests
     {
         string StringMethodArgs(string arg1, int arg2);
     }
-    public interface IDifferentMethodSig
-    {
-        void DifferentMethodSig(string arg1);
-    }
-
 #if SHIMRGEN
     [ShimOf(typeof(TestClass))]
 #endif
@@ -145,6 +140,11 @@ public class MethodShimTests
     }
 
 #if !SHIMRGEN // Not possible with ShimrGen
+    public interface IDifferentMethodSig
+    {
+        void DifferentMethodSig(string arg1);
+    }
+
     [TestMethod]
     public void Method_signatures_must_match()
     {

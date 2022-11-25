@@ -31,6 +31,8 @@
 	  <Compile Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="ConstructorTests.cs" />
 	  <Compile Include="..\IFY.Shimr.Tests\FieldShimTests.cs" Link="FieldShimTests.cs" />
 	  <Compile Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="MethodShimTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\MissingMemberTests.cs" Link="MissingMemberTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="MultiLevelInheritanceTests.cs" />
 	  <Compile Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
 	</ItemGroup>
 

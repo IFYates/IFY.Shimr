@@ -1,76 +1,75 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
-namespace IFY.Shimr.Tests
+namespace IFY.Shimr.Tests;
+
+#if !SHIMRGEN // TODO: some of this is possible in ShimrGen
+[TestClass]
+public class MissingMemberTests
 {
-    [TestClass]
-    public class MissingMemberTests
+    public interface IUnknownMethodTest
     {
-        public interface IUnknownMethodTest
-        {
-            void UnknownMethod();
-        }
-        public interface IPropertyWithoutSetTest
-        {
-            string PropertyWithoutSet { get; set; }
-        }
+        void UnknownMethod();
+    }
+    public interface IPropertyWithoutSetTest
+    {
+        string PropertyWithoutSet { get; set; }
+    }
 
-        [ExcludeFromCodeCoverage]
-        public class TestClass
+    [ExcludeFromCodeCoverage]
+    public class TestClass
+    {
+        public string PropertyWithoutSet => null;
+    }
+
+    [TestInitialize]
+    public void ResetState()
+    {
+        ShimBuilder.ResetState();
+    }
+
+    [TestMethod]
+    public void All_interface_members_must_exist_in_object()
+    {
+        var obj = new TestClass();
+
+        Assert.ThrowsException<MissingMemberException>(() =>
         {
-            public string PropertyWithoutSet => null;
-        }
-
-        [TestInitialize]
-        public void ResetState()
-        {
-            ShimBuilder.ResetState();
-        }
-
-        [TestMethod]
-        public void All_interface_members_must_exist_in_object()
-        {
-            var obj = new TestClass();
-
-            Assert.ThrowsException<MissingMemberException>(() =>
-            {
-                ShimBuilder.Shim<IUnknownMethodTest>(obj);
-            });
-        }
-
-        [TestMethod]
-        public void Can_choose_to_ignore_missing_members_on_creation()
-        {
-            var obj = new TestClass();
-
-            ShimBuilder.IgnoreMissingMembers<IUnknownMethodTest>();
             ShimBuilder.Shim<IUnknownMethodTest>(obj);
-        }
+        });
+    }
 
-        [TestMethod]
-        public void Ignored_missing_members_cannot_be_invoked()
+    [TestMethod]
+    public void Can_choose_to_ignore_missing_members_on_creation()
+    {
+        var obj = new TestClass();
+
+        ShimBuilder.IgnoreMissingMembers<IUnknownMethodTest>();
+        ShimBuilder.Shim<IUnknownMethodTest>(obj);
+    }
+
+    [TestMethod]
+    public void Ignored_missing_members_cannot_be_invoked()
+    {
+        var obj = new TestClass();
+
+        ShimBuilder.IgnoreMissingMembers<IUnknownMethodTest>();
+        var shim = ShimBuilder.Shim<IUnknownMethodTest>(obj);
+
+        Assert.ThrowsException<NotImplementedException>(() =>
         {
-            var obj = new TestClass();
+            shim.UnknownMethod();
+        });
+    }
 
-            ShimBuilder.IgnoreMissingMembers<IUnknownMethodTest>();
-            var shim = ShimBuilder.Shim<IUnknownMethodTest>(obj);
+    [TestMethod]
+    public void Properties_must_contain_all_required_parts()
+    {
+        var obj = new TestClass();
 
-            Assert.ThrowsException<NotImplementedException>(() =>
-            {
-                shim.UnknownMethod();
-            });
-        }
-
-        [TestMethod]
-        public void Properties_must_contain_all_required_parts()
+        Assert.ThrowsException<MissingMemberException>(() =>
         {
-            var obj = new TestClass();
-
-            Assert.ThrowsException<MissingMemberException>(() =>
-            {
-                ShimBuilder.Shim<IPropertyWithoutSetTest>(obj);
-            });
-        }
+            ShimBuilder.Shim<IPropertyWithoutSetTest>(obj);
+        });
     }
 }
+#endif

@@ -56,9 +56,9 @@ namespace IFY.Shimr.Tests
             public string GetProperty => "value";
 
             public string SetProperty { set => _SetPropertyValue = value; }
-            public string _SetPropertyValue = null;
+            public string _SetPropertyValue = null!;
 
-            public string GetSetProperty { get; set; }
+            public string GetSetProperty { get; set; } = null!;
         }
 
         [TestMethod]
@@ -123,7 +123,7 @@ namespace IFY.Shimr.Tests
 
         public class TrickyMethodClass
         {
-            private string _value = null;
+            private string _value = null!;
             public string get_Method() => _value;
             public void set_Method(string value) { _value = value; }
         }

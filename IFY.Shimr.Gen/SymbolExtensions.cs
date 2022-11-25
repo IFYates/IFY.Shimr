@@ -22,22 +22,23 @@ internal static class SymbolExtensions
 
     public static bool TryGetReturnType(this ISymbol symbol, [NotNullWhen(true)] out INamedTypeSymbol? returnType)
     {
-        returnType = null;
-        switch (symbol)
+        var type = symbol switch
         {
-            case IFieldSymbol field:
-                returnType = (INamedTypeSymbol?)field.Type;
-                break;
-            case IPropertySymbol property:
-                returnType = (INamedTypeSymbol?)property.GetMethod?.ReturnType
-                    ?? (INamedTypeSymbol)property.SetMethod!.Parameters[0].Type;
-                break;
-            case IMethodSymbol method:
-                returnType = !method.ReturnsVoid
-                    ? (INamedTypeSymbol)method.ReturnType
-                    : null;
-                break;
-        }
+            IFieldSymbol field => field.Type,
+            IPropertySymbol property => property.GetMethod?.ReturnType
+                ?? property.SetMethod!.Parameters[0].Type,
+            IMethodSymbol method => !method.ReturnsVoid
+                ? method.ReturnType
+                : null,
+            _ => null
+        };
+
+        returnType = type switch
+        {
+            IArrayTypeSymbol arr => null, // TODO
+            INamedTypeSymbol namedType => namedType,
+            _ => null,
+        };
 
         if (returnType?.FullName() == typeof(void).FullName)
         {
