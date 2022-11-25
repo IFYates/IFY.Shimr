@@ -30,6 +30,7 @@
 	  <Compile Include="..\IFY.Shimr.Tests\AccessibilityTests.cs" Link="AccessibilityTests.cs" />
 	  <Compile Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="ConstructorTests.cs" />
 	  <Compile Include="..\IFY.Shimr.Tests\FieldShimTests.cs" Link="FieldShimTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="MethodShimTests.cs" />
 	  <Compile Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
 	</ItemGroup>
 
