@@ -71,7 +71,7 @@ public class MethodShimTests
     [ExcludeFromCodeCoverage]
     public class TestClass : TestParentClass
     {
-        internal object[] VoidMethodArgsCalled;
+        internal object[] VoidMethodArgsCalled = null!;
         public void VoidMethodArgs(string arg1, int arg2)
         {
             VoidMethodArgsCalled = new object[] { arg1, arg2 };
@@ -100,7 +100,7 @@ public class MethodShimTests
         Assert.IsFalse(obj.VoidMethodCalled);
 
         var shim = ShimBuilder.Shim<IVoidMethodTest>(obj);
-        shim.VoidMethod();
+        shim!.VoidMethod();
 
         Assert.IsTrue(obj.VoidMethodCalled);
     }
@@ -112,7 +112,7 @@ public class MethodShimTests
         Assert.IsNull(obj.VoidMethodArgsCalled);
 
         var shim = ShimBuilder.Shim<IVoidMethodArgsTest>(obj);
-        shim.VoidMethodArgs("arg1", 2);
+        shim!.VoidMethodArgs("arg1", 2);
 
         CollectionAssert.AreEquivalent(new object[] { "arg1", 2 }, obj.VoidMethodArgsCalled);
     }
@@ -123,7 +123,7 @@ public class MethodShimTests
         var obj = new TestClass();
 
         var shim = ShimBuilder.Shim<IStringMethodTest>(obj);
-        var res = shim.StringMethod();
+        var res = shim!.StringMethod();
 
         Assert.AreEqual("result", res);
     }
@@ -134,7 +134,7 @@ public class MethodShimTests
         var obj = new TestClass();
 
         var shim = ShimBuilder.Shim<IStringMethodArgsTest>(obj);
-        var res = shim.StringMethodArgs("arg1", 2);
+        var res = shim!.StringMethodArgs("arg1", 2);
 
         Assert.AreEqual("arg1-2", res);
     }
@@ -165,7 +165,7 @@ public class MethodShimTests
         var obj2 = new TestClass();
         var shim2 = ShimBuilder.Shim<IStringMethodTest>(obj2);
 
-        Assert.AreSame(shim1.GetType(), shim2.GetType());
+        Assert.AreSame(shim1!.GetType(), shim2!.GetType());
     }
 
     [TestMethod]
@@ -174,6 +174,6 @@ public class MethodShimTests
         var obj = new TestClass();
         var shim = ShimBuilder.Shim<IAddedMethod>(obj);
 
-        Assert.IsTrue(shim.AddedMethod("TEST"));
+        Assert.IsTrue(shim!.AddedMethod("TEST"));
     }
 }

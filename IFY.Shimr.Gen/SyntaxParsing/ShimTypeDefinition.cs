@@ -1,8 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
-using System.Diagnostics;
 using Tortuga.TestMonkey;
 
-namespace IFY.Shimr.Gen;
+namespace IFY.Shimr.Gen.SyntaxParsing;
 
 /// <summary>
 /// Represents everything important about a shim type.
@@ -12,13 +11,13 @@ internal class ShimTypeDefinition
     public string ShimNamespace { get; }
     public string ShimName { get; }
     public string ShimSafeName { get; }
-    public string ShimFullName => $"{ShimNamespace}.{ShimName}";
+    public string ShimFullName { get; }
 
     public bool IsStatic { get; }
     public string TargetNamespace { get; }
     public string TargetName { get; }
     public string TargetSafeName { get; }
-    public string TargetFullName => $"{TargetNamespace}.{TargetName}";
+    public string TargetFullName { get; }
 
     public string ShimrName { get; }
 
@@ -27,23 +26,20 @@ internal class ShimTypeDefinition
     /// <summary>
     /// Any additional shims found during parsing that will need to be generated.
     /// </summary>
-    public List<(INamedTypeSymbol ShimType, INamedTypeSymbol TargetType)> AdditionalShims { get; } = new();
+    public List<(TypeDef ShimType, TypeDef TargetType)> AdditionalShims { get; } = new();
 
-    private static string MakeSafeName(string str)
-    {
-        return str.Replace('+', '_').Replace('.', '_').Replace("`", "").TrimEnd('?');
-    }
-
-    public ShimTypeDefinition(INamedTypeSymbol interfaceDef, INamedTypeSymbol targetType, bool isStatic)
+    public ShimTypeDefinition(TypeDef interfaceDef, TypeDef targetType, bool isStatic)
     {
         // Parse interface for details
-        ShimNamespace = interfaceDef.FullNamespace().TrimEnd('?');
-        ShimName = interfaceDef.GetName().TrimEnd('?');
-        ShimSafeName = MakeSafeName(ShimName);
+        ShimNamespace = interfaceDef.Namespace;
+        ShimName = interfaceDef.Name;
+        ShimFullName = interfaceDef.FullName;
+        ShimSafeName = ShimName.MakeSafeName();
 
-        TargetNamespace = targetType.FullNamespace().TrimEnd('?');
-        TargetName = targetType.GetName().TrimEnd('?');
-        TargetSafeName = MakeSafeName(TargetName);
+        TargetNamespace = targetType.Namespace;
+        TargetName = targetType.Name;
+        TargetFullName = targetType.FullName;
+        TargetSafeName = TargetName.MakeSafeName();
 
         ShimrName = $"{ShimSafeName}__{TargetSafeName}";
 
@@ -72,16 +68,14 @@ internal class ShimTypeDefinition
             Members.Add(def);
 
             // Check for return auto-shim
-            if (def.ReturnType?.TypeKind == TypeKind.Interface)
+            if (def.ReturnType?.Kind == TypeKind.Interface)
             {
-                var defReturnTypeName = def.ReturnType.TryFullName();
-
                 if (def.IsConstructor)
                 {
                     def.StaticType ??= targetType;
                     def.TargetReturnType = targetType;
                     def.IsReturnShim = true;
-                    if (!targetType.AllInterfaces.Any(i => i.FullName() == defReturnTypeName))
+                    if (!targetType.AllInterfaces.Any(i => i.FullName() == def.ReturnType.FullName))
                     {
                         AdditionalShims.Add((def.ReturnType, targetType));
                     }
@@ -92,7 +86,7 @@ internal class ShimTypeDefinition
                     .Where(m => m.Name == (def.TargetName ?? def.Name)) // TODO: flawed for arg overload
                     .FirstOrDefault();
                 if (targetMember?.TryGetReturnType(out var targetReturnType) == true
-                    && !targetReturnType.AllInterfaces.Any(i => i.FullName() == defReturnTypeName))
+                    && !targetReturnType.AllInterfaces.Any(i => i.FullName() == def.ReturnType.FullName))
                 {
                     AdditionalShims.Add((def.ReturnType, targetReturnType));
                     def.TargetReturnType = targetReturnType;

@@ -1,10 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using IFY.Shimr.Gen.SyntaxParsing;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.Versioning;
 using System.Text;
-using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen;
 
@@ -14,13 +13,44 @@ internal class ShimGenerator : ISourceGenerator
     // Replacable factory (for testing)
     internal Func<StringBuilder, ShimWriter> GetShimWriter { get; set; } = (src) => new ShimWriter(src);
 
+#if DEBUG
+    private const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput2.txt";
+    private static bool? _writeDebug;
+    private static void writeToDebug(string str)
+    {
+        if (!_writeDebug.HasValue)
+        {
+            var asmFI = new FileInfo(typeof(ShimGenerator).Assembly.Location);
+            var outFI = new FileInfo(GenOut_File);
+            _writeDebug = !outFI.Exists || outFI.Length == 0 || outFI.LastWriteTimeUtc < asmFI.LastWriteTimeUtc;
+            if (_writeDebug == true)
+            {
+                File.WriteAllText(GenOut_File, "");
+            }
+        }
+        if (_writeDebug == true)
+        {
+            File.AppendAllText(GenOut_File, str);
+        }
+    }
+#endif
+
     [ExcludeFromCodeCoverage] // Cannot set GeneratorExecutionContext.SyntaxContextReceiver
     public void Execute(GeneratorExecutionContext context)
     {
         // Only continue if our receiver is in use
         if (context.SyntaxContextReceiver is ShimTypeFinder receiver)
         {
-            Execute(receiver.ShimTypes, context.AddSource);
+            try
+            {
+                Execute(receiver.ShimTypes, context.AddSource);
+            }
+            catch (Exception ex)
+            {
+                _ = ex.ToString();
+                Debugger.Launch();
+                throw;
+            }
         }
     }
     public void Execute(IList<ShimTypeDefinition> shimTypes, Action<string, SourceText> addSource)
@@ -33,23 +63,23 @@ internal class ShimGenerator : ISourceGenerator
             .Distinct().ToArray();
         foreach (var (ShimType, TargetType) in additionalShims)
         {
-            var shimFullName = ShimType.FullName();
-            var targetFullName = TargetType.FullName();
+            var shimFullName = ShimType.FullName;
+            var targetFullName = TargetType.FullName;
             if (!shimTypes.Any(t => t.ShimFullName == shimFullName && t.TargetFullName == targetFullName))
             {
+                Debugger.Launch();
                 shimTypes.Add(new ShimTypeDefinition(ShimType, TargetType, false));
             }
         }
 
 #if DEBUG
-        const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput.txt";
-        File.WriteAllText(GenOut_File, $"// {DateTime.Now:O}\r\n");
+        writeToDebug($"// {DateTime.Now:O}\r\n");
 
         foreach (var shim in shimTypes)
         {
             src.AppendLine($"// * {shim.TargetFullName} -> {shim.ShimFullName}");
         }
-        File.AppendAllText(GenOut_File, src.ToString());
+        writeToDebug(src.ToString());
         src.Clear();
 #endif
 
@@ -63,9 +93,9 @@ internal class ShimGenerator : ISourceGenerator
 
             // Add to the compilation
             Debugger.Log(1, typeof(ShimGenerator).FullName, $"Generated {shims.Length} shim(s) for {targetType}\r\n");
-            addSource(shims[0].TargetSafeName + "Shims", SourceText.From(src.ToString(), Encoding.UTF8));
+            addSource($"{shims[0].TargetFullName.MakeSafeName()}Shims", SourceText.From(src.ToString(), Encoding.UTF8));
 #if DEBUG
-            File.AppendAllText(GenOut_File, src.ToString());
+            writeToDebug(src.ToString());
 #endif
             src.Clear();
         }
@@ -74,7 +104,7 @@ internal class ShimGenerator : ISourceGenerator
         writer.CreateStaticShimCreator(shimTypes.Where(s => s.IsStatic).ToArray());
         addSource("StaticCreatorShims", SourceText.From(src.ToString(), Encoding.UTF8));
 #if DEBUG
-        File.AppendAllText(GenOut_File, src.ToString());
+        writeToDebug(src.ToString());
 #endif
         src.Clear();
 

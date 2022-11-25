@@ -151,14 +151,25 @@
             <param name="symbol">The symbol being examined.</param>
             <returns></returns>
         </member>
-        <member name="T:IFY.Shimr.Gen.ShimTypeDefinition">
+        <member name="T:IFY.Shimr.Gen.SyntaxParsing.ShimTypeDefinition">
             <summary>
             Represents everything important about a shim type.
             </summary>
         </member>
-        <member name="P:IFY.Shimr.Gen.ShimTypeDefinition.AdditionalShims">
+        <member name="P:IFY.Shimr.Gen.SyntaxParsing.ShimTypeDefinition.AdditionalShims">
             <summary>
             Any additional shims found during parsing that will need to be generated.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.Gen.SyntaxParsing.TypeDef">
+            <summary>
+            Represents a type within the code.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.Gen.SyntaxParsing.TypeDef.FullName">
+            <summary>
+            The full referencable name of the type.
+            Include generic arguments, "[]", "?", etc.
             </summary>
         </member>
         <member name="T:IFY.Shimr.ConstructorShimAttribute">

@@ -1,21 +1,21 @@
 ﻿using Microsoft.CodeAnalysis;
 using Tortuga.TestMonkey;
 
-namespace IFY.Shimr.Gen;
+namespace IFY.Shimr.Gen.SyntaxParsing;
 
 internal class ShimMemberDefinition
 {
     public SymbolKind Kind { get; }
     public string Name { get; }
     public string? TargetName { get; private set; }
-    public INamedTypeSymbol? ReturnType { get; private set; }
-    public INamedTypeSymbol? TargetReturnType { get; set; }
+    public TypeDef? ReturnType { get; private set; }
+    public TypeDef? TargetReturnType { get; set; }
     public bool IsReturnShim { get; set; }
 
     public bool CanRead { get; }
     public bool CanWrite { get; }
 
-    public INamedTypeSymbol? StaticType { get; set; }
+    public TypeDef? StaticType { get; set; }
     public bool IsStatic { get; private set; }
     public bool IsConstructor { get; private set; }
 
@@ -74,7 +74,7 @@ internal class ShimMemberDefinition
         var staticAttr = symbol.GetAttribute<StaticShimAttribute>();
         if (staticAttr?.TryGetAttributeConstructorValue("targetType", out var staticTargetType) == true)
         {
-            StaticType = (INamedTypeSymbol?)staticTargetType;
+            StaticType = staticTargetType is INamedTypeSymbol type ? new(type) : null;
             IsStatic = true;
         }
 
@@ -85,8 +85,8 @@ internal class ShimMemberDefinition
             IsConstructor = true;
             IsStatic = true;
             constrAttr.TryGetAttributeConstructorValue("targetType", out var constrTargetType);
-            StaticType = (INamedTypeSymbol?)constrTargetType;
-            TargetReturnType = (INamedTypeSymbol?)constrTargetType;
+            StaticType = constrTargetType is INamedTypeSymbol type ? new(type) : null;
+            TargetReturnType = constrTargetType is INamedTypeSymbol type2 ? new(type2) : null;
             IsReturnShim = true;
         }
     }

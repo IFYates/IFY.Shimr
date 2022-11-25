@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using IFY.Shimr.Gen.SyntaxParsing;
+using Microsoft.CodeAnalysis;
 using System.Reflection;
 using System.Text;
 using Tortuga.TestMonkey;
@@ -53,8 +54,8 @@ internal class ShimWriter
             // Properties
             foreach (var property in shim.Members.Where(m => m.Kind == SymbolKind.Property))
             {
-                var memRefName = property.StaticType?.FullName() ?? refName;
-                var returnTypeFullName = property.ReturnType!.FullName();
+                var memRefName = property.StaticType?.FullName ?? refName;
+                var returnTypeFullName = property.ReturnType!.FullName;
                 _src.AppendLine($"\t\tpublic {returnTypeFullName} {property.Name}");
                 _src.AppendLine("\t\t{");
                 if (property.CanRead)
@@ -71,7 +72,7 @@ internal class ShimWriter
                     _src.Append($"\t\t\tset => {memRefName}.{property.TargetName ?? property.Name} = ");
                     if (property.IsReturnShim)
                     {
-                        var targetReturnTypeFullName = property.TargetReturnType.FullName();
+                        var targetReturnTypeFullName = property.TargetReturnType!.FullName;
                         _src.AppendLine($"(value as {targetReturnTypeFullName}) ?? ({targetReturnTypeFullName})((IFY.Shimr.IShim)value).Unshim();");
                     }
                     else
@@ -85,8 +86,8 @@ internal class ShimWriter
             // Methods
             foreach (var method in shim.Members.Where(m => m.Kind == SymbolKind.Method))
             {
-                var memRefName = method.StaticType?.FullName() ?? refName;
-                var returnTypeFullName = method.ReturnType?.FullName();
+                var memRefName = method.StaticType?.FullName ?? refName;
+                var returnTypeFullName = method.ReturnType?.FullName;
                 _src.Append($"\t\tpublic {returnTypeFullName ?? "void"} {method.Name}(");
                 _src.Append(string.Join(", ", method.Parameters.Select(p => $"{p.Value.ParameterTypeFullName} {p.Key}")));
                 _src.AppendLine(")");
@@ -103,7 +104,7 @@ internal class ShimWriter
                     _src.Append("\t\t\treturn ");
                     if (method.IsConstructor)
                     {
-                        _src.Append($"new {method.StaticType?.FullName() ?? shim.TargetFullName}(");
+                        _src.Append($"new {method.StaticType?.FullName ?? shim.TargetFullName}(");
                     }
                     else
                     {
@@ -132,7 +133,7 @@ internal class ShimWriter
                 _src.AppendLine("\t\t\treturn _obj;");
                 _src.AppendLine("\t\t}");
 
-                _src.AppendLine("\t\tpublic string? ToString()");
+                _src.AppendLine("\t\tpublic override string? ToString()");
                 _src.AppendLine("\t\t{");
                 _src.AppendLine("\t\t\treturn _obj.ToString();");
                 _src.AppendLine("\t\t}");

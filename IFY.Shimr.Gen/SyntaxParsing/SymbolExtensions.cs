@@ -1,11 +1,15 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Diagnostics.CodeAnalysis;
-using Tortuga.TestMonkey;
 
-namespace IFY.Shimr.Gen;
+namespace IFY.Shimr.Gen.SyntaxParsing;
 
 internal static class SymbolExtensions
 {
+    public static string MakeSafeName(this string str)
+    {
+        return str.Replace('+', '_').Replace('.', '_').Replace("`", "").TrimEnd('?');
+    }
+
     public static bool TryGetAttributeConstructorValue(this AttributeData attr, string constructorArgName, out object? value)
     {
         var argIdx = attr.AttributeConstructor!.Parameters
@@ -20,7 +24,7 @@ internal static class SymbolExtensions
         return false;
     }
 
-    public static bool TryGetReturnType(this ISymbol symbol, [NotNullWhen(true)] out INamedTypeSymbol? returnType)
+    public static bool TryGetReturnType(this ISymbol symbol, [NotNullWhen(true)] out TypeDef? returnType)
     {
         var type = symbol switch
         {
@@ -35,12 +39,12 @@ internal static class SymbolExtensions
 
         returnType = type switch
         {
-            IArrayTypeSymbol arr => null, // TODO
-            INamedTypeSymbol namedType => namedType,
+            IArrayTypeSymbol arr => new(arr),
+            INamedTypeSymbol namedType => new(namedType),
             _ => null,
         };
 
-        if (returnType?.FullName() == typeof(void).FullName)
+        if (returnType?.FullName == typeof(void).FullName)
         {
             returnType = null;
         }

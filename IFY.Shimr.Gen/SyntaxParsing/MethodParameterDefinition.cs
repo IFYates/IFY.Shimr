@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Tortuga.TestMonkey;
 
-namespace IFY.Shimr.Gen;
+namespace IFY.Shimr.Gen.SyntaxParsing;
 
 internal class MethodParameterDefinition
 {
@@ -19,7 +19,7 @@ internal class MethodParameterDefinition
         {
             TargetTypeFullName = ((INamedTypeSymbol)realType!).FullName();
         }
-        
+
         // TODO: params, out, ref
         // TODO: auto-shim
     }
