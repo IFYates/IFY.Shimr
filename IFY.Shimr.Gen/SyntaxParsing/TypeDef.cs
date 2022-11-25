@@ -49,10 +49,9 @@ internal class TypeDef
         Kind = TypeKind.Array;
         IsNullable = arr.NullableAnnotation == NullableAnnotation.Annotated;
         ElementType = new TypeDef((INamedTypeSymbol)arr.ElementType);
-        Debugger.Launch();
-        Name = arr.Name;
-        Namespace = arr.FullNamespace();
-        FullName = arr.TryFullName() + "[]";
+        Name = ElementType.Name;
+        Namespace = ElementType.Namespace;
+        FullName = ElementType.FullName + "[]";
     }
 
     public ISymbol[] GetMembers()

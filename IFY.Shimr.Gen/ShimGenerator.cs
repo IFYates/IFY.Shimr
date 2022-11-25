@@ -14,7 +14,7 @@ internal class ShimGenerator : ISourceGenerator
     internal Func<StringBuilder, ShimWriter> GetShimWriter { get; set; } = (src) => new ShimWriter(src);
 
 #if DEBUG
-    private const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput2.txt";
+    private const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput.txt";
     private static bool? _writeDebug;
     private static void writeToDebug(string str)
     {
@@ -25,7 +25,7 @@ internal class ShimGenerator : ISourceGenerator
             _writeDebug = !outFI.Exists || outFI.Length == 0 || outFI.LastWriteTimeUtc < asmFI.LastWriteTimeUtc;
             if (_writeDebug == true)
             {
-                File.WriteAllText(GenOut_File, "");
+                File.WriteAllText(GenOut_File, $"// {DateTime.Now:s} ({asmFI.LastWriteTimeUtc:s})\r\n");
             }
         }
         if (_writeDebug == true)
@@ -67,14 +67,11 @@ internal class ShimGenerator : ISourceGenerator
             var targetFullName = TargetType.FullName;
             if (!shimTypes.Any(t => t.ShimFullName == shimFullName && t.TargetFullName == targetFullName))
             {
-                Debugger.Launch();
                 shimTypes.Add(new ShimTypeDefinition(ShimType, TargetType, false));
             }
         }
 
 #if DEBUG
-        writeToDebug($"// {DateTime.Now:O}\r\n");
-
         foreach (var shim in shimTypes)
         {
             src.AppendLine($"// * {shim.TargetFullName} -> {shim.ShimFullName}");
