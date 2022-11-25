@@ -25,6 +25,9 @@ internal static class SymbolExtensions
         returnType = null;
         switch (symbol)
         {
+            case IFieldSymbol field:
+                returnType = (INamedTypeSymbol?)field.Type;
+                break;
             case IPropertySymbol property:
                 returnType = (INamedTypeSymbol?)property.GetMethod?.ReturnType
                     ?? (INamedTypeSymbol)property.SetMethod!.Parameters[0].Type;

@@ -80,6 +80,7 @@ internal class ShimTypeDefinition
                 {
                     def.StaticType ??= targetType;
                     def.TargetReturnType = targetType;
+                    def.IsReturnShim = true;
                     if (!targetType.AllInterfaces.Any(i => i.FullName() == defReturnTypeName))
                     {
                         AdditionalShims.Add((def.ReturnType, targetType));
@@ -88,13 +89,14 @@ internal class ShimTypeDefinition
                 }
 
                 var targetMember = targetType.GetMembers()
-                    .Where(m => m.Kind == def.Kind && m.Name == (def.TargetName ?? def.Name))
+                    .Where(m => m.Name == (def.TargetName ?? def.Name))
                     .FirstOrDefault();
                 if (targetMember?.TryGetReturnType(out var targetReturnType) == true
                     && !targetReturnType.AllInterfaces.Any(i => i.FullName() == defReturnTypeName))
                 {
                     AdditionalShims.Add((def.ReturnType, targetReturnType));
                     def.TargetReturnType = targetReturnType;
+                    def.IsReturnShim = true;
                 }
             }
         }

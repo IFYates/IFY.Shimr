@@ -10,7 +10,7 @@ internal class ShimMemberDefinition
     public string? TargetName { get; private set; }
     public INamedTypeSymbol? ReturnType { get; private set; }
     public INamedTypeSymbol? TargetReturnType { get; set; }
-    public bool IsReturnShim => TargetReturnType != null && TargetReturnType != ReturnType;
+    public bool IsReturnShim { get; set; }
 
     public bool CanRead { get; }
     public bool CanWrite { get; }
@@ -87,6 +87,7 @@ internal class ShimMemberDefinition
             constrAttr.TryGetAttributeConstructorValue("targetType", out var constrTargetType);
             StaticType = (INamedTypeSymbol?)constrTargetType;
             TargetReturnType = (INamedTypeSymbol?)constrTargetType;
+            IsReturnShim = true;
         }
     }
 }

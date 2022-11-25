@@ -20,7 +20,6 @@ internal class ShimWriter
     {
         // TODO: better way to show target doesn't implement shim (if strict)
         // TODO: type checking
-        // TODO: pull through documentation
 
         _src.AppendLine($"namespace {shims[0].TargetNamespace};");
         _src.AppendLine($"[System.CodeDom.Compiler.GeneratedCode(\"IFY.Shimr\", \"{_fileVersion}\")]");
@@ -32,8 +31,9 @@ internal class ShimWriter
         foreach (var shim in shims)
         {
             // TODO: pass through some target attributes, like DebuggerDisplay
+            _src.AppendLine($"\t// Shim of {shim.TargetFullName} as {shim.ShimFullName}");
             _src.AppendLine("\t[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]");
-            _src.Append($"\tinternal class {shim.ShimrName} : {shim.ShimFullName}");
+            _src.Append($"\tpublic class {shim.ShimrName} : {shim.ShimFullName}");
             if (!shim.IsStatic)
             {
                 _src.Append(", IFY.Shimr.IShim");
