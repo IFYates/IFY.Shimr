@@ -1,0 +1,2 @@
+﻿ShimOf / StaticShim options
+- missing members fail on build (standard) OR throw NotImplementedException (build works)
