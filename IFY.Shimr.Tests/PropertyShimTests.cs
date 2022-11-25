@@ -1,7 +1,4 @@
-﻿using IFY.Shimr.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable CA1822 // Mark members as static
 #pragma warning disable IDE1006 // Naming Styles
@@ -10,22 +7,44 @@ namespace IFY.Shimr.Tests
     [TestClass]
     public class PropertyShimTests
     {
+#if SHIMRGEN
+        class ShimBuilder
+        {
+            public static T Shim<T>(TestClass obj) => obj.Shim<T>();
+        }
+#endif
+
+#if SHIMRGEN
+        [ShimOf(typeof(TestClass))]
+#endif
         public interface IGetPropertyTest
         {
             string GetProperty { get; }
         }
+#if SHIMRGEN
+        [ShimOf(typeof(TestClass))]
+#endif
         public interface IGetPropertyWithSetTest
         {
             string GetSetProperty { get; }
         }
+#if SHIMRGEN
+        [ShimOf(typeof(TestClass))]
+#endif
         public interface ISetPropertyTest
         {
             string SetProperty { set; }
         }
+#if SHIMRGEN
+        [ShimOf(typeof(TestClass))]
+#endif
         public interface ISetPropertyWithGetTest
         {
             string GetSetProperty { set; }
         }
+#if SHIMRGEN
+        [ShimOf(typeof(TestClass))]
+#endif
         public interface IGetSetPropertyTest
         {
             string GetSetProperty { get; set; }
@@ -108,14 +127,13 @@ namespace IFY.Shimr.Tests
             public string get_Method() => _value;
             public void set_Method(string value) { _value = value; }
         }
+#if SHIMRGEN
+        [ShimOf(typeof(TrickyMethodClass))]
+#endif
         public interface ITrickyMethodShim
         {
             string get_Method();
             void set_Method(string value);
-        }
-        public interface ITrickyPropertyShim
-        {
-            string Method { get; set; }
         }
 
         [TestMethod]
@@ -130,6 +148,11 @@ namespace IFY.Shimr.Tests
             Assert.AreEqual("test", shim.get_Method());
         }
 
+#if !SHIMRGEN // TODO: not sure how to make this work with IFY.Shimr.Gen
+        public interface ITrickyPropertyShim
+        {
+            string Method { get; set; }
+        }
         [TestMethod]
         public void Cannot_force_property_over_methods()
         {
@@ -140,11 +163,13 @@ namespace IFY.Shimr.Tests
                 obj.Shim<ITrickyPropertyShim>();
             });
         }
+#endif
 
         #endregion Tricky method name
 
         #region Issue 12 - Hidden property causes ambiguous exception
 
+#if !SHIMRGEN // TODO: not sure how to make this work with IFY.Shimr.Gen
         public abstract class Issue12BaseClass
         {
             public string Value { get; set; } = "base";
@@ -169,6 +194,7 @@ namespace IFY.Shimr.Tests
             var shim = obj.Shim<IShimIssue12>();
             Assert.AreEqual("base", shim.Value);
         }
+#endif
 
         #endregion Issue 12
     }

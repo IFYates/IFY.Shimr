@@ -10,6 +10,28 @@
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
+	  <DefineConstants>$(DefineConstants)TRACE;SHIMRGEN</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
+	  <DefineConstants>$(DefineConstants)TRACE;SHIMRGEN</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
+	  <DefineConstants>$(DefineConstants)TRACE;SHIMRGEN</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
+	  <DefineConstants>$(DefineConstants)TRACE;SHIMRGEN</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\IFY.Shimr.Tests\AccessibilityTests.cs" Link="AccessibilityTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="ConstructorTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
 		<PackageReference Include="MSTest.TestAdapter" Version="2.2.8" />

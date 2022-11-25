@@ -1,7 +1,4 @@
-﻿using IFY.Shimr.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Shimr.Tests
 {
@@ -23,6 +20,10 @@ namespace IFY.Shimr.Tests
             public string Field;
         }
 
+#if SHIMRGEN
+        [ShimOf(typeof(TestClass_NoField))]
+        [ShimOf(typeof(TestClass_HasField))]
+#endif
         public interface ITestShim_AddField
         {
             [ShimProxy(typeof(TestImpl_AddField), ProxyBehaviour.Add)]
