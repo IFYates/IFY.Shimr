@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using System.Diagnostics;
 using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen.SyntaxParsing;
@@ -14,6 +13,7 @@ internal class TypeDef
     public TypeKind Kind { get; }
 
     public bool IsNullable { get; }
+    public bool IsValueType { get; }
     public string Name { get; }
     public string Namespace { get; }
 
@@ -36,6 +36,7 @@ internal class TypeDef
         _symbol = type;
         Kind = type.TypeKind;
         IsNullable = type.NullableAnnotation == NullableAnnotation.Annotated;
+        IsValueType = type.IsValueType;
         Name = type.GetName();
         Namespace = type.FullNamespace();
         FullName = type.FullName(); // TODO

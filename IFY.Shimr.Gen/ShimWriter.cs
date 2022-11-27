@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis;
 using System.Reflection;
 using System.Text;
-using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen;
 
@@ -60,10 +59,15 @@ internal class ShimWriter
                 _src.AppendLine("\t\t{");
                 if (property.CanRead)
                 {
-                    _src.Append($"\t\t\tget => {memRefName}.{property.TargetName ?? property.Name}");
+                    _src.Append("\t\t\tget => ");
                     if (property.IsReturnShim)
                     {
-                        _src.Append($".Shim<{returnTypeFullName}>()");
+                        _src.Append($"{property.TargetReturnType!.Namespace}.{property.TargetReturnType.Name.MakeSafeName()}ShimrExtension.Shim<{returnTypeFullName}>(");
+                    }
+                    _src.Append($"{memRefName}.{property.TargetName ?? property.Name}");
+                    if (property.IsReturnShim)
+                    {
+                        _src.Append(")");
                     }
                     _src.AppendLine(";");
                 }
@@ -73,7 +77,7 @@ internal class ShimWriter
                     if (property.IsReturnShim)
                     {
                         var targetReturnTypeFullName = property.TargetReturnType!.FullName;
-                        _src.AppendLine($"(value as {targetReturnTypeFullName}) ?? ({targetReturnTypeFullName})((IFY.Shimr.IShim)value).Unshim();");
+                        _src.AppendLine($"((object)value is {targetReturnTypeFullName} v) ? v : ({targetReturnTypeFullName})((IFY.Shimr.IShim)(object)value).Unshim();");
                     }
                     else
                     {
@@ -86,6 +90,12 @@ internal class ShimWriter
             // Methods
             foreach (var method in shim.Members.Where(m => m.Kind == SymbolKind.Method))
             {
+                if (method.Name is "ToString" or "Unshim"
+                    && method.Parameters.Count == 0)
+                {
+                    continue;
+                }
+
                 var memRefName = method.StaticType?.FullName ?? refName;
                 var returnTypeFullName = method.ReturnType?.FullName;
                 _src.Append($"\t\tpublic {returnTypeFullName ?? "void"} {method.Name}(");
@@ -95,13 +105,19 @@ internal class ShimWriter
 
                 var argList = method.Parameters.Values
                     .Select(p => p.TargetTypeFullName != null
-                        ? $"({p.TargetTypeFullName})((IShim){p.Name}).Unshim()"
+                        ? p.ParameterType.Kind == TypeKind.Interface
+                        ? $"({p.TargetTypeFullName})((IFY.Shimr.IShim)(object){p.Name}).Unshim()"
+                        : $"({p.TargetTypeFullName}){p.Name}"
                         : p.Name)
                     .ToArray();
 
                 if (method.ReturnType != null)
                 {
                     _src.Append("\t\t\treturn ");
+                    if (method.IsReturnShim)
+                    {
+                        _src.Append($"{method.TargetReturnType!.Namespace}.{method.TargetReturnType.Name.MakeSafeName()}ShimrExtension.Shim<{returnTypeFullName}>(");
+                    }
                     if (method.IsConstructor)
                     {
                         _src.Append($"new {method.StaticType?.FullName ?? shim.TargetFullName}(");
@@ -113,7 +129,7 @@ internal class ShimWriter
                     _src.Append(string.Join(", ", argList));
                     if (method.IsReturnShim)
                     {
-                        _src.Append($").Shim<{returnTypeFullName}>(");
+                        _src.Append($")");
                     }
                     _src.AppendLine(");");
                 }
@@ -150,7 +166,7 @@ internal class ShimWriter
             _src.AppendLine($"\tpublic static T? Shim<T>(this {shims[0].TargetName}? obj)");
             _src.AppendLine("\t{");
 
-            _src.AppendLine("\t\tif (obj == null)");
+            _src.AppendLine($"\t\tif ({(shims[0].TargetType.IsValueType ? "!obj.HasValue" : "obj == null")})");
             _src.AppendLine("\t\t{");
             _src.AppendLine("\t\t\treturn default;");
             _src.AppendLine("\t\t}");
@@ -159,7 +175,7 @@ internal class ShimWriter
             {
                 _src.AppendLine($"\t\telse if (typeof(T) == typeof({shim.ShimFullName}))");
                 _src.AppendLine("\t\t{");
-                _src.AppendLine($"\t\t\treturn (T)(object)new {shim.ShimrName}(obj);");
+                _src.AppendLine($"\t\t\treturn (T)(object)new {shim.ShimrName}(obj{(shims[0].TargetType.IsValueType ? ".Value" : "")});");
                 _src.AppendLine("\t\t}");
             }
 

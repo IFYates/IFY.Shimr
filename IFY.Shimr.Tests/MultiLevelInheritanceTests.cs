@@ -1,132 +1,142 @@
-﻿using IFY.Shimr.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+﻿using System.Data;
 
-namespace IFY.Shimr.Tests
+namespace IFY.Shimr.Tests;
+
+// Specific issues around these structures
+[TestClass]
+public class MultiLevelInheritanceTests
 {
-    // Specific issues around these structures
-    [TestClass]
-    public class MultiLevelInheritanceTests
-    {
-        [TestInitialize]
-        public void Reset()
-        {
-            ShimBuilder.ResetState();
-        }
+//#if SHIMRGEN
+//    class ShimBuilder
+//    {
+//        public static T Shim<T>(Extr obj) => obj.Shim<T>();
+//    }
+//#endif
 
-        // Low-level interface
-        public interface IBase
-        {
-            IEnumerable<int> Values { get; set; }
-            IEnumerable<int> GetValues();
-        }
+//#if !SHIMRGEN
+//    [TestInitialize]
+//    public void Reset()
+//    {
+//        ShimBuilder.ResetState();
+//    }
+//#endif
 
-        // Explicitly implements interface and changes signature
-        public class Impl : IBase
-        {
-            public int[] Values { get; set; }
-            IEnumerable<int> IBase.Values { get => Values; set => Values = value.ToArray(); }
+//    // Low-level interface
+//    public interface IBase
+//    {
+//        IEnumerable<int> Values { get; set; }
+//        IEnumerable<int> GetValues();
+//    }
 
-            public int[] GetValues() => Values;
-            IEnumerable<int> IBase.GetValues() => GetValues();
-        }
+//    // Explicitly implements interface and changes signature
+//    public class Impl : IBase
+//    {
+//        public int[] Values { get; set; }
+//        IEnumerable<int> IBase.Values { get => Values; set => Values = value.ToArray(); }
 
-        // Extends Impl with further signature change
-        public class Extr : Impl
-        {
-            new public string[] Values => base.Values.Select(v => v.ToString()).ToArray();
+//        public int[] GetValues() => Values;
+//        IEnumerable<int> IBase.GetValues() => GetValues();
+//    }
 
-            new public string[] GetValues() => Values;
-        }
+//    // Extends Impl with further signature change
+//    public class Extr : Impl
+//    {
+//        new public string[] Values => base.Values.Select(v => v.ToString()).ToArray();
 
-        // Shim wants everything, including inherited
-        public interface IFullShim : IBase
-        {
-            [Shim("Values")]
-            int[] IntValues { get; set; } // From Impl
-            [Shim("Values")]
-            string[] StringValues { get; } // From Extr
+//        new public string[] GetValues() => Values;
+//    }
 
-            [Shim("GetValues")]
-            int[] GetIntValues(); // From Impl
-            [Shim("GetValues")]
-            string[] GetStringValues(); // From Extr
-        }
+//    // Shim wants everything, including inherited
+//#if SHIMRGEN
+//    [ShimOf(typeof(Extr))]
+//#endif
+//    public interface IFullShim : IBase
+//    {
+//        [Shim("Values")]
+//        int[] IntValues { get; set; } // From Impl
+//        [Shim("Values")]
+//        string[] StringValues { get; } // From Extr
 
-        [TestMethod]
-        public void Can_shim_property_by_type()
-        {
-            var obj = new Extr();
-            ((IBase)obj).Values = new[] { 1, 2, 3 };
+//        [Shim("GetValues")]
+//        int[] GetIntValues(); // From Impl
+//        [Shim("GetValues")]
+//        string[] GetStringValues(); // From Extr
+//    }
 
-            var shim = obj.Shim<IFullShim>();
+//    [TestMethod]
+//    public void Can_shim_property_by_type()
+//    {
+//        var obj = new Extr();
+//        ((IBase)obj).Values = new[] { 1, 2, 3 };
 
-            Assert.IsNotNull(shim);
-            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.Values.ToArray());
-            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.IntValues);
-            CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.StringValues);
-        }
+//        var shim = obj.Shim<IFullShim>();
 
-        [TestMethod]
-        public void Can_shim_method_by_type()
-        {
-            var obj = new Extr();
-            ((IBase)obj).Values = new[] { 1, 2, 3 };
+//        Assert.IsNotNull(shim);
+//        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.Values.ToArray());
+//        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.IntValues);
+//        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.StringValues);
+//    }
 
-            var shim = obj.Shim<IFullShim>();
+//    [TestMethod]
+//    public void Can_shim_method_by_type()
+//    {
+//        var obj = new Extr();
+//        ((IBase)obj).Values = new[] { 1, 2, 3 };
 
-            Assert.IsNotNull(shim);
-            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetValues().ToArray());
-            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetIntValues());
-            CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.GetStringValues());
-        }
+//        var shim = obj.Shim<IFullShim>();
 
-        // Shim wants everything, without inheritance
-        public interface INotInheritedShim
-        {
-            [Shim(typeof(IBase), "Values")]
-            IEnumerable<int> BaseValues { get; set; }
-            [Shim("Values")]
-            int[] IntValues { get; set; } // From Impl
-            [Shim("Values")]
-            string[] StringValues { get; } // From Extr
+//        Assert.IsNotNull(shim);
+//        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetValues().ToArray());
+//        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetIntValues());
+//        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.GetStringValues());
+//    }
 
-            [Shim(typeof(IBase))]
-            IEnumerable<int> GetValues();
-            [Shim("GetValues")]
-            int[] GetIntValues(); // From Impl
-            [Shim("GetValues")]
-            string[] GetStringValues(); // From Extr
-        }
+//    // Shim wants everything, without inheritance
+//#if SHIMRGEN
+//    [ShimOf(typeof(Extr))]
+//#endif
+//    public interface INotInheritedShim
+//    {
+//        [Shim(typeof(IBase), "Values")]
+//        IEnumerable<int> BaseValues { get; set; }
+//        [Shim("Values")]
+//        int[] IntValues { get; set; } // From Impl
+//        [Shim("Values")]
+//        string[] StringValues { get; } // From Extr
 
-        [TestMethod]
-        public void Can_shim_property_by_type_without_inheritance()
-        {
-            var obj = new Extr();
-            ((IBase)obj).Values = new[] { 1, 2, 3 };
+//        [Shim(typeof(IBase))]
+//        IEnumerable<int> GetValues();
+//        [Shim("GetValues")]
+//        int[] GetIntValues(); // From Impl
+//        [Shim("GetValues")]
+//        string[] GetStringValues(); // From Extr
+//    }
 
-            var shim = obj.Shim<INotInheritedShim>();
+//    [TestMethod]
+//    public void Can_shim_property_by_type_without_inheritance()
+//    {
+//        var obj = new Extr();
+//        ((IBase)obj).Values = new[] { 1, 2, 3 };
 
-            Assert.IsNotNull(shim);
-            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.BaseValues.ToArray());
-            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.IntValues);
-            CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.StringValues);
-        }
+//        var shim = obj.Shim<INotInheritedShim>();
 
-        [TestMethod]
-        public void Can_shim_method_by_type_inheritance()
-        {
-            var obj = new Extr();
-            ((IBase)obj).Values = new[] { 1, 2, 3 };
+//        Assert.IsNotNull(shim);
+//        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.BaseValues.ToArray());
+//        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.IntValues);
+//        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.StringValues);
+//    }
 
-            var shim = obj.Shim<INotInheritedShim>();
+//    [TestMethod]
+//    public void Can_shim_method_by_type_inheritance()
+//    {
+//        var obj = new Extr();
+//        ((IBase)obj).Values = new[] { 1, 2, 3 };
 
-            Assert.IsNotNull(shim);
-            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetValues().ToArray());
-            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetIntValues());
-            CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.GetStringValues());
-        }
-    }
+//        var shim = obj.Shim<INotInheritedShim>();
+
+//        Assert.IsNotNull(shim);
+//        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetValues().ToArray());
+//        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetIntValues());
+//        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.GetStringValues());
+//    }
 }

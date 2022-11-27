@@ -14,6 +14,7 @@ internal class ShimTypeDefinition
     public string ShimFullName { get; }
 
     public bool IsStatic { get; }
+    public TypeDef TargetType { get; }
     public string TargetNamespace { get; }
     public string TargetName { get; }
     public string TargetSafeName { get; }
@@ -36,6 +37,7 @@ internal class ShimTypeDefinition
         ShimFullName = interfaceDef.FullName;
         ShimSafeName = ShimName.MakeSafeName();
 
+        TargetType = targetType;
         TargetNamespace = targetType.Namespace;
         TargetName = targetType.Name;
         TargetFullName = targetType.FullName;
