@@ -10,3 +10,11 @@ public class ShimOfAttribute : Attribute
         TargetType = targetType;
     }
 }
+
+[AttributeUsage(AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
+public class ShimOfAttribute<T> : ShimOfAttribute
+{
+    public ShimOfAttribute()
+        : base(typeof(T))
+    { }
+}

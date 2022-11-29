@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
-		<LangVersion>10.0</LangVersion>
+		<TargetFrameworks>netcoreapp3.1;net7.0</TargetFrameworks>
+		<LangVersion>11.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -10,19 +10,7 @@
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.1|AnyCPU'">
-	  <DefineConstants>$(DefineConstants)TRACE;SHIMRGEN</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.1|AnyCPU'">
-	  <DefineConstants>$(DefineConstants)TRACE;SHIMRGEN</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net6.0|AnyCPU'">
-	  <DefineConstants>$(DefineConstants)TRACE;SHIMRGEN</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
+	<PropertyGroup>
 	  <DefineConstants>$(DefineConstants)TRACE;SHIMRGEN</DefineConstants>
 	</PropertyGroup>
 
@@ -33,9 +21,10 @@
 	  <None Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="MethodShimTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\MissingMemberTests.cs" Link="MissingMemberTests.cs" />
 	  <Compile Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="MultiLevelInheritanceTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\SignatureEnumerableChangeTests.cs" Link="SignatureEnumerableChangeTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\RenameMemberTests.cs" Link="RenameMemberTests.cs" />
-	  <Compile Include="..\IFY.Shimr.Tests\SignatureChangeTests.cs" Link="SignatureChangeTests.cs" />
+	  <None Include="..\IFY.Shimr.Tests\SignatureChangeTests.cs" Link="SignatureChangeTests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
