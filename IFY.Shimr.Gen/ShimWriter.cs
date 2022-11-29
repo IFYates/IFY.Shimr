@@ -1,6 +1,6 @@
 ﻿using IFY.Shimr.Gen.SyntaxParsing;
 using Microsoft.CodeAnalysis;
-using System.Reflection;
+using System.Diagnostics;
 using System.Text;
 
 namespace IFY.Shimr.Gen;
@@ -13,7 +13,9 @@ internal class ShimWriter
     public ShimWriter(StringBuilder src)
     {
         _src = src;
-        _fileVersion = GetType().Assembly.GetCustomAttribute<AssemblyVersionAttribute>()?.Version ?? "0.0.0.0"; // TODO
+
+        var asmFile = FileVersionInfo.GetVersionInfo(GetType().Assembly.Location);
+        _fileVersion = asmFile.ProductVersion ?? "0.0.0.0";
     }
 
     internal void CreateShim(ShimTypeDefinition[] shims)
@@ -51,43 +53,20 @@ internal class ShimWriter
             }
 
             // Properties
-            foreach (var property in shim.Members.Where(m => m.Kind == SymbolKind.Property))
+            var properties = shim.Members.Where(m => m.Kind == SymbolKind.Property)
+                .GroupBy(p => p.Name).ToArray();
+            foreach (var group in properties)
             {
-                var memRefName = property.StaticType?.FullName ?? refName;
-                var returnTypeFullName = property.ReturnType!.FullName;
-                _src.AppendLine($"\t\tpublic {returnTypeFullName} {property.Name}");
-                _src.AppendLine("\t\t{");
-                if (property.CanRead)
+                var distinct = group.Count() == 1;
+                foreach (var property in group)
                 {
-                    _src.Append("\t\t\tget => ");
-                    if (property.IsReturnShim)
-                    {
-                        _src.Append($"{property.TargetReturnType!.Namespace}.{property.TargetReturnType.Name.MakeSafeName()}ShimrExtension.Shim<{returnTypeFullName}>(");
-                    }
-                    _src.Append($"{memRefName}.{property.TargetName ?? property.Name}");
-                    if (property.IsReturnShim)
-                    {
-                        _src.Append(")");
-                    }
-                    _src.AppendLine(";");
+                    var memRefName = property.StaticType?.FullName ?? refName;
+                    CreateProperty(2, property.ReturnType!, property.Name, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, !distinct && property.ParentTypeFullName != shim.ShimFullName ? property.ParentTypeFullName : null);
                 }
-                if (property.CanWrite)
-                {
-                    _src.Append($"\t\t\tset => {memRefName}.{property.TargetName ?? property.Name} = ");
-                    if (property.IsReturnShim)
-                    {
-                        var targetReturnTypeFullName = property.TargetReturnType!.FullName;
-                        _src.AppendLine($"((object)value is {targetReturnTypeFullName} v) ? v : ({targetReturnTypeFullName})((IFY.Shimr.IShim)(object)value).Unshim();");
-                    }
-                    else
-                    {
-                        _src.AppendLine("value;");
-                    }
-                }
-                _src.AppendLine("\t\t}");
             }
 
             // Methods
+            // TODO: on collision, direct implement top member with explicit implement of others
             foreach (var method in shim.Members.Where(m => m.Kind == SymbolKind.Method))
             {
                 if (method.Name is "ToString" or "Unshim"
@@ -184,6 +163,49 @@ internal class ShimWriter
         }
 
         _src.AppendLine("}");
+    }
+
+    public void CreateProperty(int indent, TypeDef returnType, string name, bool canRead, bool canWrite, string targetRefName, TypeDef? shimToType, string? targetAlias, string? implementTypeName)
+    {
+        var pad = new string('\t', indent);
+        if (implementTypeName != null)
+        {
+            _src.AppendLine($"{pad}{returnType.FullName} {implementTypeName}.{name}");
+            targetRefName = $"(({implementTypeName}){targetRefName})";
+        }
+        else
+        {
+            _src.AppendLine($"{pad}public {returnType.FullName} {name}");
+        }
+        _src.AppendLine($"{pad}{{");
+        if (canRead)
+        {
+            _src.Append($"{pad}\tget => ");
+            if (shimToType != null)
+            {
+                _src.Append($"{shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim<{returnType.FullName}>(");
+            }
+            _src.Append($"{targetRefName}.{targetAlias ?? name}");
+            if (shimToType != null)
+            {
+                _src.Append(")");
+            }
+            _src.AppendLine(";");
+        }
+        if (canWrite)
+        {
+            _src.Append($"{pad}\tset => {targetRefName}.{targetAlias ?? name} = ");
+            if (shimToType != null)
+            {
+                var targetReturnTypeFullName = shimToType.FullName;
+                _src.AppendLine($"((object)value is {targetReturnTypeFullName} v) ? v : ({targetReturnTypeFullName})((IFY.Shimr.IShim)(object)value).Unshim();");
+            }
+            else
+            {
+                _src.AppendLine("value;");
+            }
+        }
+        _src.AppendLine($"{pad}}}");
     }
 
     public void CreateStaticShimCreator(ShimTypeDefinition[] shims)

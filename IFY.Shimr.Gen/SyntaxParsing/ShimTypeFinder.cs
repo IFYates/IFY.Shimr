@@ -45,8 +45,8 @@ internal class ShimTypeFinder : ISyntaxContextReceiver
         catch (Exception ex)
         {
             _ = ex.ToString();
-            Debugger.Launch();
-            throw;
+            //Debugger.Launch();
+            //throw;
         }
     }
 }

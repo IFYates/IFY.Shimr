@@ -5,6 +5,8 @@ namespace IFY.Shimr.Gen.SyntaxParsing;
 
 internal class ShimMemberDefinition
 {
+    public string ParentTypeFullName { get; private set; }
+
     public SymbolKind Kind { get; }
     public string Name { get; }
     public string? TargetName { get; private set; }
@@ -24,6 +26,7 @@ internal class ShimMemberDefinition
     public ShimMemberDefinition(IPropertySymbol property)
     {
         // Basics
+        ParentTypeFullName = property.ContainingType.FullName();
         Kind = SymbolKind.Property;
         Name = property.Name;
         CanRead = property.GetMethod != null;
@@ -40,6 +43,7 @@ internal class ShimMemberDefinition
     public ShimMemberDefinition(IMethodSymbol method)
     {
         // Basics
+        ParentTypeFullName = method.ContainingType.FullName();
         Kind = SymbolKind.Method;
         Name = method.Name;
         if (method.TryGetReturnType(out var returnType))

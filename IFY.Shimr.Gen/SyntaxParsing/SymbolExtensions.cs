@@ -7,7 +7,8 @@ internal static class SymbolExtensions
 {
     public static string MakeSafeName(this string str)
     {
-        return str.Replace('+', '_').Replace('.', '_').Replace("`", "").TrimEnd('?');
+        return str.Replace('+', '_').Replace('.', '_').Replace("`", "")
+            .Replace("<", "").Replace(",", "").Replace(">", "").TrimEnd('?');
     }
 
     public static bool TryGetAttributeConstructorValue(this AttributeData attr, string constructorArgName, out object? value)

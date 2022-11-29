@@ -48,8 +48,8 @@ internal class ShimGenerator : ISourceGenerator
             catch (Exception ex)
             {
                 _ = ex.ToString();
-                Debugger.Launch();
-                throw;
+                //Debugger.Launch();
+                //throw;
             }
         }
     }
