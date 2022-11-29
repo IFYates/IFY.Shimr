@@ -25,7 +25,8 @@ namespace IFY.Shimr.Internal
         public static TAttribute? GetAttribute<TAttribute>(this MemberInfo memberInfo)
             where TAttribute : Attribute
         {
-            var attr = memberInfo.GetCustomAttribute<TAttribute>(false);
+            var attr = memberInfo.GetCustomAttributes(false)
+                .OfType<TAttribute>().FirstOrDefault();
             if (attr != null)
             {
                 return attr;
