@@ -1,7 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Data;
-
-namespace IFY.Shimr.Tests;
+﻿namespace IFY.Shimr.Tests;
 
 // Specific issues around these structures
 [TestClass]
@@ -22,7 +19,7 @@ public class MultiLevelInheritanceTests
     }
 #endif
 
-    // Original interface
+    // Original interfaces
     public interface IProperty1
     {
         int Value { get; }
@@ -90,31 +87,36 @@ public class MultiLevelInheritanceTests
         Assert.IsInstanceOfType(cast2.Value, typeof(double));
     }
 
-    //    // Change method signature
-    //#if SHIMRGEN
-    //    [ShimOf<MethodSigClass>]
-    //#endif
-    //    public interface INewMethodSignature : IOriginal
-    //    {
-    //        new string GetValue();
-    //    }
+    // Base method definition
+    public interface IMethod
+    {
+        int GetValue();
+    }
 
-    //    public class MethodSigClass : INewMethodSignature
-    //    {
-    //        public int Value { get; set; }
-    //        public string GetValue() => nameof(MethodSigClass);
-    //        int IOriginal.GetValue() => 1;
-    //    }
+    // Change method signature
+#if SHIMRGEN
+    [ShimOf<MethodSigClass>]
+#endif
+    public interface INewMethodSignature : IMethod
+    {
+        new string GetValue();
+    }
 
-    //    [TestMethod]
-    //    public void MethodSigChange()
-    //    {
-    //        var obj = new MethodSigClass();
+    public class MethodSigClass : INewMethodSignature
+    {
+        int IMethod.GetValue() => 1;
+        public string GetValue() => nameof(MethodSigClass);
+    }
 
-    //        var shim = obj.Shim<INewMethodSignature>();
+    [TestMethod]
+    public void MethodSigChange()
+    {
+        var obj = new MethodSigClass();
 
-    //        Assert.IsInstanceOfType(shim.GetValue(), typeof(string));
-    //    }
+        var shim = obj.Shim<INewMethodSignature>();
+
+        Assert.IsInstanceOfType(shim.GetValue(), typeof(string));
+    }
 
     //    // Low-level interface
     //    public interface IBase

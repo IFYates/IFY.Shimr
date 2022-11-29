@@ -61,64 +61,30 @@ internal class ShimWriter
                 foreach (var property in group)
                 {
                     var memRefName = property.StaticType?.FullName ?? refName;
-                    CreateProperty(2, property.ReturnType!, property.Name, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, !distinct && property.ParentTypeFullName != shim.ShimFullName ? property.ParentTypeFullName : null);
+                    var implementor = !distinct && property.ParentTypeFullName != shim.ShimFullName ? property.ParentTypeFullName : null;
+                    CreateProperty(2, property.ReturnType!, property.Name, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, implementor);
                 }
             }
 
             // Methods
-            // TODO: on collision, direct implement top member with explicit implement of others
-            foreach (var method in shim.Members.Where(m => m.Kind == SymbolKind.Method))
+            var methods = shim.Members.Where(m => m.Kind == SymbolKind.Method)
+                .GroupBy(m => m.SignatureName).ToArray();
+            foreach (var group in methods)
             {
-                if (method.Name is "ToString" or "Unshim"
-                    && method.Parameters.Count == 0)
+                // Don't shim over the automated methods
+                if (group.Key is "ToString()" or "Unshim()")
                 {
                     continue;
                 }
 
-                var memRefName = method.StaticType?.FullName ?? refName;
-                var returnTypeFullName = method.ReturnType?.FullName;
-                _src.Append($"\t\tpublic {returnTypeFullName ?? "void"} {method.Name}(");
-                _src.Append(string.Join(", ", method.Parameters.Select(p => $"{p.Value.ParameterTypeFullName} {p.Key}")));
-                _src.AppendLine(")");
-                _src.AppendLine("\t\t{");
-
-                var argList = method.Parameters.Values
-                    .Select(p => p.TargetTypeFullName != null
-                        ? p.ParameterType.Kind == TypeKind.Interface
-                        ? $"({p.TargetTypeFullName})((IFY.Shimr.IShim)(object){p.Name}).Unshim()"
-                        : $"({p.TargetTypeFullName}){p.Name}"
-                        : p.Name)
-                    .ToArray();
-
-                if (method.ReturnType != null)
+                var distinct = group.Count() == 1;
+                foreach (var method in group)
                 {
-                    _src.Append("\t\t\treturn ");
-                    if (method.IsReturnShim)
-                    {
-                        _src.Append($"{method.TargetReturnType!.Namespace}.{method.TargetReturnType.Name.MakeSafeName()}ShimrExtension.Shim<{returnTypeFullName}>(");
-                    }
-                    if (method.IsConstructor)
-                    {
-                        _src.Append($"new {method.StaticType?.FullName ?? shim.TargetFullName}(");
-                    }
-                    else
-                    {
-                        _src.Append($"{memRefName}.{method.TargetName ?? method.Name}(");
-                    }
-                    _src.Append(string.Join(", ", argList));
-                    if (method.IsReturnShim)
-                    {
-                        _src.Append($")");
-                    }
-                    _src.AppendLine(");");
+                    var memRefName = method.StaticType?.FullName ?? refName;
+                    var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? shim.TargetFullName) : null;
+                    var implementor = !distinct && method.ParentTypeFullName != shim.ShimFullName ? method.ParentTypeFullName : null;
+                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor);
                 }
-                else
-                {
-                    _src.Append($"\t\t\t{memRefName}.{method.TargetName ?? method.Name}(");
-                    _src.Append(string.Join(", ", argList));
-                    _src.AppendLine(");");
-                }
-                _src.AppendLine("\t\t}");
             }
 
             if (!shim.IsStatic)
@@ -204,6 +170,61 @@ internal class ShimWriter
             {
                 _src.AppendLine("value;");
             }
+        }
+        _src.AppendLine($"{pad}}}");
+    }
+
+    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName)
+    {
+        var pad = new string('\t', indent);
+        if (implementTypeName != null)
+        {
+            _src.Append($"{pad}{returnType?.FullName ?? "void"} {implementTypeName}.{name}(");
+            targetRefName = $"(({implementTypeName}){targetRefName})";
+        }
+        else
+        {
+            _src.Append($"{pad}public {returnType?.FullName ?? "void"} {name}(");
+        }
+        _src.Append(string.Join(", ", parameters.Select(p => $"{p.ParameterTypeFullName} {p.Name}")));
+        _src.AppendLine(")");
+        _src.AppendLine($"{pad}{{");
+
+        var argList = parameters
+            .Select(p => p.TargetTypeFullName != null
+                ? p.ParameterType.Kind == TypeKind.Interface
+                ? $"({p.TargetTypeFullName})((IFY.Shimr.IShim)(object){p.Name}).Unshim()"
+                : $"({p.TargetTypeFullName}){p.Name}"
+                : p.Name)
+            .ToArray();
+
+        if (returnType != null)
+        {
+            _src.Append($"{pad}\treturn ");
+            if (shimToType != null)
+            {
+                _src.Append($"{shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim<{returnType?.FullName}>(");
+            }
+            if (constructorTypeName != null)
+            {
+                _src.Append($"new {constructorTypeName}(");
+            }
+            else
+            {
+                _src.Append($"{targetRefName}.{targetAlias ?? name}(");
+            }
+            _src.Append(string.Join(", ", argList));
+            if (shimToType != null)
+            {
+                _src.Append($")");
+            }
+            _src.AppendLine(");");
+        }
+        else
+        {
+            _src.Append($"{pad}\t{targetRefName}.{targetAlias ?? name}(");
+            _src.Append(string.Join(", ", argList));
+            _src.AppendLine(");");
         }
         _src.AppendLine($"{pad}}}");
     }

@@ -9,6 +9,7 @@ internal class ShimMemberDefinition
 
     public SymbolKind Kind { get; }
     public string Name { get; }
+    public string SignatureName { get; }
     public string? TargetName { get; private set; }
     public TypeDef? ReturnType { get; private set; }
     public TypeDef? TargetReturnType { get; set; }
@@ -29,6 +30,7 @@ internal class ShimMemberDefinition
         ParentTypeFullName = property.ContainingType.FullName();
         Kind = SymbolKind.Property;
         Name = property.Name;
+        SignatureName = Name;
         CanRead = property.GetMethod != null;
         CanWrite = property.SetMethod != null;
         if (property.TryGetReturnType(out var returnType))
@@ -56,6 +58,9 @@ internal class ShimMemberDefinition
         {
             Parameters.Add(parameter.Name, new MethodParameterDefinition(parameter));
         }
+
+        SignatureName = Name + (method.TypeArguments.Any() ? "`" + method.TypeArguments.Length : null)
+            + "(" + string.Join(",", method.Parameters.Select(p => p.Type.Name)) + ")";
 
         // Attributes
         parseAttributes(method);
