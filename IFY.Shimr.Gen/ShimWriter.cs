@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace IFY.Shimr.Gen;
 
@@ -9,6 +10,7 @@ internal class ShimWriter
 {
     private readonly StringBuilder _src;
     private readonly string _fileVersion;
+    private static readonly Random R = new();
 
     public ShimWriter(StringBuilder src)
     {
@@ -18,35 +20,46 @@ internal class ShimWriter
         _fileVersion = asmFile.ProductVersion ?? "0.0.0.0";
     }
 
-    internal void CreateShim(ShimTypeDefinition[] shims)
+    private static string getGenericArgList(TypeDef type)
+    {
+        return type.GenericArgs.Any()
+            ? "<" + string.Join(", ", type.GenericArgs.Select(a => ((ITypeParameterSymbol)a).Name)) + ">"
+            : string.Empty;
+    }
+
+    internal void CreateTargetShims(TypeDef targetType, ShimTypeDefinition[] shims)
     {
         // TODO: better way to show target doesn't implement shim (if strict)
         // TODO: type checking
 
-        _src.AppendLine($"namespace {shims[0].TargetNamespace};");
+        _src.AppendLine($"namespace {targetType.Namespace};");
         _src.AppendLine($"[System.CodeDom.Compiler.GeneratedCode(\"IFY.Shimr\", \"{_fileVersion}\")]");
         _src.AppendLine("[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]");
-        _src.AppendLine($"internal static class {shims[0].TargetSafeName}ShimrExtension");
+        // TODO: option to make public
+        _src.AppendLine($"internal static class {targetType.Name.MakeSafeName()}ShimrExtension");
         _src.AppendLine("{");
 
         // Implementation per shim
         foreach (var shim in shims)
         {
+            var shimGenArgs = getGenericArgList(shim.ShimType);
+            var targetDef = targetType.FullGenericName.Trim('<', '>') + shimGenArgs;
+
             // TODO: pass through some target attributes, like DebuggerDisplay
-            _src.AppendLine($"\t// Shim of {shim.TargetFullName} as {shim.ShimFullName}");
+            _src.AppendLine($"\t// Shim of {targetType.FullName} as {shim.ShimFullName}");
             _src.AppendLine("\t[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]");
-            _src.Append($"\tpublic class {shim.ShimrName} : {shim.ShimFullName}");
+            _src.Append($"\tpublic class {shim.ShimSafeName}{shimGenArgs} : {shim.ShimFullName}");
             if (!shim.IsStatic)
             {
                 _src.Append(", IFY.Shimr.IShim");
             }
             _src.AppendLine().AppendLine("\t{");
 
-            var refName = shim.IsStatic ? shim.TargetFullName : "_obj";
+            var refName = shim.IsStatic ? targetDef : "_obj";
             if (!shim.IsStatic)
             {
-                _src.AppendLine($"\t\tprivate readonly {shim.TargetName} _obj;");
-                _src.AppendLine($"\t\tpublic {shim.ShimrName}({shim.TargetName} obj)");
+                _src.AppendLine($"\t\tprivate readonly {targetDef} _obj;");
+                _src.AppendLine($"\t\tpublic {shim.ShimSafeName}({targetDef} obj)");
                 _src.AppendLine("\t\t{");
                 _src.AppendLine("\t\t\t_obj = obj;");
                 _src.AppendLine("\t\t}");
@@ -81,7 +94,7 @@ internal class ShimWriter
                 foreach (var method in group)
                 {
                     var memRefName = method.StaticType?.FullName ?? refName;
-                    var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? shim.TargetFullName) : null;
+                    var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
                     var implementor = !distinct && method.ParentTypeFullName != shim.ShimFullName ? method.ParentTypeFullName : null;
                     CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor);
                 }
@@ -89,43 +102,59 @@ internal class ShimWriter
 
             if (!shim.IsStatic)
             {
-                _src.AppendLine("\t\tpublic object Unshim()");
-                _src.AppendLine("\t\t{");
-                _src.AppendLine("\t\t\treturn _obj;");
-                _src.AppendLine("\t\t}");
-
-                _src.AppendLine("\t\tpublic override string? ToString()");
-                _src.AppendLine("\t\t{");
-                _src.AppendLine("\t\t\treturn _obj.ToString();");
-                _src.AppendLine("\t\t}");
+                _src.AppendLine("\t\tpublic object Unshim() => _obj;");
+                _src.AppendLine("\t\tpublic override string? ToString() => _obj.ToString();");
             }
 
-            _src.AppendLine("\t}");
+            _src.AppendLine("\t}").AppendLine();
         }
 
-        // Shim extension
-        var instShims = shims.Where(s => !s.IsStatic).ToArray();
-        if (instShims.Any())
+        // Shim builder extension
+        var instTypes = shims.Where(s => !s.IsStatic).ToArray();
+        if (instTypes.Any())
         {
-            _src.AppendLine("\t[return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"obj\")]");
-            _src.AppendLine($"\tpublic static T? Shim<T>(this {shims[0].TargetName}? obj)");
-            _src.AppendLine("\t{");
-
-            _src.AppendLine($"\t\tif ({(shims[0].TargetType.IsValueType ? "!obj.HasValue" : "obj == null")})");
-            _src.AppendLine("\t\t{");
-            _src.AppendLine("\t\t\treturn default;");
-            _src.AppendLine("\t\t}");
-
-            foreach (var shim in instShims)
+            foreach (var group in instTypes.GroupBy(s => s.ShimType.GenericArgs.Length))
             {
-                _src.AppendLine($"\t\telse if (typeof(T) == typeof({shim.ShimFullName}))");
+                var genArgs = getGenericArgList(group.First().ShimType);
+                var targetDef = targetType.FullGenericName.Trim('<', '>') + genArgs;
+                var classRawName = $"_Shimr_{R.Next(1000, 10000)}";
+                var className = $"{classRawName}{genArgs}";
+                _src.AppendLine($"\t// Shim builder extension for {group.Key} typeargs");
+                _src.AppendLine($"\tpublic class {className}");
+                _src.AppendLine("\t{");
+                _src.AppendLine($"\t\tprivate readonly {targetDef}? _obj;");
+                _src.AppendLine($"\t\tpublic {classRawName}({targetDef}? obj) => _obj = obj;");
+                _src.AppendLine("\t\tpublic TShim? As<TShim>()");
                 _src.AppendLine("\t\t{");
-                _src.AppendLine($"\t\t\treturn (T)(object)new {shim.ShimrName}(obj{(shims[0].TargetType.IsValueType ? ".Value" : "")});");
-                _src.AppendLine("\t\t}");
-            }
+                _src.AppendLine($"\t\t\tif ({(targetType.IsValueType ? "!_obj.HasValue" : "_obj == null")})");
+                _src.AppendLine("\t\t\t{");
+                _src.AppendLine("\t\t\t\treturn default;");
+                _src.AppendLine("\t\t\t}");
+                _src.AppendLine("\t\t\tvar shimType = typeof(TShim).IsGenericType ? typeof(TShim).GetGenericTypeDefinition() : typeof(TShim);");
 
-            _src.AppendLine($"\t\tthrow new Exception(\"Invalid shim target type for this object: \" + typeof(T).FullName);");
-            _src.AppendLine("\t}");
+                foreach (var shim in group)
+                {
+                    _src.AppendLine($"\t\t\tif (shimType == typeof({shim.ShimType.FullGenericName}))");
+                    _src.AppendLine("\t\t\t{");
+                    _src.AppendLine($"\t\t\t\treturn (TShim)(object)new {shim.ShimSafeName}{genArgs}(_obj{(targetType.IsValueType ? ".Value" : "")});");
+                    _src.AppendLine("\t\t\t}");
+                }
+
+                _src.AppendLine($"\t\t\tthrow new Exception(\"Invalid shim target type for this object: \" + typeof(TShim).FullName);");
+                _src.AppendLine("\t\t}");
+                _src.AppendLine("\t}");
+
+                _src.AppendLine("\t[return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"obj\")]");
+                _src.AppendLine($"\tpublic static {className} Shim{genArgs}(this {targetDef}? obj)");
+                _src.AppendLine($"\t\t=> new {className}(obj);");
+
+                if (group.Key == 0)
+                {
+                    _src.AppendLine("\t[return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"obj\")]");
+                    _src.AppendLine($"\tpublic static TShim? Shim{genArgs}<TShim>(this {targetDef}? obj)");
+                    _src.AppendLine($"\t\t=> new {className}(obj).As<TShim>();");
+                }
+            }
         }
 
         _src.AppendLine("}");
@@ -203,7 +232,7 @@ internal class ShimWriter
             _src.Append($"{pad}\treturn ");
             if (shimToType != null)
             {
-                _src.Append($"{shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim<{returnType?.FullName}>(");
+                _src.Append($"{shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim<{returnType.FullName}>(");
             }
             if (constructorTypeName != null)
             {
@@ -243,7 +272,7 @@ internal class ShimWriter
         {
             _src.AppendLine($"\t\t{(first ? "if" : "else if")} (typeof(T) == typeof({shim.ShimFullName}))");
             _src.AppendLine("\t\t{");
-            _src.AppendLine($"\t\t\treturn (T)(object)new {shim.TargetNamespace}.{shim.TargetSafeName}ShimrExtension.{shim.ShimrName}();");
+            _src.AppendLine($"\t\t\treturn (T)(object)new {shim.TargetNamespace}.{shim.TargetSafeName}ShimrExtension.{shim.ShimSafeName}();");
             _src.AppendLine("\t\t}");
             first = false;
         }

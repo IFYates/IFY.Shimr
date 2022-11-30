@@ -141,7 +141,11 @@ namespace IFY.Shimr.Tests
         {
             var obj = new TrickyMethodClass();
 
+#if SHIMRGEN
+            var shim = obj.Shim().As<ITrickyMethodShim>(); // New format
+#else
             var shim = obj.Shim<ITrickyMethodShim>();
+#endif
 
             Assert.IsNull(obj.get_Method());
             shim.set_Method("test");
@@ -165,9 +169,9 @@ namespace IFY.Shimr.Tests
         }
 #endif
 
-        #endregion Tricky method name
+#endregion Tricky method name
 
-        #region Issue 12 - Hidden property causes ambiguous exception
+#region Issue 12 - Hidden property causes ambiguous exception
 
 #if !SHIMRGEN // TODO: not sure how to make this work with IFY.Shimr.Gen
         public abstract class Issue12BaseClass
@@ -196,6 +200,6 @@ namespace IFY.Shimr.Tests
         }
 #endif
 
-        #endregion Issue 12
+#endregion Issue 12
     }
 }

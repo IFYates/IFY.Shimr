@@ -22,12 +22,15 @@ internal class TypeDef
     /// Include generic arguments, "[]", "?", etc.
     /// </summary>
     public string FullName { get; }
+    /// <summary>
+    /// Same as <see cref="FullName"/>, but generic args are unspecified ("&lt;&gt;")
+    /// </summary>
+    public string FullGenericName { get; }
 
-    public bool IsArray => ElementType != null;
-    public TypeDef? ElementType { get; }
+    public TypeDef? ArrayElementType { get; } // If not null, array
 
     public bool IsGeneric => GenericArgs.Length > 0;
-    public TypeDef[] GenericArgs { get; } = Array.Empty<TypeDef>();
+    public ITypeSymbol[] GenericArgs { get; set; } = Array.Empty<ITypeSymbol>(); // Could be resolved types or template args
 
     public INamedTypeSymbol[] AllInterfaces { get; } = Array.Empty<INamedTypeSymbol>();
 
@@ -37,10 +40,11 @@ internal class TypeDef
         Kind = type.TypeKind;
         IsNullable = type.NullableAnnotation == NullableAnnotation.Annotated;
         IsValueType = type.IsValueType;
+        GenericArgs = type.TypeArguments.ToArray();
         Name = type.GetName();
         Namespace = type.FullNamespace();
         FullName = type.FullName(); // TODO
-        // TODO: GenericArgs
+        FullGenericName = type.FullName(true) + (IsGeneric ? "<" + new string(',', GenericArgs.Length - 1) + ">" : null);
         AllInterfaces = type.AllInterfaces.ToArray();
     }
 
@@ -49,17 +53,17 @@ internal class TypeDef
         _symbol = arr;
         Kind = TypeKind.Array;
         IsNullable = arr.NullableAnnotation == NullableAnnotation.Annotated;
-        ElementType = new TypeDef((INamedTypeSymbol)arr.ElementType);
-        Name = ElementType.Name;
-        Namespace = ElementType.Namespace;
-        FullName = ElementType.FullName + "[]";
+        ArrayElementType = new TypeDef((INamedTypeSymbol)arr.ElementType);
+        Name = ArrayElementType.Name;
+        Namespace = ArrayElementType.Namespace;
+        FullName = ArrayElementType.FullName + "[]";
     }
 
     public ISymbol[] GetMembers()
     {
-        if (IsArray)
+        if (ArrayElementType != null)
         {
-            return ElementType!.GetMembers();
+            return ArrayElementType!.GetMembers();
         }
         if (_symbol is ITypeSymbol type)
         {

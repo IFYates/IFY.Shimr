@@ -49,7 +49,7 @@
             <param name="symbol">The symbol being examined.</param>
             <returns></returns>
         </member>
-        <member name="M:Tortuga.TestMonkey.SemanticHelper.FullName(Microsoft.CodeAnalysis.INamedTypeSymbol)">
+        <member name="M:Tortuga.TestMonkey.SemanticHelper.FullName(Microsoft.CodeAnalysis.INamedTypeSymbol,System.Boolean)">
             <summary>
             This will return a full name of a type, including the namespace and type arguments.
             </summary>
@@ -170,6 +170,11 @@
             <summary>
             The full referencable name of the type.
             Include generic arguments, "[]", "?", etc.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.Gen.SyntaxParsing.TypeDef.FullGenericName">
+            <summary>
+            Same as <see cref="P:IFY.Shimr.Gen.SyntaxParsing.TypeDef.FullName"/>, but generic args are unspecified ("&lt;&gt;")
             </summary>
         </member>
         <member name="T:IFY.Shimr.ConstructorShimAttribute">

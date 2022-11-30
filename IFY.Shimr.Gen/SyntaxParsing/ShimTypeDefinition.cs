@@ -8,19 +8,15 @@ namespace IFY.Shimr.Gen.SyntaxParsing;
 /// </summary>
 internal class ShimTypeDefinition
 {
-    public string ShimNamespace { get; }
-    public string ShimName { get; }
+    public TypeDef ShimType { get; }
+    public string ShimFullName => ShimType.FullName;
     public string ShimSafeName { get; }
-    public string ShimFullName { get; }
 
     public bool IsStatic { get; }
     public TypeDef TargetType { get; }
-    public string TargetNamespace { get; }
-    public string TargetName { get; }
+    public string TargetNamespace => TargetType.Namespace;
+    public string TargetFullName => TargetType.FullName;
     public string TargetSafeName { get; }
-    public string TargetFullName { get; }
-
-    public string ShimrName { get; }
 
     public List<ShimMemberDefinition> Members { get; } = new();
 
@@ -31,19 +27,34 @@ internal class ShimTypeDefinition
 
     public ShimTypeDefinition(TypeDef interfaceDef, TypeDef targetType, bool isStatic)
     {
-        // Parse interface for details
-        ShimNamespace = interfaceDef.Namespace;
-        ShimName = interfaceDef.Name;
-        ShimFullName = interfaceDef.FullName;
-        ShimSafeName = ShimName.MakeSafeName();
+        ShimType = interfaceDef;
+        ShimSafeName = ShimType.Name.MakeSafeName(); // TODO: could add random suffix
 
         TargetType = targetType;
-        TargetNamespace = targetType.Namespace;
-        TargetName = targetType.Name;
-        TargetFullName = targetType.FullName;
-        TargetSafeName = TargetName.MakeSafeName();
+        TargetSafeName = TargetType.Name.MakeSafeName(); // TODO: could add random suffix
 
-        ShimrName = $"{ShimSafeName}__{TargetSafeName}";
+        // Tidy up generics
+        if (TargetType.IsGeneric)
+        {
+            if (!ShimType.IsGeneric)
+            {
+                // TODO: fail
+            }
+            else if (TargetType.GenericArgs.Length != ShimType.GenericArgs.Length)
+            {
+                // TODO: fail
+            }
+            else
+            {
+                // TODO: apply fixed types
+                // TODO: apply template names
+                TargetType.GenericArgs = ShimType.GenericArgs;
+            }
+        }
+        else if (ShimType.IsGeneric)
+        {
+            // Allowed; ignored for inheritance
+        }
 
         // Parse interface members
         foreach (var member in interfaceDef.GetMembers())

@@ -15,7 +15,7 @@ internal class ShimGenerator : ISourceGenerator
 
 #if DEBUG
     private const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput.txt";
-    private static string _debugOutput = $"// {DateTime.UtcNow:s}\r\n";
+    private static string _debugOutput = string.Empty;
 #endif
 
     [ExcludeFromCodeCoverage] // Cannot set GeneratorExecutionContext.SyntaxContextReceiver
@@ -26,9 +26,12 @@ internal class ShimGenerator : ISourceGenerator
         {
             try
             {
+#if DEBUG
+                _debugOutput = $"// {DateTime.UtcNow:s}\r\n";
+#endif
                 Execute(receiver.ShimTypes, context.AddSource);
 #if DEBUG
-                _debugOutput += "\r\n//-- Complete";
+                _debugOutput += $"\r\n//-- Complete {DateTime.UtcNow:s}";
 #endif
             }
             catch (Exception ex)
@@ -76,13 +79,13 @@ internal class ShimGenerator : ISourceGenerator
         {
             var targetType = typeShims.Key;
             var shims = typeShims.ToArray();
-            writer.CreateShim(shims);
+            writer.CreateTargetShims(shims[0].TargetType, shims);
 
             // Add to the compilation
             Debugger.Log(1, typeof(ShimGenerator).FullName, $"Generated {shims.Length} shim(s) for {targetType}\r\n");
-            addSource($"{shims[0].TargetFullName.MakeSafeName()}Shims", SourceText.From(src.ToString(), Encoding.UTF8));
+            addSource($"{shims[0].TargetSafeName}Shims", SourceText.From(src.ToString(), Encoding.UTF8));
 #if DEBUG
-            _debugOutput += $"\r\n//-- {typeof(ShimGenerator).FullName}\r\n";
+            _debugOutput += $"\r\n//-- {shims[0].TargetSafeName}\r\n";
             _debugOutput += src.ToString();
 #endif
             src.Clear();

@@ -121,7 +121,7 @@ internal static class SemanticHelper
     /// <param name="symbol">The symbol being examined.</param>
     /// <returns></returns>
     [return: NotNullIfNotNull("symbol")]
-    public static string? FullName(this INamedTypeSymbol? symbol)
+    public static string? FullName(this INamedTypeSymbol? symbol, bool ignoreGenArgs = false)
     {
         if (symbol == null)
         {
@@ -135,13 +135,13 @@ internal static class SemanticHelper
             prefix += "." + GetName(symbol.ContainingType);// TODO: "+" class, etc.
         }
 
-        var suffix = "";
-        if (symbol.Arity > 0)
+        var suffix = string.Empty;
+        if (!ignoreGenArgs && symbol.Arity > 0)
         {
             suffix = CollectTypeArguments(symbol.TypeArguments);
         }
 
-        if (prefix != "")
+        if (prefix.Length > 0)
             return prefix + "." + symbol.Name + suffix + symbol.NullableToken();
         else
             return symbol.Name + suffix + symbol.NullableToken();
@@ -327,7 +327,8 @@ internal static class SemanticHelper
         if (!symbol.IsGenericMethod)
             return null;
 
-        return string.Join("\r\n", symbol.TypeParameters.Select(tp => TypeConstraintString(tp)).Where(tp => tp != null));
+        return string.Join("\r\n", symbol.TypeParameters.Select(TypeConstraintString)
+            .Where(tp => tp != null));
     }
 
     /// <summary>
