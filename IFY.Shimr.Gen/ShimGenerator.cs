@@ -15,24 +15,7 @@ internal class ShimGenerator : ISourceGenerator
 
 #if DEBUG
     private const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput.txt";
-    private static bool? _writeDebug;
-    private static void writeToDebug(string str)
-    {
-        if (!_writeDebug.HasValue)
-        {
-            var asmFI = new FileInfo(typeof(ShimGenerator).Assembly.Location);
-            var outFI = new FileInfo(GenOut_File);
-            _writeDebug = !outFI.Exists || outFI.Length == 0 || outFI.LastWriteTimeUtc < asmFI.LastWriteTimeUtc;
-            if (_writeDebug == true)
-            {
-                File.WriteAllText(GenOut_File, $"// {DateTime.Now:s} ({asmFI.LastWriteTimeUtc:s})\r\n");
-            }
-        }
-        if (_writeDebug == true)
-        {
-            File.AppendAllText(GenOut_File, str);
-        }
-    }
+    private static string _debugOutput = $"// {DateTime.UtcNow:s}\r\n";
 #endif
 
     [ExcludeFromCodeCoverage] // Cannot set GeneratorExecutionContext.SyntaxContextReceiver
@@ -44,13 +27,22 @@ internal class ShimGenerator : ISourceGenerator
             try
             {
                 Execute(receiver.ShimTypes, context.AddSource);
+#if DEBUG
+                _debugOutput += "\r\n//-- Complete";
+#endif
             }
             catch (Exception ex)
             {
-                _ = ex.ToString();
+#if DEBUG
+                _debugOutput += $"\r\n/** EXCEPTION! {ex}\r\n*/";
+#endif
                 //Debugger.Launch();
                 //throw;
             }
+#if DEBUG
+            File.WriteAllText(GenOut_File, _debugOutput);
+            Debugger.Log(0, nameof(ShimGenerator), _debugOutput);
+#endif
         }
     }
     public void Execute(IList<ShimTypeDefinition> shimTypes, Action<string, SourceText> addSource)
@@ -74,10 +66,8 @@ internal class ShimGenerator : ISourceGenerator
 #if DEBUG
         foreach (var shim in shimTypes)
         {
-            src.AppendLine($"// * {shim.TargetFullName} -> {shim.ShimFullName}");
+            _debugOutput += $"// * {shim.TargetFullName} -> {shim.ShimFullName}\r\n";
         }
-        writeToDebug(src.ToString());
-        src.Clear();
 #endif
 
         // Generate each shim
@@ -92,7 +82,8 @@ internal class ShimGenerator : ISourceGenerator
             Debugger.Log(1, typeof(ShimGenerator).FullName, $"Generated {shims.Length} shim(s) for {targetType}\r\n");
             addSource($"{shims[0].TargetFullName.MakeSafeName()}Shims", SourceText.From(src.ToString(), Encoding.UTF8));
 #if DEBUG
-            writeToDebug(src.ToString());
+            _debugOutput += $"\r\n//-- {typeof(ShimGenerator).FullName}\r\n";
+            _debugOutput += src.ToString();
 #endif
             src.Clear();
         }
@@ -101,7 +92,8 @@ internal class ShimGenerator : ISourceGenerator
         writer.CreateStaticShimCreator(shimTypes.Where(s => s.IsStatic).ToArray());
         addSource("StaticCreatorShims", SourceText.From(src.ToString(), Encoding.UTF8));
 #if DEBUG
-        writeToDebug(src.ToString());
+        _debugOutput += "\r\n//-- StaticCreatorShims\r\n";
+        _debugOutput += src.ToString();
 #endif
         src.Clear();
 
