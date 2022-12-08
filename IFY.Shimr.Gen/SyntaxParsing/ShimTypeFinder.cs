@@ -22,10 +22,10 @@ internal class ShimTypeFinder : ISyntaxContextReceiver
 
                 // Add each shimmed type to list
                 var shimrAttrs = interfaceDef.GetAttributes()
-                    .Where(a => a.AttributeClass.FullName().StartsWith(typeof(ShimOfAttribute).FullName)).ToArray();
+                    .Where(a => a.AttributeClass.FullName()?.StartsWith(typeof(ShimOfAttribute).FullName) == true).ToArray();
                 foreach (var attr in shimrAttrs)
                 {
-                    if (attr.AttributeClass.TypeArguments.Length == 1)
+                    if (attr.AttributeClass?.TypeArguments.Length == 1)
                     {
                         ShimTypes.Add(new ShimTypeDefinition(new(interfaceDef), new((INamedTypeSymbol)attr.AttributeClass.TypeArguments[0]), false));
                     }

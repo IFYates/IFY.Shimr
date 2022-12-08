@@ -46,8 +46,8 @@ internal class ShimGenerator : ISourceGenerator
 #if DEBUG
                 _debugOutput += $"\r\n/** EXCEPTION! {ex}\r\n*/";
 #endif
-                Debugger.Launch();
-                throw;
+                //Debugger.Launch();
+                //throw;
             }
 #if DEBUG
             File.WriteAllText(GenOut_File, _debugOutput);

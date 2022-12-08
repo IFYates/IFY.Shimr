@@ -13,10 +13,10 @@ internal static class SymbolExtensions
 
     public static bool TryGetAttributeConstructorValue(this AttributeData attr, string constructorArgName, out object? value)
     {
-        var argIdx = attr.AttributeConstructor!.Parameters
+        var argIdx = attr.AttributeConstructor?.Parameters
             .Select((a, i) => a.Name == constructorArgName ? i : (int?)null)
             .FirstOrDefault(i => i.HasValue);
-        if (argIdx.HasValue)
+        if (argIdx != null)
         {
             value = attr.ConstructorArguments[argIdx.Value].Value;
             return true;
