@@ -31,6 +31,7 @@ internal class TypeDef
 
     public bool IsGeneric => GenericArgs.Length > 0;
     public ITypeSymbol[] GenericArgs { get; set; } = Array.Empty<ITypeSymbol>(); // Could be resolved types or template args
+    public string? GenericArgList { get; }
 
     public INamedTypeSymbol[] AllInterfaces { get; } = Array.Empty<INamedTypeSymbol>();
 
@@ -41,11 +42,23 @@ internal class TypeDef
         IsNullable = type.NullableAnnotation == NullableAnnotation.Annotated;
         IsValueType = type.IsValueType;
         GenericArgs = type.TypeArguments.ToArray();
+        GenericArgList = IsGeneric ? "<" + string.Join(",", GenericArgs.Select(a => a.Name)) + ">" : null;
         Name = type.GetName();
         Namespace = type.FullNamespace();
         FullName = type.FullName(); // TODO
         FullGenericName = type.FullName(true) + (IsGeneric ? "<" + new string(',', GenericArgs.Length - 1) + ">" : null);
         AllInterfaces = type.AllInterfaces.ToArray();
+    }
+
+    public TypeDef(ITypeParameterSymbol typepar)
+    {
+        _symbol = typepar;
+        Kind = TypeKind.TypeParameter;
+        IsNullable = typepar.NullableAnnotation == NullableAnnotation.Annotated;
+        Name = typepar.Name;
+        Namespace = string.Empty;
+        FullName = Name;
+        FullGenericName = FullName;
     }
 
     public TypeDef(IArrayTypeSymbol arr)
@@ -57,6 +70,7 @@ internal class TypeDef
         Name = ArrayElementType.Name;
         Namespace = ArrayElementType.Namespace;
         FullName = ArrayElementType.FullName + "[]";
+        FullGenericName = FullName;
     }
 
     public ISymbol[] GetMembers()

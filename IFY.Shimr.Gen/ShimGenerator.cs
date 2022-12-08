@@ -29,7 +29,14 @@ internal class ShimGenerator : ISourceGenerator
 #if DEBUG
                 _debugOutput = $"// {DateTime.UtcNow:s}\r\n";
 #endif
+
+                if (receiver.Exception != null)
+                {
+                    throw new Exception(nameof(ShimTypeFinder) + " threw exception", receiver.Exception);
+                }
+
                 Execute(receiver.ShimTypes, context.AddSource);
+
 #if DEBUG
                 _debugOutput += $"\r\n//-- Complete {DateTime.UtcNow:s}";
 #endif
@@ -39,8 +46,8 @@ internal class ShimGenerator : ISourceGenerator
 #if DEBUG
                 _debugOutput += $"\r\n/** EXCEPTION! {ex}\r\n*/";
 #endif
-                //Debugger.Launch();
-                //throw;
+                Debugger.Launch();
+                throw;
             }
 #if DEBUG
             File.WriteAllText(GenOut_File, _debugOutput);

@@ -1,9 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
-namespace IFY.Shimr.Tests;
+﻿namespace IFY.Shimr.Tests;
 
 [TestClass]
 public class SignatureEnumerableChangeTests

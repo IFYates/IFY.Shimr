@@ -53,6 +53,17 @@ internal class ShimMemberDefinition
             ReturnType = returnType;
         }
 
+        // Type Parameters
+        if (method.TypeParameters.Any())
+        {
+            for (var i = 0; i < method.TypeParameters.Length; ++i)
+            {
+                Name += (i == 0 ? "<" : ", ") + method.TypeParameters[i].Name;
+            }
+            Name += ">";
+            // TODO: generic conditions
+        }
+
         // Parameters
         foreach (var parameter in method.Parameters)
         {

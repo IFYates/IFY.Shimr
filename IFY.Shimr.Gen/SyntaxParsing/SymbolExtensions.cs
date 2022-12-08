@@ -42,6 +42,7 @@ internal static class SymbolExtensions
         {
             IArrayTypeSymbol arr => new(arr),
             INamedTypeSymbol namedType => new(namedType),
+            ITypeParameterSymbol typepar => new(typepar),
             _ => null,
         };
 

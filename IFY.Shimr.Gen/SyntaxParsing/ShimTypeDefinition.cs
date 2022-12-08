@@ -34,7 +34,7 @@ internal class ShimTypeDefinition
         TargetSafeName = TargetType.Name.MakeSafeName(); // TODO: could add random suffix
 
         // Tidy up generics
-        if (TargetType.IsGeneric)
+        if (!isStatic && TargetType.IsGeneric)
         {
             if (!ShimType.IsGeneric)
             {

@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Diagnostics;
 using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen.SyntaxParsing;
@@ -8,6 +7,8 @@ namespace IFY.Shimr.Gen.SyntaxParsing;
 [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage] // Not sure how to test without unnecessary restructure
 internal class ShimTypeFinder : ISyntaxContextReceiver
 {
+    public Exception? Exception { get; private set; }
+
     public List<ShimTypeDefinition> ShimTypes { get; } = new();
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
@@ -44,9 +45,8 @@ internal class ShimTypeFinder : ISyntaxContextReceiver
         }
         catch (Exception ex)
         {
-            _ = ex.ToString();
-            //Debugger.Launch();
-            //throw;
+            Exception ??= ex;
+            //System.Diagnostics.Debugger.Launch();
         }
     }
 }

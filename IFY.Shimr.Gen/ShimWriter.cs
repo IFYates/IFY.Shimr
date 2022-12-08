@@ -2,7 +2,6 @@
 using Microsoft.CodeAnalysis;
 using System.Diagnostics;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace IFY.Shimr.Gen;
 
@@ -165,13 +164,29 @@ internal class ShimWriter
         var pad = new string('\t', indent);
         if (implementTypeName != null)
         {
-            _src.AppendLine($"{pad}{returnType.FullName} {implementTypeName}.{name}");
+            _src.Append($"{pad}{returnType.FullName} {implementTypeName}.{name}");
             targetRefName = $"(({implementTypeName}){targetRefName})";
         }
         else
         {
-            _src.AppendLine($"{pad}public {returnType.FullName} {name}");
+            _src.Append($"{pad}public {returnType.FullName} {name}");
         }
+        if (canRead && !canWrite)
+        {
+            _src.Append($" => ");
+            if (shimToType != null)
+            {
+                _src.Append($"{shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim<{returnType.FullName}>(");
+            }
+            _src.Append($"{targetRefName}.{targetAlias ?? name}");
+            if (shimToType != null)
+            {
+                _src.Append(")");
+            }
+            _src.AppendLine(";");
+            return;
+        }
+        _src.AppendLine();
         _src.AppendLine($"{pad}{{");
         if (canRead)
         {
@@ -229,11 +244,8 @@ internal class ShimWriter
 
         if (returnType != null)
         {
-            _src.Append($"{pad}\treturn ");
-            if (shimToType != null)
-            {
-                _src.Append($"{shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim<{returnType.FullName}>(");
-            }
+            var retvar = "obj";
+            _src.Append($"{pad}\tvar obj = ");
             if (constructorTypeName != null)
             {
                 _src.Append($"new {constructorTypeName}(");
@@ -243,11 +255,13 @@ internal class ShimWriter
                 _src.Append($"{targetRefName}.{targetAlias ?? name}(");
             }
             _src.Append(string.Join(", ", argList));
+            _src.AppendLine(");");
             if (shimToType != null)
             {
-                _src.Append($")");
+                retvar = "shim";
+                _src.AppendLine($"{pad}\tvar shim = {shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim{returnType.GenericArgList}(obj).As<{returnType.FullName}>();");
             }
-            _src.AppendLine(");");
+            _src.AppendLine($"{pad}\treturn {retvar};");
         }
         else
         {

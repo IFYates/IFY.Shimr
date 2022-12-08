@@ -15,6 +15,8 @@ internal class MethodParameterDefinition
         Name = parameter.Name;
         ParameterType = parameter.Type is IArrayTypeSymbol array
             ? new(array)
+            : parameter.Type is ITypeParameterSymbol typepar
+            ? new(typepar)
             : new((INamedTypeSymbol)parameter.Type);
 
         if (parameter.GetAttribute<TypeShimAttribute>()?
