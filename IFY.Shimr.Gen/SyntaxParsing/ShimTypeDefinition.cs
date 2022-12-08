@@ -69,8 +69,9 @@ internal class ShimTypeDefinition
             var def = member switch
             {
                 IPropertySymbol property => new ShimMemberDefinition(property),
-                IMethodSymbol method when method.ConstructedFrom.AssociatedSymbol?.Kind != SymbolKind.Property
+                IMethodSymbol method when method.ConstructedFrom.AssociatedSymbol == null
                     => new ShimMemberDefinition(method),
+                IEventSymbol ev => new ShimMemberDefinition(ev),
                 _ => null
             };
             if (def == null)

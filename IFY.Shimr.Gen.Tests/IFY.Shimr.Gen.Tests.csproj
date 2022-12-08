@@ -15,7 +15,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Include="..\IFY.Shimr.Tests\GenericMethodTests.cs" Link="GenericMethodTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="EventShimTests.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\IFY.Shimr.Tests\GenericMethodTests.cs" Link="GenericMethodTests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -64,9 +64,25 @@ internal class ShimWriter
                 _src.AppendLine("\t\t}");
             }
 
+            // Events
+            var evs = shim.Members.Where(m => m.Kind == SymbolKind.Event)
+                .GroupBy(p => p.Name).ToArray();
+            foreach (var group in evs)
+            {
+                var distinct = group.Count() == 1; // TODO: how and do what?
+                foreach (var ev in group)
+                {
+                    _src.AppendLine($"\t\tpublic event {ev.ReturnType!.FullName} {ev.Name}");
+                    _src.AppendLine("\t\t{");
+                    _src.AppendLine($"\t\t\tadd => _obj.{ev.Name} += value;");
+                    _src.AppendLine($"\t\t\tremove => _obj.{ev.Name} -= value;");
+                    _src.AppendLine("\t\t}");
+                }
+            }
+
             // Properties
             var properties = shim.Members.Where(m => m.Kind == SymbolKind.Property)
-                .GroupBy(p => p.Name).ToArray();
+            .GroupBy(p => p.Name).ToArray();
             foreach (var group in properties)
             {
                 var distinct = group.Count() == 1;

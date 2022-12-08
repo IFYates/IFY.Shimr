@@ -26,6 +26,16 @@ internal class ShimMemberDefinition
 
     public Dictionary<string, MethodParameterDefinition> Parameters { get; } = new();
 
+    public ShimMemberDefinition(IEventSymbol ev)
+    {
+        // Basics
+        ParentTypeFullName = ev.ContainingType.FullName();
+        Kind = SymbolKind.Event;
+        Name = ev.Name;
+        SignatureName = Name;
+        ReturnType = new((INamedTypeSymbol)ev.Type);
+    }
+
     public ShimMemberDefinition(IPropertySymbol property)
     {
         // Basics
