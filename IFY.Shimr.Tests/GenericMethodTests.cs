@@ -94,75 +94,84 @@ public class GenericMethodTests
         Assert.AreSame("result", res);
     }
 
-    //public interface IFullTestShim
-    //{
-    //    T FullTest<T>(T val)
-    //        where T : class, IComparable;
-    //}
-    //[TestMethod]
-    //public void Facade_of_generic_method_can_send_and_receive_generic_types()
-    //{
-    //    // Arrange
-    //    var inst = new TestClass();
+#if SHIMRGEN
+    [ShimOf<TestClass>]
+#endif
+    public interface IFullTestShim
+    {
+        T FullTest<T>(T val)
+            where T : class, IComparable;
+    }
+    [TestMethod]
+    public void Facade_of_generic_method_can_send_and_receive_generic_types()
+    {
+        // Arrange
+        var inst = new TestClass();
 
-    //    var shim = ShimBuilder.Shim<IFullTestShim>(inst);
+        var shim = inst.Shim<IFullTestShim>();
 
-    //    var val = "Abcd1234";
+        var val = "Abcd1234";
 
-    //    // Act
-    //    Assert.IsFalse(inst.WasCalled);
-    //    var res = shim.FullTest(val);
+        // Act
+        Assert.IsFalse(inst.WasCalled);
+        var res = shim.FullTest(val);
 
-    //    // Assert
-    //    Assert.IsTrue(inst.WasCalled);
-    //    Assert.AreSame(val, res);
-    //}
+        // Assert
+        Assert.IsTrue(inst.WasCalled);
+        Assert.AreSame(val, res);
+    }
 
-    //public interface IDeepTestShim
-    //{
-    //    IEnumerable<T> DeepTest<T>(Func<IEnumerable<T>> val)
-    //        where T : class;
-    //}
-    //[TestMethod]
-    //public void Facade_of_generic_method_can_send_and_receive_deep_generic_types()
-    //{
-    //    // Arrange
-    //    var inst = new TestClass();
+#if SHIMRGEN
+    [ShimOf<TestClass>]
+#endif
+    public interface IDeepTestShim
+    {
+        IEnumerable<T> DeepTest<T>(Func<IEnumerable<T>> val)
+            where T : class;
+    }
+    [TestMethod]
+    public void Facade_of_generic_method_can_send_and_receive_deep_generic_types()
+    {
+        // Arrange
+        var inst = new TestClass();
 
-    //    var shim = ShimBuilder.Shim<IDeepTestShim>(inst);
+        var shim = inst.Shim<IDeepTestShim>();
 
-    //    var val = new[] { "Abcd1234" };
+        var val = new[] { "Abcd1234" };
 
-    //    // Act
-    //    Assert.IsFalse(inst.WasCalled);
-    //    var res = shim.DeepTest(() => val);
+        // Act
+        Assert.IsFalse(inst.WasCalled);
+        var res = shim.DeepTest(() => val);
 
-    //    // Assert
-    //    Assert.IsTrue(inst.WasCalled);
-    //    Assert.AreSame(val, res);
-    //}
+        // Assert
+        Assert.IsTrue(inst.WasCalled);
+        Assert.AreSame(val, res);
+    }
 
-    //public interface IComplexTestShim
-    //{
-    //    IDictionary<T1, T2> ComplexTest<T1, T2>(T1 key)
-    //        where T2 : IEnumerable<T1>;
-    //}
-    //[TestMethod]
-    //public void Support_facade_of_complex_generics()
-    //{
-    //    // Arrange
-    //    var inst = new TestClass();
+#if SHIMRGEN
+    [ShimOf<TestClass>]
+#endif
+    public interface IComplexTestShim
+    {
+        IDictionary<T1, T2> ComplexTest<T1, T2>(T1 key)
+            where T2 : IEnumerable<T1>;
+    }
+    [TestMethod]
+    public void Support_facade_of_complex_generics()
+    {
+        // Arrange
+        var inst = new TestClass();
 
-    //    var shim = ShimBuilder.Shim<IComplexTestShim>(inst);
+        var shim = inst.Shim<IComplexTestShim>();
 
-    //    var val = "Abcd1234";
+        var val = "Abcd1234";
 
-    //    // Act
-    //    Assert.IsFalse(inst.WasCalled);
-    //    var res = shim.ComplexTest<string, string[]>(val);
+        // Act
+        Assert.IsFalse(inst.WasCalled);
+        var res = shim.ComplexTest<string, string[]>(val);
 
-    //    // Assert
-    //    Assert.IsTrue(inst.WasCalled);
-    //    Assert.IsTrue(res.ContainsKey(val));
-    //}
+        // Assert
+        Assert.IsTrue(inst.WasCalled);
+        Assert.IsTrue(res.ContainsKey(val));
+    }
 }
