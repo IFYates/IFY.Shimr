@@ -15,12 +15,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Include="..\IFY.Shimr.Tests\GenericMethodTests.cs" Link="GenericMethodTests.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Include="..\IFY.Shimr.Tests\AccessibilityTests.cs" Link="AccessibilityTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="ConstructorTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\FieldShimTests.cs" Link="FieldShimTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="MethodShimTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\MissingMemberTests.cs" Link="MissingMemberTests.cs" />
-	  <Compile Include="..\IFY.Shimr.Tests\GenericConstructorTests.cs" Link="GenericConstructorTests.cs" />
+	  <None Include="..\IFY.Shimr.Tests\GenericConstructorTests.cs" Link="GenericConstructorTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="MultiLevelInheritanceTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\SignatureEnumerableChangeTests.cs" Link="SignatureEnumerableChangeTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />

@@ -95,7 +95,7 @@ internal class ShimWriter
                     var memRefName = method.StaticType?.FullName ?? refName;
                     var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
                     var implementor = !distinct && method.ParentTypeFullName != shim.ShimFullName ? method.ParentTypeFullName : null;
-                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor);
+                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor, method.GenericContraints);
                 }
             }
 
@@ -218,7 +218,7 @@ internal class ShimWriter
         _src.AppendLine($"{pad}}}");
     }
 
-    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName)
+    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName, string[]? genericConstraints)
     {
         var pad = new string('\t', indent);
         if (implementTypeName != null)
@@ -232,6 +232,15 @@ internal class ShimWriter
         }
         _src.Append(string.Join(", ", parameters.Select(p => $"{p.ParameterTypeFullName} {p.Name}")));
         _src.AppendLine(")");
+
+        if (genericConstraints?.Any() == true)
+        {
+            foreach (var constraint in genericConstraints)
+            {
+                _src.AppendLine($"{pad}    {constraint}");
+            }
+        }
+
         _src.AppendLine($"{pad}{{");
 
         var argList = parameters

@@ -22,6 +22,8 @@ internal class ShimMemberDefinition
     public bool IsStatic { get; private set; }
     public bool IsConstructor { get; private set; }
 
+    public string[]? GenericContraints { get; }
+
     public Dictionary<string, MethodParameterDefinition> Parameters { get; } = new();
 
     public ShimMemberDefinition(IPropertySymbol property)
@@ -56,12 +58,22 @@ internal class ShimMemberDefinition
         // Type Parameters
         if (method.TypeParameters.Any())
         {
+            var constraints = new List<string>();
             for (var i = 0; i < method.TypeParameters.Length; ++i)
             {
                 Name += (i == 0 ? "<" : ", ") + method.TypeParameters[i].Name;
+
+                var constraint = method.TypeParameters[i].TypeConstraintString();
+                if (constraint?.Length > 0)
+                {
+                    constraints.Add(constraint);
+                }
             }
             Name += ">";
-            // TODO: generic conditions
+            if (constraints.Any())
+            {
+                GenericContraints = constraints.ToArray();
+            }
         }
 
         // Parameters
