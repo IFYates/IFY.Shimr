@@ -10,24 +10,6 @@ namespace IFY.Shimr.Gen;
 [Generator]
 internal class ShimGenerator : ISourceGenerator
 {
-    public static DiagnosticsHelper Diagnostics { get; private set; }
-    public class DiagnosticsHelper
-    {
-        private readonly GeneratorExecutionContext _context;
-
-        public DiagnosticsHelper(GeneratorExecutionContext context)
-        {
-            _context = context;
-        }
-
-        public static readonly DiagnosticDescriptor InvalidProxyMember = new("SHIMR-1", "Test", "ShimrGen error {0}", "Shimr.Gen", DiagnosticSeverity.Error, true);
-
-        public void Report(DiagnosticDescriptor descriptor, ISymbol symbol, params object?[]? args)
-        {
-            _context.ReportDiagnostic(Diagnostic.Create(descriptor, symbol.Locations.First(), symbol.Locations.Skip(1), args));
-        }
-    }
-
     // Replacable factory (for testing)
     internal Func<StringBuilder, ShimWriter> GetShimWriter { get; set; } = (src) => new ShimWriter(src);
 
@@ -39,7 +21,7 @@ internal class ShimGenerator : ISourceGenerator
     [ExcludeFromCodeCoverage] // Cannot set GeneratorExecutionContext.SyntaxContextReceiver
     public void Execute(GeneratorExecutionContext context)
     {
-        Diagnostics = new DiagnosticsHelper(context);
+        DiagnosticsMessages.PublishDiagnostics(context);
 
         // Only continue if our receiver is in use
         if (context.SyntaxContextReceiver is ShimTypeFinder receiver)
@@ -55,7 +37,7 @@ internal class ShimGenerator : ISourceGenerator
                     throw new Exception(nameof(ShimTypeFinder) + " threw exception", receiver.Exception);
                 }
 
-                Execute(receiver.ShimTypes, context.AddSource, context);
+                Execute(receiver.ShimTypes, context.AddSource);
 
 #if DEBUG
                 _debugOutput += $"\r\n//-- Complete {DateTime.UtcNow:s}";
@@ -75,7 +57,7 @@ internal class ShimGenerator : ISourceGenerator
 #endif
         }
     }
-    public void Execute(IList<ShimTypeDefinition> shimTypes, Action<string, SourceText> addSource, GeneratorExecutionContext? context)
+    public void Execute(IList<ShimTypeDefinition> shimTypes, Action<string, SourceText> addSource)
     {
         var src = new StringBuilder();
         var writer = GetShimWriter(src);

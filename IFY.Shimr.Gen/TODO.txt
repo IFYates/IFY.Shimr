@@ -1,2 +1,4 @@
 ﻿ShimOf / StaticShim options
-- missing members fail on build (standard) OR throw NotImplementedException (build works)
+- missing members fail on build (standard)
+
+Can we have "tests" that compile code against the sourcegen? i.e., compile missing member example to capture build error
