@@ -8,7 +8,7 @@ namespace IFY.Shimr.Gen.SyntaxParsing;
 /// </summary>
 internal class TypeDef
 {
-    private readonly ISymbol _symbol;
+    public ISymbol Symbol { get; }
 
     public TypeKind Kind { get; }
 
@@ -37,7 +37,7 @@ internal class TypeDef
 
     public TypeDef(INamedTypeSymbol type)
     {
-        _symbol = type;
+        Symbol = type;
         Kind = type.TypeKind;
         IsNullable = type.NullableAnnotation == NullableAnnotation.Annotated;
         IsValueType = type.IsValueType;
@@ -52,7 +52,7 @@ internal class TypeDef
 
     public TypeDef(ITypeParameterSymbol typepar)
     {
-        _symbol = typepar;
+        Symbol = typepar;
         Kind = TypeKind.TypeParameter;
         IsNullable = typepar.NullableAnnotation == NullableAnnotation.Annotated;
         Name = typepar.Name;
@@ -63,7 +63,7 @@ internal class TypeDef
 
     public TypeDef(IArrayTypeSymbol arr)
     {
-        _symbol = arr;
+        Symbol = arr;
         Kind = TypeKind.Array;
         IsNullable = arr.NullableAnnotation == NullableAnnotation.Annotated;
         ArrayElementType = new TypeDef((INamedTypeSymbol)arr.ElementType);
@@ -79,7 +79,7 @@ internal class TypeDef
         {
             return ArrayElementType!.GetMembers();
         }
-        if (_symbol is ITypeSymbol type)
+        if (Symbol is ITypeSymbol type)
         {
             IEnumerable<ISymbol> members = type.GetMembers();
             if (type.TypeKind == TypeKind.Interface)

@@ -10,6 +10,24 @@ namespace IFY.Shimr.Gen;
 [Generator]
 internal class ShimGenerator : ISourceGenerator
 {
+    public static DiagnosticsHelper Diagnostics { get; private set; }
+    public class DiagnosticsHelper
+    {
+        private readonly GeneratorExecutionContext _context;
+
+        public DiagnosticsHelper(GeneratorExecutionContext context)
+        {
+            _context = context;
+        }
+
+        public static readonly DiagnosticDescriptor InvalidProxyMember = new("SHIMR-1", "Test", "ShimrGen error {0}", "Shimr.Gen", DiagnosticSeverity.Error, true);
+
+        public void Report(DiagnosticDescriptor descriptor, ISymbol symbol, params object?[]? args)
+        {
+            _context.ReportDiagnostic(Diagnostic.Create(descriptor, symbol.Locations.First(), symbol.Locations.Skip(1), args));
+        }
+    }
+
     // Replacable factory (for testing)
     internal Func<StringBuilder, ShimWriter> GetShimWriter { get; set; } = (src) => new ShimWriter(src);
 
@@ -21,6 +39,8 @@ internal class ShimGenerator : ISourceGenerator
     [ExcludeFromCodeCoverage] // Cannot set GeneratorExecutionContext.SyntaxContextReceiver
     public void Execute(GeneratorExecutionContext context)
     {
+        Diagnostics = new DiagnosticsHelper(context);
+
         // Only continue if our receiver is in use
         if (context.SyntaxContextReceiver is ShimTypeFinder receiver)
         {
@@ -35,7 +55,7 @@ internal class ShimGenerator : ISourceGenerator
                     throw new Exception(nameof(ShimTypeFinder) + " threw exception", receiver.Exception);
                 }
 
-                Execute(receiver.ShimTypes, context.AddSource);
+                Execute(receiver.ShimTypes, context.AddSource, context);
 
 #if DEBUG
                 _debugOutput += $"\r\n//-- Complete {DateTime.UtcNow:s}";
@@ -55,7 +75,7 @@ internal class ShimGenerator : ISourceGenerator
 #endif
         }
     }
-    public void Execute(IList<ShimTypeDefinition> shimTypes, Action<string, SourceText> addSource)
+    public void Execute(IList<ShimTypeDefinition> shimTypes, Action<string, SourceText> addSource, GeneratorExecutionContext? context)
     {
         var src = new StringBuilder();
         var writer = GetShimWriter(src);
@@ -100,12 +120,15 @@ internal class ShimGenerator : ISourceGenerator
 
         // Generate static creators
         writer.CreateStaticShimCreator(shimTypes.Where(s => s.IsStatic).ToArray());
-        addSource("StaticCreatorShims", SourceText.From(src.ToString(), Encoding.UTF8));
+        if (src.Length > 0)
+        {
+            addSource("StaticCreatorShims", SourceText.From(src.ToString(), Encoding.UTF8));
 #if DEBUG
-        _debugOutput += "\r\n//-- StaticCreatorShims\r\n";
-        _debugOutput += src.ToString();
+            _debugOutput += "\r\n//-- StaticCreatorShims\r\n";
+            _debugOutput += src.ToString();
 #endif
-        src.Clear();
+            src.Clear();
+        }
 
         Debugger.Log(1, typeof(ShimGenerator).FullName, "Shimr generation complete.\r\n");
     }

@@ -299,6 +299,11 @@ internal class ShimWriter
 
     public void CreateStaticShimCreator(ShimTypeDefinition[] shims)
     {
+        if (!shims.Any())
+        {
+            return;
+        }
+
         _src.AppendLine("namespace IFY.Shimr;");
         _src.AppendLine($"[System.CodeDom.Compiler.GeneratedCode(\"IFY.Shimr\", \"{_fileVersion}\")]");
         _src.AppendLine("public static class ShimBuilder");
