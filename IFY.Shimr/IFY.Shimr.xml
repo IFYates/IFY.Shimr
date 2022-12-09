@@ -222,7 +222,7 @@
         </member>
         <member name="T:IFY.Shimr.ShimProxyAttribute">
             <summary>
-            Mark a shim member as being a proxy to an implementation elsewhere.
+            Mark a shim member as being a proxy to a static implementation elsewhere.
             </summary>
         </member>
         <member name="P:IFY.Shimr.ShimProxyAttribute.ImplementationType">

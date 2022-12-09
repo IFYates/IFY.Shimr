@@ -2,3 +2,7 @@
 - missing members fail on build (standard)
 
 Can we have "tests" that compile code against the sourcegen? i.e., compile missing member example to capture build error
+
+TODO: add an extension method
+e.g., ClassA has extensions "void ClassAExt.MethodB(this ClassA inst)"
+shim IClassA defines Add proxy for ClassAExt "void MethodB()" that sends the original inst

@@ -111,7 +111,7 @@ internal class ShimWriter
                     var memRefName = method.StaticType?.FullName ?? refName;
                     var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
                     var implementor = !distinct && method.ParentTypeFullName != shim.ShimFullName ? method.ParentTypeFullName : null;
-                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor, method.GenericContraints);
+                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor, method.GenericContraints, method.IsExtension);
                 }
             }
 
@@ -234,7 +234,7 @@ internal class ShimWriter
         _src.AppendLine($"{pad}}}");
     }
 
-    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName, string[]? genericConstraints)
+    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName, string[]? genericConstraints, bool isExtensionMethod)
     {
         var pad = new string('\t', indent);
         if (implementTypeName != null)
@@ -266,6 +266,11 @@ internal class ShimWriter
                 : $"({p.TargetTypeFullName}){p.Name}"
                 : p.Name)
             .ToArray();
+        if (isExtensionMethod)
+        {
+            // TODO: can send _obj for original type
+            argList = new[] { "this" }.Concat(argList).ToArray();
+        }
 
         if (returnType != null)
         {

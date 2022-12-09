@@ -21,6 +21,7 @@ internal class ShimMemberDefinition
     public TypeDef? StaticType { get; set; }
     public bool IsStatic { get; private set; }
     public bool IsConstructor { get; private set; }
+    public bool IsExtension { get; private set; } // Send _obj as first arg
 
     public string[]? GenericContraints { get; }
 
@@ -101,14 +102,53 @@ internal class ShimMemberDefinition
 
     private void parseAttributes(ISymbol symbol)
     {
+        // ShimProxyAttribute
+        var proxyAttr = symbol.GetAttribute<ShimProxyAttribute>();
+        if (proxyAttr != null)
+        {
+            // implementationType is required
+            if (proxyAttr.TryGetAttributeConstructorValue("implementationType", out var proxyTypeArg) && proxyTypeArg != null)
+            {
+                StaticType = new((INamedTypeSymbol)proxyTypeArg);
+
+                TargetName = Name;
+                if (proxyAttr.TryGetAttributeConstructorValue("implementationName", out var proxyMemberNameArg) && proxyMemberNameArg != null)
+                {
+                    TargetName = proxyMemberNameArg.ToString();
+                }
+
+                // TODO: get matching member
+                //var proxyMember = proxyType.GetMembers(
+                //symbol.ReportProxyMemberNotStatic(ParentTypeFullName, Name, StaticType.FullName, TargetName);
+                //if (proxyMember is method && proxyMember.Arguments[0].Type == ParentTypeFullName)
+                //{
+                // TODO: support shim type or original type
+                IsExtension = true;
+                //}
+
+                if (proxyAttr.TryGetAttributeConstructorValue("behaviour", out var proxyBehaviour))
+                {
+                    // TODO: cannot add existing
+                    // TODO: can only override existing
+                }
+            }
+        }
+
         // ShimAttribute
         var shimAttr = symbol.GetAttribute<ShimAttribute>();
         if (shimAttr != null)
         {
-            // TODO: support definitionType arg
-            if (shimAttr.TryGetAttributeConstructorValue("name", out var targetName))
+            if (proxyAttr != null)
             {
-                TargetName = targetName?.ToString();
+                symbol.ReportConflictingAttributes(ParentTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(ShimAttribute).FullName);
+            }
+            else
+            {
+                // TODO: support definitionType arg
+                if (shimAttr.TryGetAttributeConstructorValue("name", out var targetName))
+                {
+                    TargetName = targetName?.ToString();
+                }
             }
         }
 
