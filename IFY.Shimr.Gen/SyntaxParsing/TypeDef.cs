@@ -8,7 +8,7 @@ namespace IFY.Shimr.Gen.SyntaxParsing;
 /// </summary>
 internal class TypeDef
 {
-    public ISymbol Symbol { get; }
+    public ITypeSymbol Symbol { get; }
 
     public TypeKind Kind { get; }
 

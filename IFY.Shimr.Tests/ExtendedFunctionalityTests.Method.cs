@@ -8,11 +8,11 @@
 public class ExtendedFunctionalityTests_Method
 {
 #if !SHIMRGEN
-    [TestInitialize]
-    public void ResetState()
-    {
-        ShimBuilder.ResetState();
-    }
+        [TestInitialize]
+        public void ResetState()
+        {
+            ShimBuilder.ResetState();
+        }
 #endif
 
     public interface ITestShim
@@ -33,17 +33,17 @@ public class ExtendedFunctionalityTests_Method
     [ExcludeFromCodeCoverage]
     public class TestClass_HasMethodB : TestClass_OnlyMethodA
     {
-        public bool MethodBCalled { get; private set; }
-        public void MethodB()
+        public string? MethodBCalledWith { get; private set; }
+        public void MethodB(string arg)
         {
-            MethodBCalled = true;
+            MethodBCalledWith = arg;
         }
     }
 
     [ExcludeFromCodeCoverage]
     public class TestClass_HasMethodC : TestClass_OnlyMethodA
     {
-        public string MethodCCalledWith { get; private set; }
+        public string? MethodCCalledWith { get; private set; }
         public void MethodC(string arg)
         {
             MethodCCalledWith = arg;
@@ -55,7 +55,7 @@ public class ExtendedFunctionalityTests_Method
     //    public interface ITestShim_MethodOverride : ITestShim
     //    {
     //        [ShimProxy(typeof(TestImpl_MethodOverride), ProxyBehaviour.Override)]
-    //        void MethodB();
+    //        void MethodB(string arg);
     //    }
     //    [ExcludeFromCodeCoverage]
     //    public class TestImpl_MethodOverride
@@ -75,7 +75,7 @@ public class ExtendedFunctionalityTests_Method
     //        var shim = obj.Shim<ITestShim_MethodOverride>();
 
     //        // Act
-    //        shim.MethodB();
+    //        shim.MethodB("value");
 
     //        // Assert
     //        Assert.IsFalse(obj.MethodBCalled);
@@ -85,7 +85,7 @@ public class ExtendedFunctionalityTests_Method
     //    public interface ITestShim_DefaultOverride : ITestShim
     //    {
     //        [ShimProxy(typeof(TestImpl_DefaultOverride))]
-    //        void MethodB();
+    //        void MethodB(string arg);
     //    }
     //    [ExcludeFromCodeCoverage]
     //    public class TestImpl_DefaultOverride
@@ -105,7 +105,7 @@ public class ExtendedFunctionalityTests_Method
     //        var shim = obj.Shim<ITestShim_DefaultOverride>();
 
     //        // Act
-    //        shim.MethodB();
+    //        shim.MethodB("value");
 
     //        // Assert
     //        Assert.IsFalse(obj.MethodBCalled);
@@ -146,7 +146,7 @@ public class ExtendedFunctionalityTests_Method
     //    public interface ITestShim_CallBase : ITestShim
     //    {
     //        [ShimProxy(typeof(TestImpl_CallBase))]
-    //        void MethodB();
+    //        void MethodB(string arg);
     //    }
     //    [ExcludeFromCodeCoverage]
     //    public class TestImpl_CallBase
@@ -241,7 +241,7 @@ public class ExtendedFunctionalityTests_Method
     //    public interface ITestShim_ArgImpl : ITestShim
     //    {
     //        [ShimProxy(typeof(TestImpl_ArgImpl))]
-    //        void MethodB();
+    //        void MethodB(string arg);
     //    }
     //    [ExcludeFromCodeCoverage]
     //    public class TestImpl_ArgImpl
@@ -302,7 +302,7 @@ public class ExtendedFunctionalityTests_Method
     //    public interface ITestShim_MissingBase : ITestShim
     //    {
     //        [ShimProxy(typeof(TestImpl_MissingBase), ProxyBehaviour.Override)]
-    //        void MethodB();
+    //        void MethodB(string arg);
     //    }
     //    [ExcludeFromCodeCoverage]
     //    public class TestImpl_MissingBase
@@ -326,19 +326,29 @@ public class ExtendedFunctionalityTests_Method
     //        });
     //    }
 
-    //    public interface ITestShim_BadImpl : ITestShim
-    //    {
-    //        [ShimProxy(typeof(TestImpl_BadImpl))]
-    //        void MethodB();
-    //    }
-    //    [ExcludeFromCodeCoverage]
-    //    public class TestImpl_BadImpl
-    //    {
-    //        public static void MethodB()
-    //        {
-    //            // Test
-    //        }
-    //    }
+#if SHIMRGEN
+    [ShimOf<TestImpl_BadImpl>]
+    [ShimOf<TestClass_OnlyMethodA>]
+#endif
+    public interface ITestShim_BadImpl : ITestShim
+    {
+        [ShimProxy(typeof(TestImpl_BadImpl))]
+        void MethodB(string arg);
+    }
+    [ExcludeFromCodeCoverage]
+    public class TestImpl_BadImpl
+    {
+        public void MethodA()
+        {
+            _ = GetType();
+        }
+
+        public static string? MethodBCalledWith { get; private set; }
+        public static void MethodB(string arg)
+        {
+            MethodBCalledWith = arg;
+        }
+    }
 
     //    [TestMethod]
     //    public void Override_implementation_must_take_compatible_first_param()
@@ -387,7 +397,7 @@ public class ExtendedFunctionalityTests_Method
     //    {
     //        [ConstructorShim(typeof(TestClass_OnlyMethodA))]
     //        [ShimProxy(typeof(TestImpl_DefaultOverride))]
-    //        ITestShim MethodB();
+    //        ITestShim MethodB(string arg);
     //    }
     //    [TestMethod]
     //    public void Cannot_override_constructor()
@@ -412,44 +422,51 @@ public class ExtendedFunctionalityTests_Method
     public interface ITestShim_MethodAdd : ITestShim
     {
         [ShimProxy(typeof(TestImpl_MethodAdd), ProxyBehaviour.Add)]
-        void MethodB();
+        void MethodB(string arg);
     }
     [ExcludeFromCodeCoverage]
     public class TestImpl_MethodAdd
     {
         public static ITestShim MethodBCalledObj { get; set; }
-        public static void MethodB(ITestShim_MethodAdd obj)
+        public static string? MethodBCalledWith { get; private set; }
+        public static void MethodB(ITestShim_MethodAdd obj, string arg)
         {
             MethodBCalledObj = obj;
+            MethodBCalledWith = arg;
         }
     }
 
-    [TestMethod]
-    public void Shim_can_define_proxy_to_add_member()
-    {
-        // Arrange
-        var obj = new TestClass_OnlyMethodA();
-        var shim = obj.Shim<ITestShim_MethodAdd>();
+    //    [TestMethod]
+    //    public void Shim_can_define_proxy_to_add_member()
+    //    {
+    //        // Arrange
+    //        var obj = new TestClass_OnlyMethodA();
+    //        var shim = obj.Shim<ITestShim_MethodAdd>();
 
-        // Act
-        shim.MethodB();
+    //        // Act
+    //        shim.MethodB("value");
 
-        // Assert
-        Assert.AreSame(shim, TestImpl_MethodAdd.MethodBCalledObj);
-    }
+    //        // Assert
+    //        Assert.AreSame(shim, TestImpl_MethodAdd.MethodBCalledObj);
+    //    }
 
+    //#if SHIMRGEN
+    //    [ShimOf<TestClass_OnlyMethodA>]
+    //#endif
     //    public interface ITestShim_DefaultAdd : ITestShim
     //    {
     //        [ShimProxy(typeof(TestImpl_DefaultAdd))]
-    //        void MethodB();
+    //        void MethodB(string arg);
     //    }
     //    [ExcludeFromCodeCoverage]
     //    public class TestImpl_DefaultAdd
     //    {
-    //        public static ITestShim MethodBCalledObj { get; set; }
-    //        public static void MethodB(ITestShim_DefaultAdd obj)
+    //        public static ITestShim? MethodBCalledObj { get; set; }
+    //        public static string? MethodBCalledWith { get; private set; }
+    //        public static void MethodB(ITestShim_DefaultAdd obj, string arg)
     //        {
     //            MethodBCalledObj = obj;
+    //            MethodBCalledWith = arg;
     //        }
     //    }
 
@@ -461,12 +478,16 @@ public class ExtendedFunctionalityTests_Method
     //        var shim = obj.Shim<ITestShim_DefaultAdd>();
 
     //        // Act
-    //        shim.MethodB();
+    //        shim.MethodB("value");
 
     //        // Assert
     //        Assert.AreSame(shim, TestImpl_DefaultAdd.MethodBCalledObj);
+    //        Assert.AreEqual("value", TestImpl_DefaultAdd.MethodBCalledWith);
     //    }
 
+    //#if SHIMRGEN
+    //    [ShimOf<TestClass_OnlyMethodA>]
+    //#endif
     //    public interface ITestShim_MethodAddAlias : ITestShim
     //    {
     //        [ShimProxy(typeof(TestImpl_MethodAddAlias), "MethodD", ProxyBehaviour.Add)]
@@ -496,33 +517,52 @@ public class ExtendedFunctionalityTests_Method
     //        Assert.AreSame(shim, TestImpl_MethodAddAlias.MethodBCalledObj);
     //    }
 
-    //    [TestMethod]
-    //    public void Added_member_must_not_exist_in_shimmed_type()
-    //    {
-    //        // Arrange
-    //        var obj = new TestClass_HasMethodB();
+#if !SHIMRGEN // Not possible in Shimr.Gen
+    [TestMethod]
+    public void Added_member_must_not_exist_in_shimmed_type()
+    {
+        // Arrange
+        var obj = new TestClass_HasMethodB();
 
-    //        // Act
-    //        Assert.ThrowsException<InvalidCastException>(() =>
-    //        {
-    //            obj.Shim<ITestShim_MethodAdd>();
-    //        });
-    //    }
+        // Act
+        Assert.ThrowsException<InvalidCastException>(() =>
+        {
+            obj.Shim<ITestShim_MethodAdd>();
+        });
+    }
+#endif
 
-    //    [TestMethod]
-    //    public void Added_implementation_must_take_compatible_first_param()
-    //    {
-    //        // Arrange
-    //        var obj = new TestClass_OnlyMethodA();
+#if !SHIMRGEN // TODO: Shimr to support no first parameter
+    [TestMethod]
+    public void Added_implementation_must_take_compatible_first_param()
+    {
+        // Arrange
+        var obj = new TestClass_OnlyMethodA();
 
-    //        // Act
-    //        var ex = Assert.ThrowsException<MissingMemberException>(() =>
-    //        {
-    //            obj.Shim<ITestShim_BadImpl>();
-    //        });
+        // Act
+        var ex = Assert.ThrowsException<MissingMemberException>(() =>
+        {
+            obj.Shim<ITestShim_BadImpl>();
+        });
 
-    //        Assert.IsTrue(ex.Message.Contains(" missing method:"), ex.Message);
-    //    }
+        Assert.IsTrue(ex.Message.Contains(" missing method:"), ex.Message);
+    }
+#endif
+#if SHIMRGEN
+    [TestMethod]
+    public void Added_implementation_works_without_first_parameter()
+    {
+        // Arrange
+        var obj = new TestClass_OnlyMethodA();
+
+        var shim = obj.Shim<ITestShim_BadImpl>();
+
+        // Act
+        shim.MethodB("value");
+
+        Assert.AreEqual("value", TestImpl_BadImpl.MethodBCalledWith);
+    }
+#endif
 
     #endregion Add
 

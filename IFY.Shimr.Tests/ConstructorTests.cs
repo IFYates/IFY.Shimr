@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace IFY.Shimr.Tests;
+﻿namespace IFY.Shimr.Tests;
 
 [TestClass]
 public class ConstructorTests
