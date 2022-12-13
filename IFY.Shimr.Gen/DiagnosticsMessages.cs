@@ -17,6 +17,7 @@ internal static class DiagnosticsMessages
         {
             context.ReportDiagnostic(diagnostic);
         }
+        _diagnostics.Clear();
     }
     #endregion Report
 

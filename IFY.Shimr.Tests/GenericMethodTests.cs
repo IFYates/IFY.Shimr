@@ -35,11 +35,12 @@ public class GenericMethodTests
         }
 
 
-        public IDictionary<T1, T2> ComplexTest<T1, T2>(T1 key)
+        public IDictionary<T1, T2?> ComplexTest<T1, T2>(T1 key)
+            where T1 : notnull
             where T2 : IEnumerable<T1>
         {
             WasCalled = true;
-            return new Dictionary<T1, T2>
+            return new Dictionary<T1, T2?>
             {
                 [key] = default
             };
@@ -153,7 +154,8 @@ public class GenericMethodTests
 #endif
     public interface IComplexTestShim
     {
-        IDictionary<T1, T2> ComplexTest<T1, T2>(T1 key)
+        IDictionary<T1, T2?> ComplexTest<T1, T2>(T1 key)
+            where T1 : notnull
             where T2 : IEnumerable<T1>;
     }
     [TestMethod]
