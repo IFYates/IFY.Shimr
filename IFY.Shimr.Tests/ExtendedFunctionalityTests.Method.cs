@@ -50,98 +50,115 @@ public class ExtendedFunctionalityTests_Method
         }
     }
 
-    //#region Override
+    #region Override
 
-    //    public interface ITestShim_MethodOverride : ITestShim
-    //    {
-    //        [ShimProxy(typeof(TestImpl_MethodOverride), ProxyBehaviour.Override)]
-    //        void MethodB(string arg);
-    //    }
-    //    [ExcludeFromCodeCoverage]
-    //    public class TestImpl_MethodOverride
-    //    {
-    //        public static ITestShim MethodBCalledObj { get; set; }
-    //        public static void MethodB(ITestShim_MethodOverride obj)
-    //        {
-    //            MethodBCalledObj = obj;
-    //        }
-    //    }
+#if SHIMRGEN
+    [ShimOf<TestClass_HasMethodB>]
+#endif
+    public interface ITestShim_MethodOverride : ITestShim
+    {
+        [ShimProxy(typeof(TestImpl_MethodOverride), ProxyBehaviour.Override)]
+        void MethodB(string arg);
+    }
+    [ExcludeFromCodeCoverage]
+    public class TestImpl_MethodOverride
+    {
+        public static ITestShim? MethodBCalledObj { get; private set; }
+        public static string? MethodBCalledWith { get; private set; }
+        public static void MethodB(ITestShim_MethodOverride obj, string arg)
+        {
+            MethodBCalledObj = obj;
+            MethodBCalledWith = arg;
+        }
+    }
 
-    //    [TestMethod]
-    //    public void Shim_can_define_proxy_to_override_member()
-    //    {
-    //        // Arrange
-    //        var obj = new TestClass_HasMethodB();
-    //        var shim = obj.Shim<ITestShim_MethodOverride>();
+    [TestMethod]
+    public void Shim_can_define_proxy_to_override_member()
+    {
+        // Arrange
+        var obj = new TestClass_HasMethodB();
+        var shim = obj.Shim<ITestShim_MethodOverride>();
 
-    //        // Act
-    //        shim.MethodB("value");
+        // Act
+        shim.MethodB("value");
 
-    //        // Assert
-    //        Assert.IsFalse(obj.MethodBCalled);
-    //        Assert.AreSame(shim, TestImpl_MethodOverride.MethodBCalledObj);
-    //    }
+        // Assert
+        Assert.IsNull(obj.MethodBCalledWith);
+        Assert.AreSame(shim, TestImpl_MethodOverride.MethodBCalledObj);
+        Assert.AreEqual("value", TestImpl_MethodOverride.MethodBCalledWith);
+    }
 
-    //    public interface ITestShim_DefaultOverride : ITestShim
-    //    {
-    //        [ShimProxy(typeof(TestImpl_DefaultOverride))]
-    //        void MethodB(string arg);
-    //    }
-    //    [ExcludeFromCodeCoverage]
-    //    public class TestImpl_DefaultOverride
-    //    {
-    //        public static ITestShim MethodBCalledObj { get; set; }
-    //        public static void MethodB(ITestShim_DefaultOverride obj)
-    //        {
-    //            MethodBCalledObj = obj;
-    //        }
-    //    }
+#if SHIMRGEN
+    [ShimOf<TestClass_HasMethodB>]
+#endif
+    public interface ITestShim_DefaultOverride : ITestShim
+    {
+        [ShimProxy(typeof(TestImpl_DefaultOverride))]
+        void MethodB(string arg);
+    }
+    [ExcludeFromCodeCoverage]
+    public class TestImpl_DefaultOverride
+    {
+        public static ITestShim? MethodBCalledObj { get; private set; }
+        public static string? MethodBCalledWith { get; private set; }
+        public static void MethodB(ITestShim_DefaultOverride obj, string arg)
+        {
+            MethodBCalledObj = obj;
+            MethodBCalledWith = arg;
+        }
+    }
 
-    //    [TestMethod]
-    //    public void Shim_can_define_proxy_to_override_member_by_default()
-    //    {
-    //        // Arrange
-    //        var obj = new TestClass_HasMethodB();
-    //        var shim = obj.Shim<ITestShim_DefaultOverride>();
+    [TestMethod]
+    public void Shim_can_define_proxy_to_override_member_by_default()
+    {
+        // Arrange
+        var obj = new TestClass_HasMethodB();
+        var shim = obj.Shim<ITestShim_DefaultOverride>();
 
-    //        // Act
-    //        shim.MethodB("value");
+        // Act
+        shim.MethodB("value");
 
-    //        // Assert
-    //        Assert.IsFalse(obj.MethodBCalled);
-    //        Assert.AreSame(shim, TestImpl_DefaultOverride.MethodBCalledObj);
-    //    }
+        // Assert
+        Assert.IsNull(obj.MethodBCalledWith);
+        Assert.AreSame(shim, TestImpl_DefaultOverride.MethodBCalledObj);
+        Assert.AreEqual("value", TestImpl_DefaultOverride.MethodBCalledWith);
+    }
 
-    //    public interface ITestShim_MethodOverrideAlias : ITestShim
-    //    {
-    //        [Shim("MethodB")]
-    //        [ShimProxy(typeof(TestImpl_MethodOverrideAlias), "MethodD", ProxyBehaviour.Override)]
-    //        void MethodC();
-    //    }
-    //    [ExcludeFromCodeCoverage]
-    //    public class TestImpl_MethodOverrideAlias
-    //    {
-    //        public static ITestShim MethodBCalledObj { get; set; }
-    //        public static void MethodD(ITestShim_MethodOverrideAlias obj)
-    //        {
-    //            MethodBCalledObj = obj;
-    //        }
-    //    }
+#if SHIMRGEN
+    [ShimOf<TestClass_HasMethodB>]
+#endif
+    public interface ITestShim_MethodOverrideAlias : ITestShim
+    {
+        [ShimProxy(typeof(TestImpl_MethodOverrideAlias), "MethodD", ProxyBehaviour.Override)]
+        void MethodB(string arg);
+    }
+    [ExcludeFromCodeCoverage]
+    public class TestImpl_MethodOverrideAlias
+    {
+        public static ITestShim? MethodBCalledObj { get; private set; }
+        public static string? MethodBCalledWith { get; private set; }
+        public static void MethodD(ITestShim_MethodOverrideAlias obj, string arg)
+        {
+            MethodBCalledObj = obj;
+            MethodBCalledWith = arg;
+        }
+    }
 
-    //    [TestMethod]
-    //    public void Shim_can_define_proxy_to_override_member_with_alias()
-    //    {
-    //        // Arrange
-    //        var obj = new TestClass_HasMethodB();
-    //        var shim = obj.Shim<ITestShim_MethodOverrideAlias>();
+    [TestMethod]
+    public void Shim_can_define_proxy_to_override_member_with_alias()
+    {
+        // Arrange
+        var obj = new TestClass_HasMethodB();
+        var shim = obj.Shim<ITestShim_MethodOverrideAlias>();
 
-    //        // Act
-    //        shim.MethodC(); // Actually TestImpl_MethodOverrideAlias.MethodB
+        // Act
+        shim.MethodB("value"); // Actually TestImpl_MethodOverrideAlias.MethodB
 
-    //        // Assert
-    //        Assert.IsFalse(obj.MethodBCalled);
-    //        Assert.AreSame(shim, TestImpl_MethodOverrideAlias.MethodBCalledObj);
-    //    }
+        // Assert
+        Assert.IsNull(obj.MethodBCalledWith);
+        Assert.AreSame(shim, TestImpl_MethodOverrideAlias.MethodBCalledObj);
+        Assert.AreEqual("value", TestImpl_MethodOverrideAlias.MethodBCalledWith);
+    }
 
     //    public interface ITestShim_CallBase : ITestShim
     //    {
@@ -412,7 +429,7 @@ public class ExtendedFunctionalityTests_Method
     //        Assert.AreEqual("Cannot proxy IFY.Shimr.Tests.ExtendedFunctionalityTests_Method+TestClass_OnlyMethodA constructor in IFY.Shimr.Tests.ExtendedFunctionalityTests_Method+ITestShim_Constructor", ex.Message);
     //    }
 
-    //#endregion Override
+    #endregion Override
 
     #region Add
 
@@ -427,7 +444,7 @@ public class ExtendedFunctionalityTests_Method
     [ExcludeFromCodeCoverage]
     public class TestImpl_MethodAdd
     {
-        public static ITestShim MethodBCalledObj { get; set; }
+        public static ITestShim? MethodBCalledObj { get; private set; }
         public static string? MethodBCalledWith { get; private set; }
         public static void MethodB(ITestShim_MethodAdd obj, string arg)
         {
@@ -566,35 +583,35 @@ public class ExtendedFunctionalityTests_Method
 
     #endregion Add
 
-    //    public interface ITestShim_MissingImpl : ITestShim
+    //public interface ITestShim_MissingImpl : ITestShim
+    //{
+    //    [ShimProxy(typeof(TestImpl_DefaultOverride))]
+    //    void MethodC(); // Not in TestImpl_Default
+    //}
+
+    //[TestMethod]
+    //public void Proxy_member_must_exist_in_impl_type()
+    //{
+    //    // Arrange
+    //    var obj = new TestClass_HasMethodB();
+
+    //    // Act
+    //    Assert.ThrowsException<MissingMemberException>(() =>
     //    {
-    //        [ShimProxy(typeof(TestImpl_DefaultOverride))]
-    //        void MethodC(); // Not in TestImpl_Default
-    //    }
+    //        obj.Shim<ITestShim_MissingImpl>();
+    //    });
+    //}
 
-    //    [TestMethod]
-    //    public void Proxy_member_must_exist_in_impl_type()
+    //[TestMethod]
+    //public void Factory_cannot_define_proxy()
+    //{
+    //    // Arrange
+    //    var obj = new TestClass_HasMethodB();
+
+    //    // Act
+    //    Assert.ThrowsException<MissingMemberException>(() =>
     //    {
-    //        // Arrange
-    //        var obj = new TestClass_HasMethodB();
-
-    //        // Act
-    //        Assert.ThrowsException<MissingMemberException>(() =>
-    //        {
-    //            obj.Shim<ITestShim_MissingImpl>();
-    //        });
-    //    }
-
-    //    [TestMethod]
-    //    public void Factory_cannot_define_proxy()
-    //    {
-    //        // Arrange
-    //        var obj = new TestClass_HasMethodB();
-
-    //        // Act
-    //        Assert.ThrowsException<MissingMemberException>(() =>
-    //        {
-    //            obj.Shim<ITestShim_MissingImpl>();
-    //        });
-    //    }
+    //        obj.Shim<ITestShim_MissingImpl>();
+    //    });
+    //}
 }
