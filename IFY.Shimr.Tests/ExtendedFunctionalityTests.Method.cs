@@ -1,4 +1,6 @@
-﻿namespace IFY.Shimr.Tests;
+﻿using System.Diagnostics;
+
+namespace IFY.Shimr.Tests;
 
 /// <summary>
 /// Tests around extending/replacing shim functionality
@@ -160,42 +162,50 @@ public class ExtendedFunctionalityTests_Method
         Assert.AreEqual("value", TestImpl_MethodOverrideAlias.MethodBCalledWith);
     }
 
-    //    public interface ITestShim_CallBase : ITestShim
-    //    {
-    //        [ShimProxy(typeof(TestImpl_CallBase))]
-    //        void MethodB(string arg);
-    //    }
-    //    [ExcludeFromCodeCoverage]
-    //    public class TestImpl_CallBase
-    //    {
-    //        public static ITestShim MethodBCalledObj { get; set; }
-    //        public static void MethodB(ITestShim_CallBase obj)
-    //        {
-    //            if (MethodBCalledObj != null)
-    //            {
-    //                throw new InvalidOperationException("recursion");
-    //            }
+#if SHIMRGEN
+    [ShimOf<TestClass_HasMethodB>]
+#endif
+    public interface ITestShim_CallBase : ITestShim
+    {
+        [ShimProxy(typeof(TestImpl_CallBase), ProxyBehaviour.Override)]
+        void MethodB(string arg);
+    }
+    [ExcludeFromCodeCoverage]
+    public class TestImpl_CallBase
+    {
+        public static ITestShim? MethodBCalledObj { get; set; }
+        public static string? MethodBCalledWith { get; private set; }
+        public static void MethodB(ITestShim_CallBase obj, string arg)
+        {
+            if (MethodBCalledObj != null)
+            {
+                throw new InvalidOperationException("recursion");
+            }
 
-    //            MethodBCalledObj = obj;
-    //            obj.MethodB();
-    //        }
-    //    }
+            MethodBCalledObj = obj;
+            MethodBCalledWith = arg;
+            obj.MethodB(arg);
+        }
+    }
 
-    //    [TestMethod]
-    //    [Timeout(1_000)] // Incase of recursion
-    //    public void Override_member_can_call_shimmed_implementation()
-    //    {
-    //        // Arrange
-    //        var obj = new TestClass_HasMethodB();
-    //        var shim = obj.Shim<ITestShim_CallBase>();
+    [TestMethod]
+    [Timeout(1_000)] // Incase of recursion
+    public void Override_member_can_call_shimmed_implementation()
+    {
+        // Arrange
+        var obj = new TestClass_HasMethodB();
+        var shim = obj.Shim<ITestShim_CallBase>();
 
-    //        // Act
-    //        shim.MethodB();
+        var value = Guid.NewGuid().ToString();
 
-    //        // Assert
-    //        Assert.AreSame(shim, TestImpl_CallBase.MethodBCalledObj);
-    //        Assert.IsTrue(obj.MethodBCalled);
-    //    }
+        // Act
+        shim.MethodB(value);
+
+        // Assert
+        Assert.AreSame(shim, TestImpl_CallBase.MethodBCalledObj);
+        Assert.AreEqual(value, TestImpl_CallBase.MethodBCalledWith);
+        Assert.AreEqual(value, obj.MethodBCalledWith);
+    }
 
     //    [ExcludeFromCodeCoverage]
     //    public class TestClass_MethodFails

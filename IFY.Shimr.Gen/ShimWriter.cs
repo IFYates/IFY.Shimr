@@ -32,7 +32,7 @@ internal class ShimWriter
         // TODO: type checking
 
         _src.AppendLine($"namespace {targetType.Namespace};");
-        _src.AppendLine($"[System.CodeDom.Compiler.GeneratedCode(\"IFY.Shimr\", \"{_fileVersion}\")]");
+        _src.AppendLine($"[System.CodeDom.Compiler.GeneratedCode(\"IFY.Shimr\", \"{_fileVersion}\")] // {DateTime.UtcNow:s}");
         _src.AppendLine("[System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never), System.ComponentModel.Browsable(false)]");
         // TODO: option to make public
         _src.AppendLine($"internal static class {targetType.Name.MakeSafeName()}ShimrExtension");
@@ -111,7 +111,7 @@ internal class ShimWriter
                     var memRefName = method.StaticType?.FullName ?? refName;
                     var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
                     var implementor = !distinct && method.ParentTypeFullName != shim.ShimFullName ? method.ParentTypeFullName : null;
-                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor, method.GenericContraints, method.IsExtensionProxy);
+                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor, method.GenericContraints, method.IsExtensionProxy, method.IsProxyOverride);
                 }
             }
 
@@ -234,11 +234,12 @@ internal class ShimWriter
         _src.AppendLine($"{pad}}}");
     }
 
-    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName, string[]? genericConstraints, bool? isExtensionMethod)
+    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName, string[]? genericConstraints, bool? isExtensionMethod, bool isOverrideProxy)
     {
         var pad = new string('\t', indent);
         if (implementTypeName != null)
         {
+            // Explicit implementation
             _src.Append($"{pad}{returnType?.FullName ?? "void"} {implementTypeName}.{name}(");
             targetRefName = $"(({implementTypeName}){targetRefName})";
         }
@@ -253,12 +254,36 @@ internal class ShimWriter
         {
             foreach (var constraint in genericConstraints)
             {
-                _src.AppendLine($"{pad}    {constraint}");
+                _src.AppendLine($"{pad}\t{constraint}");
             }
         }
 
         _src.AppendLine($"{pad}{{");
 
+        if (isOverrideProxy)
+        {
+            // Check if proxy method is calling back in
+            _src.AppendLine($"{pad}\tvar caller = new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod();");
+            _src.AppendLine($"{pad}\tif (caller?.Name == \"{name}\" && caller.DeclaringType == typeof({targetRefName}))");
+            _src.AppendLine($"{pad}\t{{");
+            // Call original ("base")
+            outputInvocation($"{pad}\t\t", name, parameters, null, returnType, constructorTypeName, "_obj", null, shimToType);
+            _src.AppendLine($"{pad}\t}}");
+            _src.AppendLine($"{pad}\telse");
+            _src.AppendLine($"{pad}\t{{");
+            // Call proxy
+            outputInvocation($"{pad}\t\t", name, parameters, isExtensionMethod, returnType, constructorTypeName, targetRefName, targetAlias, shimToType);
+            _src.AppendLine($"{pad}\t}}");
+        }
+        else
+        {
+            outputInvocation($"{pad}\t", name, parameters, isExtensionMethod, returnType, constructorTypeName, targetRefName, targetAlias, shimToType);
+        }
+
+        _src.AppendLine($"{pad}}}");
+    }
+    private void outputInvocation(string pad, string name, IEnumerable<MethodParameterDefinition> parameters, bool? isExtensionMethod, TypeDef? returnType, string? constructorTypeName, string targetRefName, string? targetAlias, TypeDef? shimToType)
+    {
         var argList = parameters
             .Select(p => p.TargetTypeFullName != null
                 ? p.ParameterType.Kind == TypeKind.Interface
@@ -278,7 +303,7 @@ internal class ShimWriter
         if (returnType != null)
         {
             var retvar = "obj";
-            _src.Append($"{pad}\tvar obj = ");
+            _src.Append($"{pad}var obj = ");
             if (constructorTypeName != null)
             {
                 _src.Append($"new {constructorTypeName}(");
@@ -292,17 +317,16 @@ internal class ShimWriter
             if (shimToType != null)
             {
                 retvar = "shim";
-                _src.AppendLine($"{pad}\tvar shim = {shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim{returnType.GenericArgList}(obj).As<{returnType.FullName}>();");
+                _src.AppendLine($"{pad}var shim = {shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim{returnType.GenericArgList}(obj).As<{returnType.FullName}>();");
             }
-            _src.AppendLine($"{pad}\treturn {retvar};");
+            _src.AppendLine($"{pad}treturn {retvar};");
         }
         else
         {
-            _src.Append($"{pad}\t{targetRefName}.{targetAlias ?? name}(");
+            _src.Append($"{pad}{targetRefName}.{targetAlias ?? name}(");
             _src.Append(string.Join(", ", argList));
             _src.AppendLine(");");
         }
-        _src.AppendLine($"{pad}}}");
     }
 
     public void CreateStaticShimCreator(ShimTypeDefinition[] shims)

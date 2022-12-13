@@ -24,6 +24,7 @@ internal class ShimMemberDefinition
     public bool IsStatic { get; private set; }
     public bool IsConstructor { get; private set; }
     public bool? IsExtensionProxy { get; private set; } // true = "this", false == "_obj" as first arg
+    public bool IsProxyOverride { get; private set; }
 
     public string[]? GenericContraints { get; }
 
@@ -165,22 +166,22 @@ internal class ShimMemberDefinition
                 // TODO: how does property work?
             }
 
+            // Find base type member
+            IsProxyOverride = Kind == SymbolKind.Method
+                ? GetMatchingMethods(targetType.Symbol, Name, ReturnType?.Symbol, ((IMethodSymbol)symbol).Parameters, false).Any()
+                : GetMatchingProperties(targetType.Symbol, Name, ((IPropertySymbol)symbol).Type, false).Any();
             if (proxyAttr.TryGetAttributeConstructorValue("behaviour", out var proxyBehaviour)
                 && proxyBehaviour != null)
             {
-                // Find base type member
-                var hasBaseMember = Kind == SymbolKind.Method
-                    ? GetMatchingMethods(targetType.Symbol, Name, ReturnType?.Symbol, ((IMethodSymbol)symbol).Parameters).Any()
-                    : GetMatchingProperties(targetType.Symbol, Name, ((IPropertySymbol)symbol).Type).Any();
-                if ((int)proxyBehaviour == (int)ProxyBehaviour.Add && hasBaseMember)
+                if ((int)proxyBehaviour == (int)ProxyBehaviour.Add && IsProxyOverride)
                 {
                     // Cannot use Add if base type contains method
-                    symbol.ReportProxyAddExisting(ParentTypeFullName, TargetName ?? Name, targetType.FullName);
+                    symbol.ReportProxyAddExisting(ParentTypeFullName, Name, targetType.FullName);
                 }
-                else if ((int)proxyBehaviour == (int)ProxyBehaviour.Override && !hasBaseMember)
+                else if ((int)proxyBehaviour == (int)ProxyBehaviour.Override && !IsProxyOverride)
                 {
                     // Can only use Override if existing base method
-                    symbol.ReportProxyOverrideMissing(ParentTypeFullName, TargetName ?? Name, targetType.FullName);
+                    symbol.ReportProxyOverrideMissing(ParentTypeFullName, Name, targetType.FullName);
                 }
             }
         }
@@ -224,10 +225,10 @@ internal class ShimMemberDefinition
         }
     }
 
-    private static IMethodSymbol[] GetMatchingMethods(ITypeSymbol type, string name, ITypeSymbol? returnType, ImmutableArray<IParameterSymbol> parameters)
+    private static IMethodSymbol[] GetMatchingMethods(ITypeSymbol type, string name, ITypeSymbol? returnType, ImmutableArray<IParameterSymbol> parameters, bool isStatic)
     {
         return type.GetMembers()
-            .Where(m => m.Kind == SymbolKind.Method && m.Name == name)
+            .Where(m => m.Kind == SymbolKind.Method && m.Name == name && m.IsStatic == isStatic)
             .OfType<IMethodSymbol>()
             .Where(m => (returnType == null && m.ReturnsVoid) || m.ReturnType.TryFullName() == returnType?.TryFullName())
             .Where(allParametersMatch)
@@ -248,10 +249,10 @@ internal class ShimMemberDefinition
             return true;
         }
     }
-    private static IPropertySymbol[] GetMatchingProperties(ITypeSymbol type, string name, ITypeSymbol propertyType)
+    private static IPropertySymbol[] GetMatchingProperties(ITypeSymbol type, string name, ITypeSymbol propertyType, bool isStatic)
     {
         return type.GetMembers()
-            .Where(m => m.Kind == SymbolKind.Property && m.Name == name)
+            .Where(m => m.Kind == SymbolKind.Property && m.Name == name && m.IsStatic == isStatic)
             .OfType<IPropertySymbol>()
             .Where(m => m.Type.TryFullName() == propertyType.TryFullName())
             .ToArray();
