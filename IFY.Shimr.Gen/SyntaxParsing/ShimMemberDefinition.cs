@@ -1,13 +1,13 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen.SyntaxParsing;
 
 internal class ShimMemberDefinition
 {
-    public string ParentTypeFullName { get; private set; }
+    public INamedTypeSymbol ParentType { get; }
+    public string ParentTypeFullName { get; }
 
     public SymbolKind Kind { get; }
     public string Name { get; }
@@ -33,6 +33,7 @@ internal class ShimMemberDefinition
     public ShimMemberDefinition(IEventSymbol ev)
     {
         // Basics
+        ParentType = ev.ContainingType;
         ParentTypeFullName = ev.ContainingType.FullName();
         Kind = SymbolKind.Event;
         Name = ev.Name;
@@ -43,6 +44,7 @@ internal class ShimMemberDefinition
     public ShimMemberDefinition(IPropertySymbol property, TypeDef targetType)
     {
         // Basics
+        ParentType = property.ContainingType;
         ParentTypeFullName = property.ContainingType.FullName();
         Kind = SymbolKind.Property;
         Name = property.Name;
@@ -61,6 +63,7 @@ internal class ShimMemberDefinition
     public ShimMemberDefinition(IMethodSymbol method, TypeDef targetType)
     {
         // Basics
+        ParentType = method.ContainingType;
         ParentTypeFullName = method.ContainingType.FullName();
         Kind = SymbolKind.Method;
         Name = method.Name;
@@ -131,39 +134,36 @@ internal class ShimMemberDefinition
                     .ToArray();
 
                 IMethodSymbol? proxyMethod = null;
-                if (proxyMethods.Length > 1)
+                foreach (var method in proxyMethods)
                 {
-                    // TODO: pick by matching args with first arg of shim/obj
-                    proxyMethod = proxyMethods
-                        .Where(m => m.Parameters.Length == Parameters.Count + 1)
-                        .Where(m => m.Parameters[0].Type.TryFullName() == ParentTypeFullName)
-                        .FirstOrDefault()
-                        ?? proxyMethods
-                        .Where(m => m.Parameters.Length == Parameters.Count + 1)
-                        .Where(m => m.Parameters[0].Type.TryFullName() == StaticType.FullName)
-                        .FirstOrDefault()
-                        ?? proxyMethods
-                        .Where(m => m.Parameters.Length == Parameters.Count)
-                        .FirstOrDefault();
+                    // Find first method that properly extends
+                    if (method.Parameters.Length == Parameters.Count + 1)
+                    {
+                        var arg0Type = proxyMethods[0].Parameters[0].Type;
+                        IsExtensionProxy = IsAssignableTo(arg0Type, ParentType)
+                            ? true
+                            : IsAssignableTo(arg0Type, StaticType.Symbol)
+                            ? false
+                            : null;
+                        if (IsExtensionProxy != null)
+                        {
+                            proxyMethod = method;
+                            break;
+                        }
+                    }
                 }
-                if (proxyMethods.Length == 0)
+                proxyMethod ??= proxyMethods
+                        .FirstOrDefault(m => m.Parameters.Length == Parameters.Count);
+                if (proxyMethod == null)
                 {
                     // TODO: missing proxy target
                     return;
                 }
-
-                proxyMember = proxyMethods[0];
-                var arg1TypeName = proxyMethods[0].Parameters
-                    .FirstOrDefault()?.Type.TryFullName();
-                IsExtensionProxy = arg1TypeName == ParentTypeFullName
-                    ? true
-                    : arg1TypeName == StaticType.FullName
-                    ? false
-                    : null;
             }
             else
             {
                 // TODO: how does property work?
+                throw new NotImplementedException();
             }
 
             // Find base type member
@@ -223,6 +223,26 @@ internal class ShimMemberDefinition
             TargetReturnType = constrTargetType is INamedTypeSymbol type2 ? new(type2) : null;
             IsReturnShim = true;
         }
+    }
+
+    private static bool IsAssignableTo(ITypeSymbol symbol, ITypeSymbol type)
+    {
+        // Any interface match
+        if (symbol.AllInterfaces.Select(i => i.FullName()).Union(type.AllInterfaces.Select(i => i.FullName())).Any())
+        {
+            return true;
+        }
+        // Any class in hierarchy
+        var symbolFullName = symbol.TryFullName();
+        while (type != null)
+        {
+            if (symbolFullName == type.TryFullName())
+            {
+                return true;
+            }
+            type = type.BaseType!;
+        }
+        return false;
     }
 
     private static IMethodSymbol[] GetMatchingMethods(ITypeSymbol type, string name, ITypeSymbol? returnType, ImmutableArray<IParameterSymbol> parameters, bool isStatic)

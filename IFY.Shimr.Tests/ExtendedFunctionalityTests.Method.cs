@@ -207,92 +207,98 @@ public class ExtendedFunctionalityTests_Method
         Assert.AreEqual(value, obj.MethodBCalledWith);
     }
 
-    //    [ExcludeFromCodeCoverage]
-    //    public class TestClass_MethodFails
-    //    {
-    //#pragma warning disable CA1822 // Mark members as static
-    //        public void Fail()
-    //        {
-    //            throw new InvalidOperationException();
-    //        }
-    //#pragma warning restore CA1822 // Mark members as static
-    //    }
-    //    public interface ITestShim_MethodFails
-    //    {
-    //        [ShimProxy(typeof(TestImpl_MethodFails), ProxyBehaviour.Override)]
-    //        void Fail();
-    //    }
-    //    [ExcludeFromCodeCoverage]
-    //    public class TestImpl_MethodFails
-    //    {
-    //        public static int CallPre { get; private set; }
-    //        public static int CallPost { get; private set; }
-    //        public static int CallEnd { get; private set; }
+    [ExcludeFromCodeCoverage]
+    public class TestClass_MethodFails
+    {
+#pragma warning disable CA1822 // Mark members as static
+        public void Fail()
+        {
+            throw new InvalidOperationException();
+        }
+#pragma warning restore CA1822 // Mark members as static
+    }
+#if SHIMRGEN
+    [ShimOf<TestClass_MethodFails>]
+#endif
+    public interface ITestShim_MethodFails
+    {
+        [ShimProxy(typeof(TestImpl_MethodFails), ProxyBehaviour.Override)]
+        void Fail();
+    }
+    [ExcludeFromCodeCoverage]
+    public class TestImpl_MethodFails
+    {
+        public static int CallPre { get; private set; }
+        public static int CallPost { get; private set; }
+        public static int CallEnd { get; private set; }
 
-    //        public static void Fail(ITestShim_MethodFails inst)
-    //        {
-    //            ++CallPre;
-    //            try
-    //            {
-    //                inst.Fail();
-    //                ++CallPost;
-    //            }
-    //            finally
-    //            {
-    //                ++CallEnd;
-    //            }
-    //        }
-    //    }
+        public static void Fail(ITestShim_MethodFails inst)
+        {
+            ++CallPre;
+            try
+            {
+                inst.Fail();
+                ++CallPost;
+            }
+            finally
+            {
+                ++CallEnd;
+            }
+        }
+    }
 
-    //    [TestMethod]
-    //    [Timeout(1_000)] // Incase of recursion
-    //    public void Failure_during_underlying_call_does_not_break_proxy()
-    //    {
-    //        // Arrange
-    //        var obj = new TestClass_MethodFails();
-    //        var shim = obj.Shim<ITestShim_MethodFails>();
+    [TestMethod]
+    [Timeout(1_000)] // Incase of recursion
+    public void Failure_during_underlying_call_does_not_break_proxy()
+    {
+        // Arrange
+        var obj = new TestClass_MethodFails();
+        var shim = obj.Shim<ITestShim_MethodFails>();
 
-    //        var fails = 0;
+        var fails = 0;
 
-    //        // Act
-    //        try { shim.Fail(); } catch (InvalidOperationException) { ++fails; }
-    //        try { shim.Fail(); } catch (InvalidOperationException) { ++fails; }
+        // Act
+        try { shim.Fail(); } catch (InvalidOperationException) { ++fails; }
+        try { shim.Fail(); } catch (InvalidOperationException) { ++fails; }
 
-    //        // Assert
-    //        Assert.AreEqual(2, fails);
-    //        Assert.AreEqual(2, TestImpl_MethodFails.CallPre);
-    //        Assert.AreEqual(0, TestImpl_MethodFails.CallPost);
-    //        Assert.AreEqual(2, TestImpl_MethodFails.CallEnd);
-    //    }
+        // Assert
+        Assert.AreEqual(2, fails);
+        Assert.AreEqual(2, TestImpl_MethodFails.CallPre);
+        Assert.AreEqual(0, TestImpl_MethodFails.CallPost);
+        Assert.AreEqual(2, TestImpl_MethodFails.CallEnd);
+    }
 
-    //    public interface ITestShim_ArgImpl : ITestShim
-    //    {
-    //        [ShimProxy(typeof(TestImpl_ArgImpl))]
-    //        void MethodB(string arg);
-    //    }
-    //    [ExcludeFromCodeCoverage]
-    //    public class TestImpl_ArgImpl
-    //    {
-    //        public static ITestShim MethodBCalledObj { get; set; }
-    //        public static void MethodB(ITestShim obj)
-    //        {
-    //            MethodBCalledObj = obj;
-    //        }
-    //    }
+#if SHIMRGEN
+    [ShimOf<TestClass_HasMethodB>]
+#endif
+    public interface ITestShim_ArgImpl : ITestShim
+    {
+        [ShimProxy(typeof(TestImpl_ArgImpl))]
+        void MethodB(string arg);
+    }
+    [ExcludeFromCodeCoverage]
+    public class TestImpl_ArgImpl
+    {
+        public static ITestShim? MethodBCalledObj { get; set; }
+        public static void MethodB(ITestShim obj, string arg)
+        {
+            MethodBCalledObj = obj;
+        }
+    }
 
-    //    [TestMethod]
-    //    public void Override_implementation_can_invoke_on_compatible_arg()
-    //    {
-    //        // Arrange
-    //        var obj = new TestClass_HasMethodB();
-    //        var shim = obj.Shim<ITestShim_ArgImpl>();
+    [TestMethod]
+    public void Override_implementation_can_invoke_on_compatible_arg()
+    {
+        // Arrange
+        var obj = new TestClass_HasMethodB();
+        var shim = obj.Shim<ITestShim_ArgImpl>();
 
-    //        // Act
-    //        shim.MethodB();
+        // Act
+        shim.MethodB("value");
 
-    //        // Assert
-    //        Assert.AreSame(shim, TestImpl_ArgImpl.MethodBCalledObj);
-    //    }
+        // Assert
+        Assert.AreSame(shim, TestImpl_ArgImpl.MethodBCalledObj);
+    }
 
     //    public interface ITestShim_WithArg : ITestShim
     //    {
