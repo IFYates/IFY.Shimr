@@ -111,7 +111,7 @@ internal class ShimWriter
                     var memRefName = method.StaticType?.FullName ?? refName;
                     var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
                     var implementor = !distinct && method.ParentTypeFullName != shim.ShimFullName ? method.ParentTypeFullName : null;
-                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor, method.GenericContraints, method.IsExtensionProxy, method.IsProxyOverride);
+                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor, method.GenericContraints, method.Proxy);
                 }
             }
 
@@ -234,7 +234,7 @@ internal class ShimWriter
         _src.AppendLine($"{pad}}}");
     }
 
-    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName, string[]? genericConstraints, bool? isExtensionMethod, bool isOverrideProxy)
+    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName, string[]? genericConstraints, ShimMemberDefinition.ProxyInfo? proxy)
     {
         var pad = new string('\t', indent);
         if (implementTypeName != null)
@@ -260,7 +260,7 @@ internal class ShimWriter
 
         _src.AppendLine($"{pad}{{");
 
-        if (isOverrideProxy)
+        if (proxy?.IsOverride == true)
         {
             // Check if proxy method is calling back in
             _src.AppendLine($"{pad}\tvar caller = new System.Diagnostics.StackTrace().GetFrame(1)?.GetMethod();");
@@ -272,12 +272,13 @@ internal class ShimWriter
             _src.AppendLine($"{pad}\telse");
             _src.AppendLine($"{pad}\t{{");
             // Call proxy
-            outputInvocation($"{pad}\t\t", name, parameters, isExtensionMethod, returnType, constructorTypeName, targetRefName, targetAlias, shimToType);
+
+            outputInvocation($"{pad}\t\t", proxy.Name, parameters, proxy.IsExtensionMethod, returnType, constructorTypeName, targetRefName, targetAlias, shimToType);
             _src.AppendLine($"{pad}\t}}");
         }
         else
         {
-            outputInvocation($"{pad}\t", name, parameters, isExtensionMethod, returnType, constructorTypeName, targetRefName, targetAlias, shimToType);
+            outputInvocation($"{pad}\t", proxy?.Name ?? name, parameters, proxy?.IsExtensionMethod, returnType, constructorTypeName, targetRefName, targetAlias, shimToType);
         }
 
         _src.AppendLine($"{pad}}}");

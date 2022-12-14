@@ -1,11 +1,14 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen.SyntaxParsing;
 
 internal class ShimMemberDefinition
 {
+    public ISymbol Symbol { get; }
+
     public INamedTypeSymbol ParentType { get; }
     public string ParentTypeFullName { get; }
 
@@ -23,16 +26,96 @@ internal class ShimMemberDefinition
     public TypeDef? StaticType { get; set; }
     public bool IsStatic { get; private set; }
     public bool IsConstructor { get; private set; }
-    public bool? IsExtensionProxy { get; private set; } // true = "this", false == "_obj" as first arg
-    public bool IsProxyOverride { get; private set; }
 
     public string[]? GenericContraints { get; }
+
+    public class ProxyInfo
+    {
+        public bool IsOverride { get; }
+        public bool? IsExtensionMethod { get; } // true = "this", false == "_obj" as first arg
+        public INamedTypeSymbol Type { get; }
+        public string Name { get; }
+
+        public ProxyInfo(AttributeData proxyAttr, ShimMemberDefinition member, INamedTypeSymbol type, TypeDef targetType)
+        {
+            Name = member.Name;
+            Type = type;
+
+            if (proxyAttr.TryGetAttributeConstructorValue("implementationName", out var proxyMemberNameArg) && proxyMemberNameArg != null)
+            {
+                Name = proxyMemberNameArg.ToString();
+            }
+
+            // Find target member
+            if (member.Kind == SymbolKind.Method)
+            {
+                var proxyMethods = Type.GetMembers()
+                    .Where(m => m.Name == Name && m.Kind == member.Kind)
+                    // TODO: match parameters
+                    .Cast<IMethodSymbol>()
+                    .ToArray();
+
+                IMethodSymbol? proxyMethod = null;
+                foreach (var method in proxyMethods)
+                {
+                    // Find first method that properly extends
+                    if (method.Parameters.Length == member.Parameters.Count + 1)
+                    {
+                        var arg0Type = proxyMethods[0].Parameters[0].Type;
+                        IsExtensionMethod = IsAssignableTo(arg0Type, member.ParentType)
+                            ? true
+                            : IsAssignableTo(arg0Type, Type)
+                            ? false
+                            : null;
+                        if (IsExtensionMethod != null)
+                        {
+                            proxyMethod = method;
+                            break;
+                        }
+                    }
+                }
+                proxyMethod ??= proxyMethods
+                        .FirstOrDefault(m => m.Parameters.Length == member.Parameters.Count);
+                if (proxyMethod == null)
+                {
+                    member.Symbol.ReportProxyMemberMissing(member.ParentTypeFullName, Name, Type.FullName());
+                    return;
+                }
+            }
+            else
+            {
+                // TODO: how does property work?
+                throw new NotImplementedException();
+            }
+
+            // Find base type member
+            IsOverride = member.Kind == SymbolKind.Method
+                ? GetMatchingMethods(targetType.Symbol, member.Name, member.ReturnType?.Symbol, ((IMethodSymbol)member.Symbol).Parameters, false).Any()
+                : GetMatchingProperties(targetType.Symbol, member.Name, ((IPropertySymbol)member.Symbol).Type, false).Any();
+            if (proxyAttr.TryGetAttributeConstructorValue("behaviour", out var proxyBehaviour)
+                && proxyBehaviour != null)
+            {
+                if ((int)proxyBehaviour == (int)ProxyBehaviour.Add && IsOverride)
+                {
+                    // Cannot use Add if base type contains method
+                    member.Symbol.ReportProxyAddExisting(member.ParentTypeFullName, member.Name, targetType.FullName);
+                }
+                else if ((int)proxyBehaviour == (int)ProxyBehaviour.Override && !IsOverride)
+                {
+                    // Can only use Override if existing base method
+                    member.Symbol.ReportProxyOverrideMissing(member.ParentTypeFullName, member.Name, targetType.FullName);
+                }
+            }
+        }
+    }
+    public ProxyInfo? Proxy { get; private set; }
 
     public Dictionary<string, MethodParameterDefinition> Parameters { get; } = new();
 
     public ShimMemberDefinition(IEventSymbol ev)
     {
         // Basics
+        Symbol = ev;
         ParentType = ev.ContainingType;
         ParentTypeFullName = ev.ContainingType.FullName();
         Kind = SymbolKind.Event;
@@ -44,6 +127,7 @@ internal class ShimMemberDefinition
     public ShimMemberDefinition(IPropertySymbol property, TypeDef targetType)
     {
         // Basics
+        Symbol = property;
         ParentType = property.ContainingType;
         ParentTypeFullName = property.ContainingType.FullName();
         Kind = SymbolKind.Property;
@@ -63,6 +147,7 @@ internal class ShimMemberDefinition
     public ShimMemberDefinition(IMethodSymbol method, TypeDef targetType)
     {
         // Basics
+        Symbol = method;
         ParentType = method.ContainingType;
         ParentTypeFullName = method.ContainingType.FullName();
         Kind = SymbolKind.Method;
@@ -115,74 +200,8 @@ internal class ShimMemberDefinition
             && proxyAttr.TryGetAttributeConstructorValue("implementationType", out var proxyTypeArg)
             && proxyTypeArg != null)
         {
-            StaticType = new((INamedTypeSymbol)proxyTypeArg);
-
-            TargetName = Name;
-            if (proxyAttr.TryGetAttributeConstructorValue("implementationName", out var proxyMemberNameArg) && proxyMemberNameArg != null)
-            {
-                TargetName = proxyMemberNameArg.ToString();
-            }
-
-            // Find target member
-            if (Kind == SymbolKind.Method)
-            {
-                var proxyMethods = StaticType.GetMembers()
-                    .Where(m => m.Name == TargetName && m.Kind == Kind)
-                    // TODO: match parameters
-                    .Cast<IMethodSymbol>()
-                    .ToArray();
-
-                IMethodSymbol? proxyMethod = null;
-                foreach (var method in proxyMethods)
-                {
-                    // Find first method that properly extends
-                    if (method.Parameters.Length == Parameters.Count + 1)
-                    {
-                        var arg0Type = proxyMethods[0].Parameters[0].Type;
-                        IsExtensionProxy = IsAssignableTo(arg0Type, ParentType)
-                            ? true
-                            : IsAssignableTo(arg0Type, StaticType.Symbol)
-                            ? false
-                            : null;
-                        if (IsExtensionProxy != null)
-                        {
-                            proxyMethod = method;
-                            break;
-                        }
-                    }
-                }
-                proxyMethod ??= proxyMethods
-                        .FirstOrDefault(m => m.Parameters.Length == Parameters.Count);
-                if (proxyMethod == null)
-                {
-                    symbol.ReportProxyMemberMissing(ParentTypeFullName, Name, StaticType.FullName);
-                    return;
-                }
-            }
-            else
-            {
-                // TODO: how does property work?
-                throw new NotImplementedException();
-            }
-
-            // Find base type member
-            IsProxyOverride = Kind == SymbolKind.Method
-                ? GetMatchingMethods(targetType.Symbol, Name, ReturnType?.Symbol, ((IMethodSymbol)symbol).Parameters, false).Any()
-                : GetMatchingProperties(targetType.Symbol, Name, ((IPropertySymbol)symbol).Type, false).Any();
-            if (proxyAttr.TryGetAttributeConstructorValue("behaviour", out var proxyBehaviour)
-                && proxyBehaviour != null)
-            {
-                if ((int)proxyBehaviour == (int)ProxyBehaviour.Add && IsProxyOverride)
-                {
-                    // Cannot use Add if base type contains method
-                    symbol.ReportProxyAddExisting(ParentTypeFullName, Name, targetType.FullName);
-                }
-                else if ((int)proxyBehaviour == (int)ProxyBehaviour.Override && !IsProxyOverride)
-                {
-                    // Can only use Override if existing base method
-                    symbol.ReportProxyOverrideMissing(ParentTypeFullName, Name, targetType.FullName);
-                }
-            }
+            Proxy = new(proxyAttr, this, (INamedTypeSymbol)proxyTypeArg, targetType);
+            StaticType = new(Proxy.Type);
         }
 
         // ShimAttribute
@@ -203,24 +222,40 @@ internal class ShimMemberDefinition
             }
         }
 
-        // StaticShimAttribute
-        var staticAttr = symbol.GetAttribute<StaticShimAttribute>();
-        if (staticAttr?.TryGetAttributeConstructorValue("targetType", out var staticTargetType) == true)
-        {
-            StaticType = staticTargetType is INamedTypeSymbol type ? new(type) : null;
-            IsStatic = true;
-        }
-
         // ConstructorShimAttribute
         var constrAttr = symbol.GetAttribute<ConstructorShimAttribute>();
         if (constrAttr != null)
         {
-            IsConstructor = true;
-            IsStatic = true;
-            constrAttr.TryGetAttributeConstructorValue("targetType", out var constrTargetType);
-            StaticType = constrTargetType is INamedTypeSymbol type ? new(type) : null;
-            TargetReturnType = constrTargetType is INamedTypeSymbol type2 ? new(type2) : null;
-            IsReturnShim = true;
+            if (proxyAttr != null)
+            {
+                symbol.ReportConflictingAttributes(ParentTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
+            }
+            else
+            {
+                IsConstructor = true;
+                IsStatic = true;
+                constrAttr.TryGetAttributeConstructorValue("targetType", out var constrTargetType);
+                StaticType = constrTargetType is INamedTypeSymbol type ? new(type) : null;
+                TargetReturnType = constrTargetType is INamedTypeSymbol type2 ? new(type2) : null;
+                IsReturnShim = true;
+            }
+        }
+        else
+        {
+            // StaticShimAttribute
+            var staticAttr = symbol.GetAttribute<StaticShimAttribute>();
+            if (staticAttr?.TryGetAttributeConstructorValue("targetType", out var staticTargetType) == true)
+            {
+                if (proxyAttr != null)
+                {
+                    symbol.ReportConflictingAttributes(ParentTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
+                }
+                else
+                {
+                    StaticType = staticTargetType is INamedTypeSymbol type ? new(type) : null;
+                    IsStatic = true;
+                }
+            }
         }
     }
 

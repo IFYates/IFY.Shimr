@@ -145,7 +145,7 @@ public class ExtendedFunctionalityTests_Method
     }
 
     [TestMethod]
-    public void Shim_can_define_proxy_to_override_member_with_alias()
+    public void Shim_can_define_proxy_to_override_aliased_member_()
     {
         // Arrange
         var obj = new TestClass_HasMethodB();
@@ -266,24 +266,24 @@ public class ExtendedFunctionalityTests_Method
         Assert.AreEqual(2, TestImpl_MethodFails.CallEnd);
     }
 
-#if SHIMRGEN
-    [ShimOf<TestClass_HasMethodB>]
-#endif
-    public interface ITestShim_ArgImpl : ITestShim
-    {
-        [ShimProxy(typeof(TestImpl_ArgImpl))]
-        void MethodB(string arg);
-    }
-    [ExcludeFromCodeCoverage]
-    public class TestImpl_ArgImpl
-    {
-        public static ITestShim? MethodBCalledObj { get; set; }
-        public static void MethodB(ITestShim obj, string arg)
-        {
-            MethodBCalledObj = obj;
-            _ = arg;
-        }
-    }
+//#if SHIMRGEN
+//    [ShimOf<TestClass_HasMethodB>]
+//#endif
+//    public interface ITestShim_ArgImpl : ITestShim
+//    {
+//        [ShimProxy(typeof(TestImpl_ArgImpl))]
+//        void MethodB(string arg);
+//    }
+//    [ExcludeFromCodeCoverage]
+//    public class TestImpl_ArgImpl
+//    {
+//        public static ITestShim? MethodBCalledObj { get; set; }
+//        public static void MethodB(ITestShim obj, string arg)
+//        {
+//            MethodBCalledObj = obj;
+//            _ = arg;
+//        }
+//    }
 
     [TestMethod]
     public void Override_implementation_can_invoke_on_compatible_arg()
@@ -547,7 +547,7 @@ public class ExtendedFunctionalityTests_Method
     [ExcludeFromCodeCoverage]
     public class TestImpl_MethodAddAlias
     {
-        public static ITestShim MethodBCalledObj { get; set; }
+        public static ITestShim? MethodBCalledObj { get; set; }
         public static void MethodD(ITestShim_MethodAddAlias obj)
         {
             MethodBCalledObj = obj;
