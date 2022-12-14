@@ -124,7 +124,6 @@ internal class ShimMemberDefinition
             }
 
             // Find target member
-            ISymbol? proxyMember = null;
             if (Kind == SymbolKind.Method)
             {
                 var proxyMethods = StaticType.GetMembers()
@@ -156,7 +155,7 @@ internal class ShimMemberDefinition
                         .FirstOrDefault(m => m.Parameters.Length == Parameters.Count);
                 if (proxyMethod == null)
                 {
-                    // TODO: missing proxy target
+                    symbol.ReportProxyMemberMissing(ParentTypeFullName, Name, StaticType.FullName);
                     return;
                 }
             }

@@ -37,11 +37,15 @@ internal static class DiagnosticsMessages
     public static void ReportConflictingAttributes(this ISymbol symbol, string shimTypeName, string? shimMemberName, string attribute1, string attribute2)
         => Report(symbol, _conflictingAttributes, shimTypeName, shimMemberName ?? "(class)", attribute1, attribute2);
 
-    private static readonly DiagnosticDescriptor _proxyAddExisting = new("SHIMR-11", "ShimProxy adds existing member", "Shim interface '{0}' proxy member '{1}' has ProxyBehaviour 'Add', but base type '{2}' defines method with same signature.", "Shimr.Gen", DiagnosticSeverity.Error, true);
+    private static readonly DiagnosticDescriptor _proxyAddExisting = new("SHIMR-11", "ShimProxy adds existing member", "Shim interface '{0}' proxy member '{1}' has ProxyBehaviour 'Add', but base type '{2}' defines member with same signature.", "Shimr.Gen", DiagnosticSeverity.Error, true);
     public static void ReportProxyAddExisting(this ISymbol symbol, string shimTypeName, string shimMemberName, string baseTypeName)
         => Report(symbol, _proxyAddExisting, shimTypeName, shimMemberName, baseTypeName);
 
-    private static readonly DiagnosticDescriptor _proxyOverrideMissing = new("SHIMR-12", "ShimProxy override non-existing member", "Shim interface '{0}' proxy member '{1}' has ProxyBehaviour 'Override', but base type '{2}' does not define method with same signature.", "Shimr.Gen", DiagnosticSeverity.Error, true);
+    private static readonly DiagnosticDescriptor _proxyOverrideMissing = new("SHIMR-12", "ShimProxy override non-existing member", "Shim interface '{0}' proxy member '{1}' has ProxyBehaviour 'Override', but base type '{2}' does not define member with same signature.", "Shimr.Gen", DiagnosticSeverity.Error, true);
     public static void ReportProxyOverrideMissing(this ISymbol symbol, string shimTypeName, string shimMemberName, string baseTypeName)
         => Report(symbol, _proxyOverrideMissing, shimTypeName, shimMemberName, baseTypeName);
+
+    private static readonly DiagnosticDescriptor _proxyMemberMissing = new("SHIMR-13", "ShimProxy for non-existing member", "Shim interface '{0}' defines proxy member '{1}' but target type '{2}' does not define matching member.", "Shimr.Gen", DiagnosticSeverity.Error, true);
+    public static void ReportProxyMemberMissing(this ISymbol symbol, string shimTypeName, string shimMemberName, string baseTypeName)
+        => Report(symbol, _proxyMemberMissing, shimTypeName, shimMemberName, baseTypeName);
 }
