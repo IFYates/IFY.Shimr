@@ -90,7 +90,7 @@ internal class ShimWriter
                 {
                     var memRefName = property.StaticType?.FullName ?? refName;
                     var implementor = !distinct && property.ParentTypeFullName != shim.ShimFullName ? property.ParentTypeFullName : null;
-                    CreateProperty(2, property.ReturnType!, property.Name, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, implementor);
+                    CreateProperty(2, property.ReturnType!, property.Name, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, implementor, property.UsePropertyMethods, property.Proxy);
                 }
             }
 
@@ -175,8 +175,9 @@ internal class ShimWriter
         _src.AppendLine("}");
     }
 
-    public void CreateProperty(int indent, TypeDef returnType, string name, bool canRead, bool canWrite, string targetRefName, TypeDef? shimToType, string? targetAlias, string? implementTypeName)
+    public void CreateProperty(int indent, TypeDef returnType, string name, bool canRead, bool canWrite, string targetRefName, TypeDef? shimToType, string? targetAlias, string? implementTypeName, bool useMethods, ShimMemberDefinition.ProxyInfo? proxy)
     {
+        // TODO: method get/set to use same logic as method
         var pad = new string('\t', indent);
         if (implementTypeName != null)
         {
@@ -194,7 +195,16 @@ internal class ShimWriter
             {
                 _src.Append($"{shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim<{returnType.FullName}>(");
             }
-            _src.Append($"{targetRefName}.{targetAlias ?? name}");
+            _src.Append($"{targetRefName}.{(useMethods ? "get_" : null)}{proxy?.Name ?? targetAlias ?? name}");
+            if (useMethods)
+            {
+                _src.Append("(");
+                if (proxy?.IsExtensionMethod != null)
+                {
+                    _src.Append(proxy.IsExtensionMethod == true ? "this" : "_obj");
+                }
+                _src.Append(")");
+            }
             if (shimToType != null)
             {
                 _src.Append(")");
@@ -211,7 +221,16 @@ internal class ShimWriter
             {
                 _src.Append($"{shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim<{returnType.FullName}>(");
             }
-            _src.Append($"{targetRefName}.{targetAlias ?? name}");
+            _src.Append($"{targetRefName}.{(useMethods ? "get_" : null)}{proxy?.Name ?? targetAlias ?? name}");
+            if (useMethods)
+            {
+                _src.Append("(");
+                if (proxy?.IsExtensionMethod != null)
+                {
+                    _src.Append(proxy.IsExtensionMethod == true ? "this" : "_obj");
+                }
+                _src.Append(")");
+            }
             if (shimToType != null)
             {
                 _src.Append(")");
@@ -220,16 +239,22 @@ internal class ShimWriter
         }
         if (canWrite)
         {
-            _src.Append($"{pad}\tset => {targetRefName}.{targetAlias ?? name} = ");
+            _src.Append($"{pad}\tset => {targetRefName}.{(useMethods ? "set_" : null)}{proxy?.Name ?? targetAlias ?? name}")
+                .Append(useMethods ? "(" : " = ");
+            if (useMethods && proxy?.IsExtensionMethod != null)
+            {
+                _src.Append(proxy.IsExtensionMethod == true ? "this, " : "_obj, ");
+            }
             if (shimToType != null)
             {
                 var targetReturnTypeFullName = shimToType.FullName;
-                _src.AppendLine($"((object)value is {targetReturnTypeFullName} v) ? v : ({targetReturnTypeFullName})((IFY.Shimr.IShim)(object)value).Unshim();");
+                _src.Append($"((object)value is {targetReturnTypeFullName} v) ? v : ({targetReturnTypeFullName})((IFY.Shimr.IShim)(object)value).Unshim()");
             }
             else
             {
-                _src.AppendLine("value;");
+                _src.Append("value");
             }
+            _src.AppendLine(useMethods ? ");" : ";");
         }
         _src.AppendLine($"{pad}}}");
     }
