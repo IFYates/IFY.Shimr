@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen.SyntaxParsing;
@@ -21,6 +22,7 @@ internal class ShimMemberDefinition
 
     public bool CanRead { get; }
     public bool CanWrite { get; }
+    public TypeDef? IndexType { get; }
     public bool UsePropertyMethods { get; private set; }
 
     public TypeDef? StaticType { get; set; }
@@ -39,9 +41,6 @@ internal class ShimMemberDefinition
         public bool? IsExtensionSetMethod { get; }
 
         public ProxyInfo(AttributeData proxyAttr, ShimMemberDefinition member, INamedTypeSymbol type, TypeDef targetType)
-            : this(proxyAttr, member, type, targetType, member.Kind)
-        { }
-        public ProxyInfo(AttributeData proxyAttr, ShimMemberDefinition member, INamedTypeSymbol type, TypeDef targetType, SymbolKind kind)
         {
             Name = member.Name;
             Type = type;
@@ -166,14 +165,13 @@ internal class ShimMemberDefinition
         ParentType = property.ContainingType;
         ParentTypeFullName = property.ContainingType.FullName();
         Kind = SymbolKind.Property;
-        Name = property.Name;
+        Name = property.Name.Trim('[', ']');
         SignatureName = Name;
         CanRead = property.GetMethod != null;
         CanWrite = property.SetMethod != null;
-        if (property.TryGetReturnType(out var returnType))
-        {
-            ReturnType = returnType;
-        }
+        IndexType = property.IsIndexer
+            ? new((INamedTypeSymbol)property.Parameters[0].Type) : null;
+        ReturnType = new(property.Type);
 
         // TODO: Property may also match to methods
 

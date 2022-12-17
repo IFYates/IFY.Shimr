@@ -90,7 +90,7 @@ internal class ShimWriter
                 {
                     var memRefName = property.StaticType?.FullName ?? refName;
                     var implementor = !distinct && property.ParentTypeFullName != shim.ShimFullName ? property.ParentTypeFullName : null;
-                    CreateProperty(2, property.ReturnType!, property.Name, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, implementor, property.UsePropertyMethods, property.Proxy);
+                    CreateProperty(2, property.ReturnType!, property.Name, property.IndexType, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, implementor, property.UsePropertyMethods, property.Proxy);
                 }
             }
 
@@ -175,19 +175,28 @@ internal class ShimWriter
         _src.AppendLine("}");
     }
 
-    public void CreateProperty(int indent, TypeDef returnType, string name, bool canRead, bool canWrite, string targetRefName, TypeDef? shimToType, string? targetAlias, string? implementTypeName, bool useMethods, ShimMemberDefinition.ProxyInfo? proxy)
+    public void CreateProperty(int indent, TypeDef returnType, string name, TypeDef? indexType, bool canRead, bool canWrite, string targetRefName, TypeDef? shimToType, string? targetAlias, string? implementTypeName, bool useMethods, ShimMemberDefinition.ProxyInfo? proxy)
     {
+        var propertyName = indexType == null
+            ? name
+            : $"{name}[{indexType.FullName} index]";
+
         // TODO: method get/set to use same logic as method
         var pad = new string('\t', indent);
         if (implementTypeName != null)
         {
-            _src.Append($"{pad}{returnType.FullName} {implementTypeName}.{name}");
+            _src.Append($"{pad}{returnType.FullName} {implementTypeName}.{propertyName}");
             targetRefName = $"(({implementTypeName}){targetRefName})";
         }
         else
         {
-            _src.Append($"{pad}public {returnType.FullName} {name}");
+            _src.Append($"{pad}public {returnType.FullName} {propertyName}");
         }
+
+        var getCall = indexType == null
+            ? $"{targetRefName}.{(useMethods ? "get_" : null)}{proxy?.Name ?? targetAlias ?? name}"
+            : $"{targetRefName}[index]";
+
         if (canRead && !canWrite)
         {
             _src.Append($" => ");
@@ -195,7 +204,7 @@ internal class ShimWriter
             {
                 _src.Append($"{shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim<{returnType.FullName}>(");
             }
-            _src.Append($"{targetRefName}.{(useMethods ? "get_" : null)}{proxy?.Name ?? targetAlias ?? name}");
+            _src.Append(getCall);
             if (useMethods)
             {
                 _src.Append("(");
@@ -221,7 +230,7 @@ internal class ShimWriter
             {
                 _src.Append($"{shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim<{returnType.FullName}>(");
             }
-            _src.Append($"{targetRefName}.{(useMethods ? "get_" : null)}{proxy?.Name ?? targetAlias ?? name}");
+            _src.Append(getCall);
             if (useMethods)
             {
                 _src.Append("(");
@@ -239,8 +248,15 @@ internal class ShimWriter
         }
         if (canWrite)
         {
-            _src.Append($"{pad}\tset => {targetRefName}.{(useMethods ? "set_" : null)}{proxy?.Name ?? targetAlias ?? name}")
-                .Append(useMethods ? "(" : " = ");
+            if (indexType == null)
+            {
+                _src.Append($"{pad}\tset => {targetRefName}.{(useMethods ? "set_" : null)}{proxy?.Name ?? targetAlias ?? name}");
+            }
+            else
+            {
+                _src.Append($"{pad}\tset => {targetRefName}[index]");
+            }
+            _src.Append(useMethods ? "(" : " = ");
             if (useMethods && proxy?.IsExtensionMethod != null)
             {
                 _src.Append(proxy.IsExtensionMethod == true ? "this, " : "_obj, ");

@@ -17,7 +17,8 @@
 
 	<ItemGroup>
 	  <None Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Method.cs" Link="ExtendedFunctionalityTests.Method.cs" />
-	  <Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Property.cs" Link="ExtendedFunctionalityTests.Property.cs" />
+	  <None Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Property.cs" Link="ExtendedFunctionalityTests.Property.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\IndexerShimTests.cs" Link="IndexerShimTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="EventShimTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\GenericMethodTests.cs" Link="GenericMethodTests.cs" />
 	  <Compile Include="..\IFY.Shimr.Tests\AccessibilityTests.cs" Link="AccessibilityTests.cs" />

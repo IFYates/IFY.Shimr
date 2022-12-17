@@ -35,6 +35,9 @@ internal class TypeDef
 
     public INamedTypeSymbol[] AllInterfaces { get; } = Array.Empty<INamedTypeSymbol>();
 
+    public TypeDef(ITypeSymbol type)
+        : this((INamedTypeSymbol)type)
+    { }
     public TypeDef(INamedTypeSymbol type)
     {
         Symbol = type;
