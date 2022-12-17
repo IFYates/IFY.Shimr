@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using Tortuga.TestMonkey;
 
@@ -9,8 +8,8 @@ internal class ShimMemberDefinition
 {
     public ISymbol Symbol { get; }
 
-    public INamedTypeSymbol ParentType { get; }
-    public string ParentTypeFullName { get; }
+    public INamedTypeSymbol ShimType { get; }
+    public string ShimTypeFullName { get; }
 
     public SymbolKind Kind { get; }
     public string Name { get; }
@@ -19,6 +18,8 @@ internal class ShimMemberDefinition
     public TypeDef? ReturnType { get; private set; }
     public TypeDef? TargetReturnType { get; set; }
     public bool IsReturnShim { get; set; }
+    public Dictionary<string, MethodParameterDefinition> Parameters { get; } = new();
+    public INamedTypeSymbol? ParentType { get; }
 
     public bool CanRead { get; }
     public bool CanWrite { get; }
@@ -53,11 +54,11 @@ internal class ShimMemberDefinition
             // Find target member
             if (member.Kind == SymbolKind.Method)
             {
-                var proxyMethod = findProxyMethod(Name, Type, member.ParentType, new TypeDef[member.Parameters.Count], out var isExtensionMethod);
+                var proxyMethod = findProxyMethod(Name, Type, member.ShimType, new TypeDef[member.Parameters.Count], out var isExtensionMethod);
                 IsExtensionMethod = isExtensionMethod;
                 if (proxyMethod == null)
                 {
-                    member.Symbol.ReportProxyMemberMissing(member.ParentTypeFullName, Name, Type.FullName());
+                    member.Symbol.ReportProxyMemberMissing(member.ShimTypeFullName, Name, Type.FullName());
                     return;
                 }
             }
@@ -75,19 +76,19 @@ internal class ShimMemberDefinition
                     IMethodSymbol? getMethod = null, setMethod = null;
                     if (member.CanRead)
                     {
-                        getMethod = findProxyMethod("get_" + Name, type, member.ParentType, Array.Empty<TypeDef>(), out var isExtGetMethod);
+                        getMethod = findProxyMethod("get_" + Name, type, member.ShimType, Array.Empty<TypeDef>(), out var isExtGetMethod);
                         IsExtensionMethod = isExtGetMethod;
                     }
                     if (member.CanWrite)
                     {
-                        setMethod = findProxyMethod("set_" + Name, type, member.ParentType, new[] { member.ReturnType }, out var isExtSetMethod);
+                        setMethod = findProxyMethod("set_" + Name, type, member.ShimType, new[] { member.ReturnType }, out var isExtSetMethod);
                         IsExtensionSetMethod = isExtSetMethod;
                     }
 
                     member.UsePropertyMethods = member.CanRead == (getMethod != null) && member.CanWrite == (setMethod != null);
                     if (!member.UsePropertyMethods)
                     {
-                        member.Symbol.ReportProxyMemberMissing(member.ParentTypeFullName, Name, Type.FullName());
+                        member.Symbol.ReportProxyMemberMissing(member.ShimTypeFullName, Name, Type.FullName());
                         return;
                     }
                 }
@@ -103,12 +104,12 @@ internal class ShimMemberDefinition
                 if ((int)proxyBehaviour == (int)ProxyBehaviour.Add && IsOverride)
                 {
                     // Cannot use Add if base type contains method
-                    member.Symbol.ReportProxyAddExisting(member.ParentTypeFullName, member.TargetName ?? member.Name, targetType.FullName);
+                    member.Symbol.ReportProxyAddExisting(member.ShimTypeFullName, member.TargetName ?? member.Name, targetType.FullName);
                 }
                 else if ((int)proxyBehaviour == (int)ProxyBehaviour.Override && !IsOverride)
                 {
                     // Can only use Override if existing base method
-                    member.Symbol.ReportProxyOverrideMissing(member.ParentTypeFullName, member.TargetName ?? member.Name, targetType.FullName);
+                    member.Symbol.ReportProxyOverrideMissing(member.ShimTypeFullName, member.TargetName ?? member.Name, targetType.FullName);
                 }
             }
         }
@@ -144,14 +145,12 @@ internal class ShimMemberDefinition
     }
     public ProxyInfo? Proxy { get; private set; }
 
-    public Dictionary<string, MethodParameterDefinition> Parameters { get; } = new();
-
     public ShimMemberDefinition(IEventSymbol ev)
     {
         // Basics
         Symbol = ev;
-        ParentType = ev.ContainingType;
-        ParentTypeFullName = ev.ContainingType.FullName();
+        ShimType = ev.ContainingType;
+        ShimTypeFullName = ev.ContainingType.FullName();
         Kind = SymbolKind.Event;
         Name = ev.Name;
         SignatureName = Name;
@@ -162,8 +161,8 @@ internal class ShimMemberDefinition
     {
         // Basics
         Symbol = property;
-        ParentType = property.ContainingType;
-        ParentTypeFullName = property.ContainingType.FullName();
+        ShimType = property.ContainingType;
+        ShimTypeFullName = property.ContainingType.FullName();
         Kind = SymbolKind.Property;
         Name = property.Name.Trim('[', ']');
         SignatureName = Name;
@@ -183,8 +182,8 @@ internal class ShimMemberDefinition
     {
         // Basics
         Symbol = method;
-        ParentType = method.ContainingType;
-        ParentTypeFullName = method.ContainingType.FullName();
+        ShimType = method.ContainingType;
+        ShimTypeFullName = method.ContainingType.FullName();
         Kind = SymbolKind.Method;
         Name = method.Name;
         if (method.TryGetReturnType(out var returnType))
@@ -211,6 +210,16 @@ internal class ShimMemberDefinition
             {
                 GenericContraints = constraints.ToArray();
             }
+        }
+
+        var methods = GetMatchingMethods(targetType.Symbol, Name, ReturnType?.Symbol, method.Parameters, false);
+        if (!methods.Any())
+        {
+            // TODO: warning
+        }
+        else
+        {
+            ParentType = methods.First().ContainingType;
         }
 
         // Parameters
@@ -256,7 +265,7 @@ internal class ShimMemberDefinition
         {
             if (proxyAttr != null)
             {
-                symbol.ReportConflictingAttributes(ParentTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
+                symbol.ReportConflictingAttributes(ShimTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
             }
             else
             {
@@ -276,7 +285,7 @@ internal class ShimMemberDefinition
             {
                 if (proxyAttr != null)
                 {
-                    symbol.ReportConflictingAttributes(ParentTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
+                    symbol.ReportConflictingAttributes(ShimTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
                 }
                 else
                 {
@@ -307,9 +316,9 @@ internal class ShimMemberDefinition
         return false;
     }
 
-    private static IMethodSymbol[] GetMatchingMethods(ITypeSymbol type, string name, ITypeSymbol? returnType, ImmutableArray<IParameterSymbol> parameters, bool isStatic)
+    private static IMethodSymbol[] GetMatchingMethods(ITypeSymbol type, string name, ITypeSymbol? returnType, IEnumerable<IParameterSymbol> parameters, bool isStatic)
     {
-        return type.GetMembers()
+        return type.GetAllMembers()
             .Where(m => m.Kind == SymbolKind.Method && m.Name == name && m.IsStatic == isStatic)
             .OfType<IMethodSymbol>()
             .Where(m => (returnType == null && m.ReturnsVoid) || m.ReturnType.TryFullName() == returnType?.TryFullName())
@@ -317,13 +326,13 @@ internal class ShimMemberDefinition
             .ToArray();
         bool allParametersMatch(IMethodSymbol method)
         {
-            if (method.Parameters.Length != parameters.Length)
+            if (method.Parameters.Length != parameters.Count())
             {
                 return false;
             }
             for (var i = 0; i < method.Parameters.Length; ++i)
             {
-                if (method.Parameters[i].Type.TryFullName() != parameters[i].Type.TryFullName())
+                if (method.Parameters[i].Type.TryFullName() != parameters.ElementAt(i).Type.TryFullName())
                 {
                     return false;
                 }

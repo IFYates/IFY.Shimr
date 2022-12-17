@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using System.Diagnostics;
 using System.Text;
+using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen;
 
@@ -89,7 +90,7 @@ internal class ShimWriter
                 foreach (var property in group)
                 {
                     var memRefName = property.StaticType?.FullName ?? refName;
-                    var implementor = !distinct && property.ParentTypeFullName != shim.ShimFullName ? property.ParentTypeFullName : null;
+                    var implementor = !distinct && property.ShimTypeFullName != shim.ShimFullName ? property.ShimTypeFullName : null;
                     CreateProperty(2, property.ReturnType!, property.Name, property.IndexType, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, implementor, property.UsePropertyMethods, property.Proxy);
                 }
             }
@@ -110,8 +111,12 @@ internal class ShimWriter
                 {
                     var memRefName = method.StaticType?.FullName ?? refName;
                     var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
-                    var implementor = !distinct && method.ParentTypeFullName != shim.ShimFullName ? method.ParentTypeFullName : null;
-                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor, method.GenericContraints, method.Proxy);
+                    var implementor = !distinct && method.ShimType.TypeKind == TypeKind.Interface && method.ShimTypeFullName != shim.ShimFullName
+                        ? method.ShimTypeFullName
+                        : method.ParentType != null
+                        ? method.ParentType.FullName()
+                        : null;
+                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor, !distinct, method.GenericContraints, method.Proxy);
                 }
             }
 
@@ -275,18 +280,21 @@ internal class ShimWriter
         _src.AppendLine($"{pad}}}");
     }
 
-    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName, string[]? genericConstraints, ShimMemberDefinition.ProxyInfo? proxy)
+    public void CreateMethod(int indent, TypeDef? returnType, string name, IEnumerable<MethodParameterDefinition> parameters, string targetRefName, TypeDef? shimToType, string? targetAlias, string? constructorTypeName, string? implementTypeName, bool isExplicit, string[]? genericConstraints, ShimMemberDefinition.ProxyInfo? proxy)
     {
         var pad = new string('\t', indent);
-        if (implementTypeName != null)
+        if (implementTypeName != null && isExplicit)
         {
             // Explicit implementation
             _src.Append($"{pad}{returnType?.FullName ?? "void"} {implementTypeName}.{name}(");
-            targetRefName = $"(({implementTypeName}){targetRefName})";
         }
         else
         {
             _src.Append($"{pad}public {returnType?.FullName ?? "void"} {name}(");
+        }
+        if (implementTypeName != null)
+        {
+            targetRefName = $"(({implementTypeName}){targetRefName})";
         }
         _src.Append(string.Join(", ", parameters.Select(p => $"{p.ParameterTypeFullName} {p.Name}")));
         _src.AppendLine(")");
@@ -361,7 +369,7 @@ internal class ShimWriter
                 retvar = "shim";
                 _src.AppendLine($"{pad}var shim = {shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim{returnType.GenericArgList}(obj).As<{returnType.FullName}>();");
             }
-            _src.AppendLine($"{pad}\treturn {retvar};");
+            _src.AppendLine($"{pad}return {retvar};");
         }
         else
         {

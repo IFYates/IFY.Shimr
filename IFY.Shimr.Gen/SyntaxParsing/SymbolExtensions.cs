@@ -1,10 +1,23 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Diagnostics.CodeAnalysis;
+using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen.SyntaxParsing;
 
 internal static class SymbolExtensions
 {
+    public static ISymbol[] GetAllMembers(this ITypeSymbol type)
+    {
+        var members = new List<ISymbol>(type.GetMembers());
+        members.AddRange(type.AllInterfaces.SelectMany(i => i.GetMembers()));
+        while (type.BaseType.FullName() != "System.Object")
+        {
+            type = type.BaseType!;
+            members.AddRange(type.GetMembers());
+        }
+        return members.Distinct().ToArray();
+    }
+
     public static string MakeSafeName(this string str)
     {
         return str.Replace('+', '_').Replace('.', '_').Replace("`", "")

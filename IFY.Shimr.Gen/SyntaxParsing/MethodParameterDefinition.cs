@@ -5,21 +5,23 @@ namespace IFY.Shimr.Gen.SyntaxParsing;
 
 internal class MethodParameterDefinition
 {
+    public IParameterSymbol Symbol { get; }
     public string Name { get; }
     public TypeDef ParameterType { get; }
     public string ParameterTypeFullName => ParameterType.FullName;
     public string? TargetTypeFullName { get; }
 
-    public MethodParameterDefinition(IParameterSymbol parameter)
+    public MethodParameterDefinition(IParameterSymbol symbol)
     {
-        Name = parameter.Name;
-        ParameterType = parameter.Type is IArrayTypeSymbol array
+        Symbol = symbol;
+        Name = symbol.Name;
+        ParameterType = symbol.Type is IArrayTypeSymbol array
             ? new(array)
-            : parameter.Type is ITypeParameterSymbol typepar
+            : symbol.Type is ITypeParameterSymbol typepar
             ? new(typepar)
-            : new((INamedTypeSymbol)parameter.Type);
+            : new((INamedTypeSymbol)symbol.Type);
 
-        if (parameter.GetAttribute<TypeShimAttribute>()?
+        if (symbol.GetAttribute<TypeShimAttribute>()?
             .TryGetAttributeConstructorValue("realType", out var realType) == true)
         {
             TargetTypeFullName = ((INamedTypeSymbol)realType!).FullName();
