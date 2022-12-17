@@ -160,6 +160,43 @@ public class ExtendedFunctionalityTests_Method
         Assert.AreEqual("value", TestImpl_MethodOverrideAlias.MethodBCalledWith);
     }
 
+//#if SHIMRGEN
+//    [ShimOf<TestClass_HasMethodB>]
+//#endif
+//    public interface ITestShim_MethodAliasOverride : ITestShim
+//    {
+//        [Shim("MethodB")] // Name in base type
+//        [ShimProxy(typeof(TestImpl_MethodOverrideAlias), ProxyBehaviour.Override)]
+//        void MethodD(string arg);
+//    }
+//    [ExcludeFromCodeCoverage]
+//    public class TestImpl_MethodAliasOverride
+//    {
+//        public static ITestShim? MethodBCalledObj { get; private set; }
+//        public static string? MethodBCalledWith { get; private set; }
+//        public static void MethodD(ITestShim_MethodAliasOverride obj, string arg)
+//        {
+//            MethodBCalledObj = obj;
+//            MethodBCalledWith = arg;
+//        }
+//    }
+
+//    [TestMethod]
+//    public void Shim_can_define_proxy_to_override_aliased_member()
+//    {
+//        // Arrange
+//        var obj = new TestClass_HasMethodB();
+//        var shim = obj.Shim<ITestShim_MethodOverrideAlias>();
+
+//        // Act
+//        shim.MethodB("value"); // Actually TestImpl_MethodOverrideAlias.MethodB
+
+//        // Assert
+//        Assert.IsNull(obj.MethodBCalledWith);
+//        Assert.AreSame(shim, TestImpl_MethodOverrideAlias.MethodBCalledObj);
+//        Assert.AreEqual("value", TestImpl_MethodOverrideAlias.MethodBCalledWith);
+//    }
+
 #if SHIMRGEN
     [ShimOf<TestClass_HasMethodB>]
 #endif
@@ -285,19 +322,19 @@ public class ExtendedFunctionalityTests_Method
 //        }
 //    }
 
-    [TestMethod]
-    public void Override_implementation_can_invoke_on_compatible_arg()
-    {
-        // Arrange
-        var obj = new TestClass_HasMethodB();
-        var shim = obj.Shim<ITestShim_ArgImpl>();
+//    [TestMethod]
+//    public void Override_implementation_can_invoke_on_compatible_arg()
+//    {
+//        // Arrange
+//        var obj = new TestClass_HasMethodB();
+//        var shim = obj.Shim<ITestShim_ArgImpl>();
 
-        // Act
-        shim.MethodB("value");
+//        // Act
+//        shim.MethodB("value");
 
-        // Assert
-        Assert.AreSame(shim, TestImpl_ArgImpl.MethodBCalledObj);
-    }
+//        // Assert
+//        Assert.AreSame(shim, TestImpl_ArgImpl.MethodBCalledObj);
+//    }
 
 #if SHIMRGEN
     [ShimOf<TestClass_HasMethodC>]

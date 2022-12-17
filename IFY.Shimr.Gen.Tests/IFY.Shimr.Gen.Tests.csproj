@@ -17,28 +17,20 @@
 
 	<ItemGroup>
 	  <Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Method.cs" Link="ExtendedFunctionalityTests.Method.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="EventShimTests.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="..\IFY.Shimr.Tests\GenericMethodTests.cs" Link="GenericMethodTests.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="..\IFY.Shimr.Tests\AccessibilityTests.cs" Link="AccessibilityTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="ConstructorTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\FieldShimTests.cs" Link="FieldShimTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="MethodShimTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\MissingMemberTests.cs" Link="MissingMemberTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\GenericConstructorTests.cs" Link="GenericConstructorTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="MultiLevelInheritanceTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\SignatureEnumerableChangeTests.cs" Link="SignatureEnumerableChangeTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\RenameMemberTests.cs" Link="RenameMemberTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\SignatureChangeTests.cs" Link="SignatureChangeTests.cs" />
+	  <None Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Property.cs" Link="ExtendedFunctionalityTests.Property.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="EventShimTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\GenericMethodTests.cs" Link="GenericMethodTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\AccessibilityTests.cs" Link="AccessibilityTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="ConstructorTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\FieldShimTests.cs" Link="FieldShimTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="MethodShimTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\MissingMemberTests.cs" Link="MissingMemberTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\GenericConstructorTests.cs" Link="GenericConstructorTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="MultiLevelInheritanceTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\SignatureEnumerableChangeTests.cs" Link="SignatureEnumerableChangeTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\RenameMemberTests.cs" Link="RenameMemberTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\SignatureChangeTests.cs" Link="SignatureChangeTests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

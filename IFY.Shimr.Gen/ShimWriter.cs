@@ -320,7 +320,7 @@ internal class ShimWriter
                 retvar = "shim";
                 _src.AppendLine($"{pad}var shim = {shimToType.Namespace}.{shimToType.Name.MakeSafeName()}ShimrExtension.Shim{returnType.GenericArgList}(obj).As<{returnType.FullName}>();");
             }
-            _src.AppendLine($"{pad}treturn {retvar};");
+            _src.AppendLine($"{pad}\treturn {retvar};");
         }
         else
         {
