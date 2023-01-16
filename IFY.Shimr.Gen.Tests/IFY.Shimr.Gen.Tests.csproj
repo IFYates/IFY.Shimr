@@ -30,7 +30,7 @@
 	  <None Include="..\IFY.Shimr.Tests\GenericConstructorTests.cs" Link="GenericConstructorTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="MultiLevelInheritanceTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\SignatureEnumerableChangeTests.cs" Link="SignatureEnumerableChangeTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\RenameMemberTests.cs" Link="RenameMemberTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\SignatureChangeTests.cs" Link="SignatureChangeTests.cs" />
 	</ItemGroup>

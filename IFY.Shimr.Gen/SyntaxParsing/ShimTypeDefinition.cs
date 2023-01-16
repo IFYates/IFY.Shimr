@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using IFY.Shimr.Gen.Model;
+using Microsoft.CodeAnalysis;
 using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen.SyntaxParsing;
@@ -18,7 +19,7 @@ internal class ShimTypeDefinition
     public string TargetFullName => TargetType.FullName;
     public string TargetSafeName { get; }
 
-    public List<ShimMemberDefinition> Members { get; } = new();
+    public List<ShimMember> Members { get; } = new();
 
     /// <summary>
     /// Any additional shims found during parsing that will need to be generated.
@@ -68,10 +69,11 @@ internal class ShimTypeDefinition
             // Shape
             var def = member switch
             {
-                IPropertySymbol property => new ShimMemberDefinition(property, targetType),
-                IMethodSymbol method when method.ConstructedFrom.AssociatedSymbol == null
-                    => new ShimMemberDefinition(method, targetType),
-                IEventSymbol ev => new ShimMemberDefinition(ev),
+                IPropertySymbol property => new ShimPropertyMember(property),
+                // TODO
+                //IMethodSymbol method when method.ConstructedFrom.AssociatedSymbol == null
+                //    => new ShimMemberDefinition(method, targetType),
+                //IEventSymbol ev => new ShimMemberDefinition(ev),
                 _ => null
             };
             if (def == null)
@@ -81,30 +83,30 @@ internal class ShimTypeDefinition
 
             Members.Add(def);
 
-            // Check for return auto-shim
-            if (def.ReturnType?.Kind == TypeKind.Interface)
-            {
-                if (def.IsConstructor)
-                {
-                    def.StaticType ??= targetType;
-                    def.TargetReturnType = targetType;
-                    def.IsReturnShim = true;
-                    if (!targetType.AllInterfaces.Any(i => i.FullName() == def.ReturnType.FullName))
-                    {
-                        AdditionalShims.Add((def.ReturnType, targetType));
-                    }
-                    continue;
-                }
+            //// Check for return auto-shim
+            //if (def.ReturnType?.Kind == TypeKind.Interface)
+            //{
+            //    if (def.IsConstructor)
+            //    {
+            //        def.StaticType ??= targetType;
+            //        def.TargetReturnType = targetType;
+            //        def.IsReturnShim = true;
+            //        if (!targetType.AllInterfaces.Any(i => i.FullName() == def.ReturnType.FullName))
+            //        {
+            //            AdditionalShims.Add((def.ReturnType, targetType));
+            //        }
+            //        continue;
+            //    }
 
-                if (def.TargetMember?.TryGetReturnType(out var targetReturnType) == true
-                    && !targetReturnType.AllInterfaces.Any(i => i.FullName() == def.ReturnType.FullName)
-                    && targetReturnType.FullName != def.ReturnType.FullName)
-                {
-                    AdditionalShims.Add((def.ReturnType, targetReturnType));
-                    def.TargetReturnType = targetReturnType;
-                    def.IsReturnShim = true;
-                }
-            }
+            //    if (def.TargetMember?.TryGetReturnType(out var targetReturnType) == true
+            //        && !targetReturnType.AllInterfaces.Any(i => i.FullName() == def.ReturnType.FullName)
+            //        && targetReturnType.FullName != def.ReturnType.FullName)
+            //    {
+            //        AdditionalShims.Add((def.ReturnType, targetReturnType));
+            //        def.TargetReturnType = targetReturnType;
+            //        def.IsReturnShim = true;
+            //    }
+            //}
         }
 
         IsStatic = isStatic || Members.Any(m => m.IsStatic);

@@ -1,4 +1,5 @@
-﻿using IFY.Shimr.Gen.SyntaxParsing;
+﻿using IFY.Shimr.Gen.Model;
+using IFY.Shimr.Gen.SyntaxParsing;
 using Microsoft.CodeAnalysis;
 using System.Diagnostics;
 using System.Text;
@@ -65,72 +66,77 @@ internal class ShimWriter
                 _src.AppendLine("\t\t}");
             }
 
-            // Events
-            var evs = shim.Members.Where(m => m.Kind == SymbolKind.Event)
-                .GroupBy(p => p.Name).ToArray();
-            foreach (var group in evs)
-            {
-                var distinct = group.Count() == 1; // TODO: how and do what?
-                foreach (var ev in group)
-                {
-                    _src.AppendLine($"\t\tpublic event {ev.ReturnType!.FullName} {ev.Name}");
-                    _src.AppendLine("\t\t{");
-                    _src.AppendLine($"\t\t\tadd => _obj.{ev.Name} += value;");
-                    _src.AppendLine($"\t\t\tremove => _obj.{ev.Name} -= value;");
-                    _src.AppendLine("\t\t}");
-                }
-            }
+            //// Events
+            //var evs = shim.Members.Where(m => m.Kind == SymbolKind.Event)
+            //    .GroupBy(p => p.Name).ToArray();
+            //foreach (var group in evs)
+            //{
+            //    var distinct = group.Count() == 1; // TODO: how and do what?
+            //    foreach (var ev in group)
+            //    {
+            //        _src.AppendLine($"\t\tpublic event {ev.ReturnType!.FullName} {ev.Name}");
+            //        _src.AppendLine("\t\t{");
+            //        _src.AppendLine($"\t\t\tadd => _obj.{ev.Name} += value;");
+            //        _src.AppendLine($"\t\t\tremove => _obj.{ev.Name} -= value;");
+            //        _src.AppendLine("\t\t}");
+            //    }
+            //}
 
             // Properties
-            var properties = shim.Members.Where(m => m.Kind == SymbolKind.Property)
-            .GroupBy(p => p.Name).ToArray();
+            var properties = shim.Members.OfType<ShimPropertyMember>()
+                .GroupBy(p => p.Name).ToArray();
             foreach (var group in properties)
             {
                 var distinct = group.Count() == 1;
                 foreach (var property in group)
                 {
-                    var memRefName = property.StaticType?.FullName ?? refName;
-                    if (property.TargetCast != null)
-                    {
-                        memRefName = $"(({property.TargetCast.FullName}){memRefName})";
-                    }
-                    var implementor = !distinct && property.ShimType.TypeKind == TypeKind.Interface && property.ShimTypeFullName != shim.ShimFullName && property.ShimType.TypeKind == TypeKind.Interface
-                        ? property.ShimTypeFullName
-                        : property.ParentType != null && property.ParentType.TypeKind == TypeKind.Interface
-                        ? property.ParentType.FullName()
-                        : null;
-                    CreateProperty(2, property.ReturnType!, property.Name, property.IndexType, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, implementor, property.UsePropertyMethods, property.Proxy);
+                    var str = property.ToString().Trim();
+                    str = str.Replace("\n", "\n\t\t")
+                        .Replace("\n", Environment.NewLine);
+                    _src.AppendLine("\t\t" + str);
+
+                    //var memRefName = property.StaticType?.FullName ?? refName;
+                    //if (property.TargetCast != null)
+                    //{
+                    //    memRefName = $"(({property.TargetCast.FullName}){memRefName})";
+                    //}
+                    //var implementor = !distinct && property.ShimType.TypeKind == TypeKind.Interface && property.ShimTypeFullName != shim.ShimFullName && property.ShimType.TypeKind == TypeKind.Interface
+                    //    ? property.ShimTypeFullName
+                    //    : property.ParentType != null && property.ParentType.TypeKind == TypeKind.Interface
+                    //    ? property.ParentType.FullName()
+                    //    : null;
+                    //CreateProperty(2, property.ReturnType!, property.Name, property.IndexType, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, implementor, property.UsePropertyMethods, property.Proxy);
                 }
             }
 
-            // Methods
-            var methods = shim.Members.Where(m => m.Kind == SymbolKind.Method)
-                .GroupBy(m => m.SignatureName).ToArray();
-            foreach (var group in methods)
-            {
-                // Don't shim over the automated methods
-                if (group.Key is "ToString()" or "Unshim()")
-                {
-                    continue;
-                }
+            //// Methods
+            //var methods = shim.Members.Where(m => m.Kind == SymbolKind.Method)
+            //    .GroupBy(m => m.SignatureName).ToArray();
+            //foreach (var group in methods)
+            //{
+            //    // Don't shim over the automated methods
+            //    if (group.Key is "ToString()" or "Unshim()")
+            //    {
+            //        continue;
+            //    }
 
-                var distinct = group.Count() == 1;
-                foreach (var method in group)
-                {
-                    var memRefName = method.StaticType?.FullName ?? refName;
-                    if (method.TargetCast != null)
-                    {
-                        memRefName = $"(({method.TargetCast.FullName}){memRefName})";
-                    }
-                    var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
-                    var implementor = !distinct && method.ShimType.TypeKind == TypeKind.Interface && method.ShimTypeFullName != shim.ShimFullName && method.ShimType.TypeKind == TypeKind.Interface
-                        ? method.ShimType
-                        : method.ParentType != null
-                        ? method.ParentType
-                        : null;
-                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor?.FullName(), !distinct && implementor?.TypeKind == TypeKind.Interface, method.GenericContraints, method.Proxy);
-                }
-            }
+            //    var distinct = group.Count() == 1;
+            //    foreach (var method in group)
+            //    {
+            //        var memRefName = method.StaticType?.FullName ?? refName;
+            //        if (method.TargetCast != null)
+            //        {
+            //            memRefName = $"(({method.TargetCast.FullName}){memRefName})";
+            //        }
+            //        var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
+            //        var implementor = !distinct && method.ShimType.TypeKind == TypeKind.Interface && method.ShimTypeFullName != shim.ShimFullName && method.ShimType.TypeKind == TypeKind.Interface
+            //            ? method.ShimType
+            //            : method.ParentType != null
+            //            ? method.ParentType
+            //            : null;
+            //        CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor?.FullName(), !distinct && implementor?.TypeKind == TypeKind.Interface, method.GenericContraints, method.Proxy);
+            //    }
+            //}
 
             if (!shim.IsStatic)
             {

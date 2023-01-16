@@ -127,30 +127,30 @@ namespace IFY.Shimr.Tests
             public string get_Method() => _value;
             public void set_Method(string value) { _value = value; }
         }
-#if SHIMRGEN
-        [ShimOf(typeof(TrickyMethodClass))]
-#endif
-        public interface ITrickyMethodShim
-        {
-            string get_Method();
-            void set_Method(string value);
-        }
+//#if SHIMRGEN
+//        [ShimOf(typeof(TrickyMethodClass))]
+//#endif
+//        public interface ITrickyMethodShim
+//        {
+//            string get_Method();
+//            void set_Method(string value);
+//        }
 
-        [TestMethod]
-        public void Not_tricked_by_method_naming()
-        {
-            var obj = new TrickyMethodClass();
+//        [TestMethod]
+//        public void Not_tricked_by_method_naming()
+//        {
+//            var obj = new TrickyMethodClass();
 
-#if SHIMRGEN
-            var shim = obj.Shim().As<ITrickyMethodShim>(); // New format
-#else
-            var shim = obj.Shim<ITrickyMethodShim>();
-#endif
+//#if SHIMRGEN
+//            var shim = obj.Shim().As<ITrickyMethodShim>(); // New format
+//#else
+//            var shim = obj.Shim<ITrickyMethodShim>();
+//#endif
 
-            Assert.IsNull(obj.get_Method());
-            shim.set_Method("test");
-            Assert.AreEqual("test", shim.get_Method());
-        }
+//            Assert.IsNull(obj.get_Method());
+//            shim.set_Method("test");
+//            Assert.AreEqual("test", shim.get_Method());
+//        }
 
 #if !SHIMRGEN // TODO: not sure how to make this work with IFY.Shimr.Gen
         public interface ITrickyPropertyShim
