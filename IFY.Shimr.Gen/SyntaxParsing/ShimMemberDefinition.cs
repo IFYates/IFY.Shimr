@@ -15,8 +15,10 @@ internal class ShimMemberDefinition
     public string Name { get; }
     public string SignatureName { get; }
     public string? TargetName { get; private set; }
+    public TypeDef? TargetCast { get; private set; }
     public TypeDef? ReturnType { get; private set; }
     public TypeDef? TargetReturnType { get; set; }
+    public ISymbol? TargetMember { get; }
     public bool IsReturnShim { get; set; }
     public Dictionary<string, MethodParameterDefinition> Parameters { get; } = new();
     public INamedTypeSymbol? ParentType { get; }
@@ -161,7 +163,8 @@ internal class ShimMemberDefinition
     {
         // Basics
         Symbol = property;
-        ShimType = property.ContainingType;
+        parseShimAttribute();
+        ShimType = (INamedTypeSymbol?)TargetCast?.Symbol ?? property.ContainingType;
         ShimTypeFullName = property.ContainingType.FullName();
         Kind = SymbolKind.Property;
         Name = property.Name.Trim('[', ']');
@@ -170,19 +173,31 @@ internal class ShimMemberDefinition
         CanWrite = property.SetMethod != null;
         IndexType = property.IsIndexer
             ? new((INamedTypeSymbol)property.Parameters[0].Type) : null;
-        ReturnType = new(property.Type);
+        ReturnType = property.Type is IArrayTypeSymbol arr ? new(arr) : new(property.Type);
 
         // TODO: Property may also match to methods
 
+        var props = GetMatchingProperties(targetType.Symbol, Name, ReturnType?.Symbol, IsStatic, CanRead, CanWrite);
+        if (!props.Any())
+        {
+            // TODO: warning
+        }
+        else
+        {
+            TargetMember = props.First();
+            ParentType = TargetMember.ContainingType;
+        }
+
         // Attributes
-        parseAttributes(property, targetType);
+        parseAttributes(targetType);
     }
 
     public ShimMemberDefinition(IMethodSymbol method, TypeDef targetType)
     {
         // Basics
         Symbol = method;
-        ShimType = method.ContainingType;
+        parseShimAttribute();
+        ShimType = (INamedTypeSymbol?)TargetCast?.Symbol ?? method.ContainingType;
         ShimTypeFullName = method.ContainingType.FullName();
         Kind = SymbolKind.Method;
         Name = method.Name;
@@ -219,7 +234,8 @@ internal class ShimMemberDefinition
         }
         else
         {
-            ParentType = methods.First().ContainingType;
+            TargetMember = methods.First();
+            ParentType = TargetMember.ContainingType;
         }
 
         // Parameters
@@ -232,24 +248,29 @@ internal class ShimMemberDefinition
             + "(" + string.Join(",", method.Parameters.Select(p => p.Type.Name)) + ")";
 
         // Attributes
-        parseAttributes(method, targetType);
+        parseAttributes(targetType);
     }
 
-    private void parseAttributes(ISymbol symbol, TypeDef targetType)
+    private void parseShimAttribute()
     {
         // ShimAttribute
-        var shimAttr = symbol.GetAttribute<ShimAttribute>();
+        var shimAttr = Symbol.GetAttribute<ShimAttribute>();
         if (shimAttr != null)
         {
-            // TODO: support definitionType arg
+            if (shimAttr.TryGetAttributeConstructorValue("definitionType", out var targetDefType))
+            {
+                TargetCast = new((INamedTypeSymbol)targetDefType!);
+            }
             if (shimAttr.TryGetAttributeConstructorValue("name", out var targetName))
             {
                 TargetName = targetName?.ToString();
             }
         }
-
+    }
+    private void parseAttributes(TypeDef targetType)
+    {
         // ShimProxyAttribute
-        var proxyAttr = symbol.GetAttribute<ShimProxyAttribute>();
+        var proxyAttr = Symbol.GetAttribute<ShimProxyAttribute>();
         if (proxyAttr != null
             // implementationType is required
             && proxyAttr.TryGetAttributeConstructorValue("implementationType", out var proxyTypeArg)
@@ -260,12 +281,12 @@ internal class ShimMemberDefinition
         }
 
         // ConstructorShimAttribute
-        var constrAttr = symbol.GetAttribute<ConstructorShimAttribute>();
+        var constrAttr = Symbol.GetAttribute<ConstructorShimAttribute>();
         if (constrAttr != null)
         {
             if (proxyAttr != null)
             {
-                symbol.ReportConflictingAttributes(ShimTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
+                Symbol.ReportConflictingAttributes(ShimTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
             }
             else
             {
@@ -280,12 +301,12 @@ internal class ShimMemberDefinition
         else
         {
             // StaticShimAttribute
-            var staticAttr = symbol.GetAttribute<StaticShimAttribute>();
+            var staticAttr = Symbol.GetAttribute<StaticShimAttribute>();
             if (staticAttr?.TryGetAttributeConstructorValue("targetType", out var staticTargetType) == true)
             {
                 if (proxyAttr != null)
                 {
-                    symbol.ReportConflictingAttributes(ShimTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
+                    Symbol.ReportConflictingAttributes(ShimTypeFullName, Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
                 }
                 else
                 {
@@ -342,7 +363,7 @@ internal class ShimMemberDefinition
     }
     private static IPropertySymbol[] GetMatchingProperties(ITypeSymbol type, string name, ITypeSymbol propertyType, bool isStatic, bool canRead, bool canWrite)
     {
-        return type.GetMembers()
+        return type.GetAllMembers()
             .Where(m => m.Kind == SymbolKind.Property && m.Name == name && m.IsStatic == isStatic)
             .OfType<IPropertySymbol>()
             .Where(p => p.Type.TryFullName() == propertyType.TryFullName()

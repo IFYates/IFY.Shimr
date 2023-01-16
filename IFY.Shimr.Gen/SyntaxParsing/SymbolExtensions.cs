@@ -10,10 +10,13 @@ internal static class SymbolExtensions
     {
         var members = new List<ISymbol>(type.GetMembers());
         members.AddRange(type.AllInterfaces.SelectMany(i => i.GetMembers()));
-        while (type.BaseType.FullName() != "System.Object")
+        while (type != null && type.BaseType.FullName() != "System.Object")
         {
-            type = type.BaseType!;
-            members.AddRange(type.GetMembers());
+            type = type?.BaseType!;
+            if (type != null)
+            {
+                members.AddRange(type.GetMembers());
+            }
         }
         return members.Distinct().ToArray();
     }

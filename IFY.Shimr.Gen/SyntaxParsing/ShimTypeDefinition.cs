@@ -96,10 +96,7 @@ internal class ShimTypeDefinition
                     continue;
                 }
 
-                var targetMember = targetType.GetMembers()
-                    .Where(m => m.Name == (def.TargetName ?? def.Name)) // TODO: flawed for arg overload
-                    .FirstOrDefault();
-                if (targetMember?.TryGetReturnType(out var targetReturnType) == true
+                if (def.TargetMember?.TryGetReturnType(out var targetReturnType) == true
                     && !targetReturnType.AllInterfaces.Any(i => i.FullName() == def.ReturnType.FullName))
                 {
                     AdditionalShims.Add((def.ReturnType, targetReturnType));

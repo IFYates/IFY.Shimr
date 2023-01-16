@@ -19,7 +19,7 @@
 	  <None Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Method.cs" Link="ExtendedFunctionalityTests.Method.cs" />
 	  <None Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Property.cs" Link="ExtendedFunctionalityTests.Property.cs" />
 	  <None Include="..\IFY.Shimr.Tests\IndexerShimTests.cs" Link="IndexerShimTests.cs" />
-	  <Compile Include="..\IFY.Shimr.Tests\InheritanceTests.cs" Link="InheritanceTests.cs" />
+	  <None Include="..\IFY.Shimr.Tests\InheritanceTests.cs" Link="InheritanceTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="EventShimTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\GenericMethodTests.cs" Link="GenericMethodTests.cs" />
 	  <Compile Include="..\IFY.Shimr.Tests\AccessibilityTests.cs" Link="AccessibilityTests.cs" />
@@ -28,7 +28,7 @@
 	  <None Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="MethodShimTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\MissingMemberTests.cs" Link="MissingMemberTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\GenericConstructorTests.cs" Link="GenericConstructorTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="MultiLevelInheritanceTests.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="MultiLevelInheritanceTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\SignatureEnumerableChangeTests.cs" Link="SignatureEnumerableChangeTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
 	  <None Include="..\IFY.Shimr.Tests\RenameMemberTests.cs" Link="RenameMemberTests.cs" />

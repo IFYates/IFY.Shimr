@@ -23,7 +23,7 @@ internal class ShimWriter
     private static string getGenericArgList(TypeDef type)
     {
         return type.GenericArgs.Any()
-            ? "<" + string.Join(", ", type.GenericArgs.Select(a => ((ITypeParameterSymbol)a).Name)) + ">"
+            ? "<" + string.Join(", ", type.GenericArgs.Select(a => a.Name)) + ">"
             : string.Empty;
     }
 
@@ -90,7 +90,15 @@ internal class ShimWriter
                 foreach (var property in group)
                 {
                     var memRefName = property.StaticType?.FullName ?? refName;
-                    var implementor = !distinct && property.ShimTypeFullName != shim.ShimFullName ? property.ShimTypeFullName : null;
+                    if (property.TargetCast != null)
+                    {
+                        memRefName = $"(({property.TargetCast.FullName}){memRefName})";
+                    }
+                    var implementor = !distinct && property.ShimType.TypeKind == TypeKind.Interface && property.ShimTypeFullName != shim.ShimFullName
+                        ? property.ShimTypeFullName
+                        : property.ParentType != null
+                        ? property.ParentType.FullName()
+                        : null;
                     CreateProperty(2, property.ReturnType!, property.Name, property.IndexType, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, implementor, property.UsePropertyMethods, property.Proxy);
                 }
             }
@@ -110,6 +118,10 @@ internal class ShimWriter
                 foreach (var method in group)
                 {
                     var memRefName = method.StaticType?.FullName ?? refName;
+                    if (method.TargetCast != null)
+                    {
+                        memRefName = $"(({method.TargetCast.FullName}){memRefName})";
+                    }
                     var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
                     var implementor = !distinct && method.ShimType.TypeKind == TypeKind.Interface && method.ShimTypeFullName != shim.ShimFullName
                         ? method.ShimTypeFullName

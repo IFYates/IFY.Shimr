@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace IFY.Shimr.Gen;
@@ -15,7 +16,12 @@ internal class ShimGenerator : ISourceGenerator
 
 #if DEBUG
     private const string GenOut_File = @"C:\dev\_GH\IFY.Shimr\IFY.Shimr.Gen\GeneratorOutput.txt";
-    private static string _debugOutput = string.Empty;
+    private static StringBuilder _debugOutput = new();
+    internal static void Log(string message, [CallerFilePath] string file = null!, [CallerLineNumber] int line = 0)
+    {
+        lock (_debugOutput)
+        _debugOutput.AppendLine(string.Format("/* {0} ({1}): {2} */", Path.GetFileName(file), line, message));
+    }
 #endif
 
     [ExcludeFromCodeCoverage] // Cannot set GeneratorExecutionContext.SyntaxContextReceiver
@@ -29,7 +35,7 @@ internal class ShimGenerator : ISourceGenerator
             try
             {
 #if DEBUG
-                _debugOutput = $"// {DateTime.UtcNow:s}\r\n";
+                _debugOutput.AppendLine($"// {DateTime.UtcNow:s}");
 #endif
 
                 if (receiver.Exception != null)
@@ -40,20 +46,20 @@ internal class ShimGenerator : ISourceGenerator
                 Execute(receiver.ShimTypes, context.AddSource);
 
 #if DEBUG
-                _debugOutput += $"\r\n//-- Complete {DateTime.UtcNow:s}";
+                _debugOutput.AppendLine($"\r\n//-- Complete {DateTime.UtcNow:s}");
 #endif
             }
             catch (Exception ex)
             {
 #if DEBUG
-                _debugOutput += $"\r\n/** EXCEPTION! {ex}\r\n*/";
+                _debugOutput.AppendLine($"\r\n/** EXCEPTION! {ex}\r\n*/");
 #endif
                 //Debugger.Launch();
                 //throw;
             }
 #if DEBUG
-            File.WriteAllText(GenOut_File, _debugOutput);
-            Debugger.Log(0, nameof(ShimGenerator), _debugOutput);
+            File.WriteAllText(GenOut_File, _debugOutput.ToString());
+            Debugger.Log(0, nameof(ShimGenerator), _debugOutput.ToString());
 #endif
         }
     }
@@ -78,7 +84,7 @@ internal class ShimGenerator : ISourceGenerator
 #if DEBUG
         foreach (var shim in shimTypes)
         {
-            _debugOutput += $"// * {shim.TargetFullName} -> {shim.ShimFullName}\r\n";
+            _debugOutput.AppendLine($"// * {shim.TargetFullName} -> {shim.ShimFullName}");
         }
 #endif
 
@@ -94,8 +100,8 @@ internal class ShimGenerator : ISourceGenerator
             Debugger.Log(1, typeof(ShimGenerator).FullName, $"Generated {shims.Length} shim(s) for {targetType}\r\n");
             addSource($"{shims[0].TargetSafeName}Shims", SourceText.From(src.ToString(), Encoding.UTF8));
 #if DEBUG
-            _debugOutput += $"\r\n//-- {shims[0].TargetSafeName}\r\n";
-            _debugOutput += src.ToString();
+            _debugOutput.AppendLine($"\r\n//-- {shims[0].TargetSafeName}");
+            _debugOutput.AppendLine(src.ToString());
 #endif
             src.Clear();
         }
@@ -106,8 +112,8 @@ internal class ShimGenerator : ISourceGenerator
         {
             addSource("StaticCreatorShims", SourceText.From(src.ToString(), Encoding.UTF8));
 #if DEBUG
-            _debugOutput += "\r\n//-- StaticCreatorShims\r\n";
-            _debugOutput += src.ToString();
+            _debugOutput.AppendLine("\r\n//-- StaticCreatorShims");
+            _debugOutput.AppendLine(src.ToString());
 #endif
             src.Clear();
         }
