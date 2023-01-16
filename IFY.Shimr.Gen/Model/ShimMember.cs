@@ -1,15 +1,21 @@
 ﻿using IFY.Shimr.Gen.SyntaxParsing;
 using Microsoft.CodeAnalysis;
+using System.Text;
+using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen.Model;
 
 internal abstract class ShimMember
 {
     public ISymbol Symbol { get; protected set; } = null!;
+    // Unique signature
+    public string SignatureName { get; protected set; } = null!;
 
     // The full name of the interface that defines this member, if explicit reference needed
     public string? ExplicitInterfaceType { get; set; }
 
+    // The implementation target
+    public ISymbol? TargetMember { get; set; }
     // The full name of the target type that provides the implementation
     public string? TargetType { get; set; }
     // The full name of the return type of the target member, if different to the shim
@@ -21,18 +27,58 @@ internal abstract class ShimMember
 
     public string ReturnType { get; set; } = null!;
     public string Name { get; set; } = null!;
+
+    protected string GetMemberStart()
+    {
+        return ExplicitInterfaceType == null
+            ? $"public {ReturnType ?? "void"} {Name}"
+            : $"{ReturnType} {ExplicitInterfaceType}.{Name}";
+    }
 }
 
 internal class ShimMethodMember : ShimMember
 {
-    // TODO: is constructor
-    // TODO: gen args
-    // TODO: params
+    new public IMethodSymbol Symbol => (IMethodSymbol)base.Symbol;
 
+    public ShimMethodMember(IMethodSymbol method)
+    {
+        base.Symbol = method;
+
+        if (method.TryGetReturnType(out var retType))
+        {
+            ReturnType = retType.FullName;
+        }
+        Name = method.Name;
+
+        SignatureName = Name; // TODO: args
+    }
+
+    //public bool IsConstructor { get; set; }
+    // TODO: gen args
+
+    public string GetGenArgs()
+    {
+        return string.Empty;
+    }
+    public string GetParams()
+    {
+        return string.Join(", ", Symbol.Parameters
+            .Select(p => string.Format("{0} {1}", p.Type.TryFullName(), p.Name)));
+    }
     public override string ToString()
     {
-        // TODO
-        return null!;
+        var objName = "_obj";
+        string getValue()
+        {
+            var args = string.Join(", ", Symbol.Parameters.Select(p => p.Name));
+            return $"{objName}.{TargetName ?? Name}({args})";
+        }
+
+        var str = $"{GetMemberStart()}{GetGenArgs()}({GetParams()})\n"
+            + "{\n";
+        return str
+            + (ReturnType != null ? "\treturn " : "\t")
+            + $"{getValue()};\n}}";
     }
 }
 
@@ -49,6 +95,7 @@ internal class ShimPropertyMember : ShimMember
             ReturnType = retType.FullName;
         }
         Name = property.Name;
+        SignatureName = Name;
 
         CanRead = property.GetMethod != null;
         CanWrite = property.SetMethod != null;
@@ -63,16 +110,6 @@ internal class ShimPropertyMember : ShimMember
 
     public override string ToString()
     {
-        string res = "";
-        if (ExplicitInterfaceType == null)
-        {
-            res += $"public {ReturnType} {Name}";
-        }
-        else
-        {
-            res += $"{ReturnType} {ExplicitInterfaceType}.{Name}";
-        }
-
         var objName = "_obj";
         string getValue()
         {
@@ -80,6 +117,7 @@ internal class ShimPropertyMember : ShimMember
                 + (UseMethods ? "()" : "");
         }
 
+        var res = GetMemberStart();
         if (CanRead && !CanWrite)
         {
             res += $"\n\t=> {getValue()};";

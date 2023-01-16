@@ -3,7 +3,6 @@ using IFY.Shimr.Gen.SyntaxParsing;
 using Microsoft.CodeAnalysis;
 using System.Diagnostics;
 using System.Text;
-using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen;
 
@@ -109,34 +108,39 @@ internal class ShimWriter
                 }
             }
 
-            //// Methods
-            //var methods = shim.Members.Where(m => m.Kind == SymbolKind.Method)
-            //    .GroupBy(m => m.SignatureName).ToArray();
-            //foreach (var group in methods)
-            //{
-            //    // Don't shim over the automated methods
-            //    if (group.Key is "ToString()" or "Unshim()")
-            //    {
-            //        continue;
-            //    }
+            // Methods
+            var methods = shim.Members.OfType<ShimMethodMember>()
+                .GroupBy(m => m.SignatureName).ToArray();
+            foreach (var group in methods)
+            {
+                // Don't shim over the automated methods
+                if (group.Key is "ToString()" or "Unshim()")
+                {
+                    continue;
+                }
 
-            //    var distinct = group.Count() == 1;
-            //    foreach (var method in group)
-            //    {
-            //        var memRefName = method.StaticType?.FullName ?? refName;
-            //        if (method.TargetCast != null)
-            //        {
-            //            memRefName = $"(({method.TargetCast.FullName}){memRefName})";
-            //        }
-            //        var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
-            //        var implementor = !distinct && method.ShimType.TypeKind == TypeKind.Interface && method.ShimTypeFullName != shim.ShimFullName && method.ShimType.TypeKind == TypeKind.Interface
-            //            ? method.ShimType
-            //            : method.ParentType != null
-            //            ? method.ParentType
-            //            : null;
-            //        CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor?.FullName(), !distinct && implementor?.TypeKind == TypeKind.Interface, method.GenericContraints, method.Proxy);
-            //    }
-            //}
+                var distinct = group.Count() == 1;
+                foreach (var method in group)
+                {
+                    var str = method.ToString().Trim();
+                    str = str.Replace("\n", "\n\t\t")
+                        .Replace("\n", Environment.NewLine);
+                    _src.AppendLine("\t\t" + str);
+
+                    //        var memRefName = method.StaticType?.FullName ?? refName;
+                    //        if (method.TargetCast != null)
+                    //        {
+                    //            memRefName = $"(({method.TargetCast.FullName}){memRefName})";
+                    //        }
+                    //        var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
+                    //        var implementor = !distinct && method.ShimType.TypeKind == TypeKind.Interface && method.ShimTypeFullName != shim.ShimFullName && method.ShimType.TypeKind == TypeKind.Interface
+                    //            ? method.ShimType
+                    //            : method.ParentType != null
+                    //            ? method.ParentType
+                    //            : null;
+                    //        CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor?.FullName(), !distinct && implementor?.TypeKind == TypeKind.Interface, method.GenericContraints, method.Proxy);
+                }
+            }
 
             if (!shim.IsStatic)
             {

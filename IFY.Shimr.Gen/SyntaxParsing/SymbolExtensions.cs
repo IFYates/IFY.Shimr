@@ -21,6 +21,26 @@ internal static class SymbolExtensions
         return members.Distinct().ToArray();
     }
 
+    public static IMethodSymbol[] GetMatchingMethods(this ITypeSymbol type, string name, ITypeSymbol? returnType, IEnumerable<IParameterSymbol> parameters, bool isStatic)
+    {
+        return type.GetAllMembers()
+            .OfType<IMethodSymbol>()
+            .Where(m => m.Name == name && m.IsStatic == isStatic)
+            .Where(m => (returnType == null && m.ReturnsVoid) || m.ReturnType.TryFullName() == returnType?.TryFullName())
+            .Where(allParametersMatch)
+            .ToArray();
+        bool allParametersMatch(IMethodSymbol method)
+        {
+            if (method.Parameters.Length != parameters.Count())
+            {
+                return false;
+            }
+            return parameters
+                .Select((p, i) => p.Type.TryFullName() == method.Parameters[i].Type.TryFullName())
+                .All(v => v);
+        }
+    }
+
     public static string MakeSafeName(this string str)
     {
         return str.Replace('+', '_').Replace('.', '_').Replace("`", "")

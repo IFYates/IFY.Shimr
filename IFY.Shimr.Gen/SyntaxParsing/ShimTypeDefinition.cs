@@ -67,12 +67,12 @@ internal class ShimTypeDefinition
             }
 
             // Shape
-            var def = member switch
+            ShimMember? def = member switch
             {
                 IPropertySymbol property => new ShimPropertyMember(property),
+                IMethodSymbol method when method.ConstructedFrom.AssociatedSymbol == null
+                    => new ShimMethodMember(method),
                 // TODO
-                //IMethodSymbol method when method.ConstructedFrom.AssociatedSymbol == null
-                //    => new ShimMemberDefinition(method, targetType),
                 //IEventSymbol ev => new ShimMemberDefinition(ev),
                 _ => null
             };
