@@ -6,135 +6,135 @@ namespace IFY.Shimr.Tests;
 [TestClass]
 public class MultiLevelInheritanceTests
 {
-//    //#if SHIMRGEN
-//    //    class ShimBuilder
-//    //    {
-//    //        public static T Shim<T>(Extr obj) => obj.Shim<T>();
-//    //    }
-//    //#endif
+    //    //#if SHIMRGEN
+    //    //    class ShimBuilder
+    //    //    {
+    //    //        public static T Shim<T>(Extr obj) => obj.Shim<T>();
+    //    //    }
+    //    //#endif
 
-//#if !SHIMRGEN
-//    [TestInitialize]
-//    public void Reset()
-//    {
-//        ShimBuilder.ResetState();
-//    }
-//#endif
+    //#if !SHIMRGEN
+    //    [TestInitialize]
+    //    public void Reset()
+    //    {
+    //        ShimBuilder.ResetState();
+    //    }
+    //#endif
 
-//    // Original interfaces
-//    public interface IProperty1
-//    {
-//        int Value { get; }
-//    }
-//    public interface IProperty2
-//    {
-//        double Value { get; }
-//    }
+    //    // Original interfaces
+    //    public interface IProperty1
+    //    {
+    //        int Value { get; }
+    //    }
+    //    public interface IProperty2
+    //    {
+    //        double Value { get; }
+    //    }
 
-//    // Combine properties
-//#if SHIMRGEN
-//    [ShimOf<BothPropertiesClass>]
-//#endif
-//    public interface IBothProperties : IProperty2, IProperty1
-//    {
-//    }
+    //    // Combine properties
+    //#if SHIMRGEN
+    //    [ShimOf<BothPropertiesClass>]
+    //#endif
+    //    public interface IBothProperties : IProperty2, IProperty1
+    //    {
+    //    }
 
-//    public class BothPropertiesClass : IBothProperties
-//    {
-//        int IProperty1.Value { get; } = 1;
-//        public double Value { get; } = 2.0;
-//    }
+    //    public class BothPropertiesClass : IBothProperties
+    //    {
+    //        int IProperty1.Value { get; } = 1;
+    //        public double Value { get; } = 2.0;
+    //    }
 
-//    [TestMethod]
-//    public void BothProperties()
-//    {
-//        var obj = new BothPropertiesClass();
+    //    [TestMethod]
+    //    public void BothProperties()
+    //    {
+    //        var obj = new BothPropertiesClass();
 
-//        var shim = obj.Shim<IBothProperties>();
-//        var cast1 = (IProperty1)shim;
-//        var cast2 = (IProperty2)shim;
+    //        var shim = obj.Shim<IBothProperties>();
+    //        var cast1 = (IProperty1)shim;
+    //        var cast2 = (IProperty2)shim;
 
-//        //Assert.IsInstanceOfType(shim.Value, typeof(double)); // Not compilable
-//        Assert.IsInstanceOfType(cast1.Value, typeof(int));
-//        Assert.IsInstanceOfType(cast2.Value, typeof(double));
-//    }
+    //        //Assert.IsInstanceOfType(shim.Value, typeof(double)); // Not compilable
+    //        Assert.IsInstanceOfType(cast1.Value, typeof(int));
+    //        Assert.IsInstanceOfType(cast2.Value, typeof(double));
+    //    }
 
-//    // Change property signature
-//#if SHIMRGEN
-//    [ShimOf<PropertySigClass>]
-//#endif
-//    public interface INewPropertySignature : IProperty2, IProperty1
-//    {
-//        new string Value { get; }
-//    }
+    //    // Change property signature
+    //#if SHIMRGEN
+    //    [ShimOf<PropertySigClass>]
+    //#endif
+    //    public interface INewPropertySignature : IProperty2, IProperty1
+    //    {
+    //        new string Value { get; }
+    //    }
 
-//    public class PropertySigClass : INewPropertySignature
-//    {
-//        public string Value { get; } = nameof(PropertySigClass);
-//        int IProperty1.Value { get; } = 1;
-//        double IProperty2.Value { get; } = 2.0;
-//    }
+    //    public class PropertySigClass : INewPropertySignature
+    //    {
+    //        public string Value { get; } = nameof(PropertySigClass);
+    //        int IProperty1.Value { get; } = 1;
+    //        double IProperty2.Value { get; } = 2.0;
+    //    }
 
-//    [TestMethod]
-//    public void PropertySigChange()
-//    {
-//        var obj = new PropertySigClass();
+    //    [TestMethod]
+    //    public void PropertySigChange()
+    //    {
+    //        var obj = new PropertySigClass();
 
-//        var shim = obj.Shim<INewPropertySignature>();
-//        var cast1 = (IProperty1)shim;
-//        var cast2 = (IProperty2)shim;
+    //        var shim = obj.Shim<INewPropertySignature>();
+    //        var cast1 = (IProperty1)shim;
+    //        var cast2 = (IProperty2)shim;
 
-//        Assert.IsInstanceOfType(shim.Value, typeof(string));
-//        Assert.IsInstanceOfType(cast1.Value, typeof(int));
-//        Assert.IsInstanceOfType(cast2.Value, typeof(double));
-//    }
+    //        Assert.IsInstanceOfType(shim.Value, typeof(string));
+    //        Assert.IsInstanceOfType(cast1.Value, typeof(int));
+    //        Assert.IsInstanceOfType(cast2.Value, typeof(double));
+    //    }
 
-//    // Base method definition
-//    public interface IMethod
-//    {
-//        int GetValue();
-//    }
+    //    // Base method definition
+    //    public interface IMethod
+    //    {
+    //        int GetValue();
+    //    }
 
-//    // Change method signature
-//#if SHIMRGEN
-//    [ShimOf<MethodSigClass>]
-//#endif
-//    public interface INewMethodSignature : IMethod
-//    {
-//        new string GetValue();
-//    }
+    //    // Change method signature
+    //#if SHIMRGEN
+    //    [ShimOf<MethodSigClass>]
+    //#endif
+    //    public interface INewMethodSignature : IMethod
+    //    {
+    //        new string GetValue();
+    //    }
 
-//    public class MethodSigClass : INewMethodSignature
-//    {
-//        int IMethod.GetValue() => 1;
-//        public string GetValue() => nameof(MethodSigClass);
-//    }
+    //    public class MethodSigClass : INewMethodSignature
+    //    {
+    //        int IMethod.GetValue() => 1;
+    //        public string GetValue() => nameof(MethodSigClass);
+    //    }
 
-//    [TestMethod]
-//    public void MethodSigChange()
-//    {
-//        var obj = new MethodSigClass();
+    //    [TestMethod]
+    //    public void MethodSigChange()
+    //    {
+    //        var obj = new MethodSigClass();
 
-//        var shim = obj.Shim<INewMethodSignature>();
+    //        var shim = obj.Shim<INewMethodSignature>();
 
-//        Assert.IsInstanceOfType(shim.GetValue(), typeof(string));
-//    }
+    //        Assert.IsInstanceOfType(shim.GetValue(), typeof(string));
+    //    }
 
     // Low-level interface
     public interface IBase
     {
-        //IEnumerable<int> Values { get; set; }
-        //IEnumerable<int> GetValues();
+        IEnumerable<int> Values { get; set; }
+        IEnumerable<int> GetValues();
     }
 
     // Explicitly implements interface and changes signature
     public class Impl : IBase
     {
         public int[] Values { get; set; }
-        //IEnumerable<int> IBase.Values { get => Values; set => Values = value.ToArray(); }
+        IEnumerable<int> IBase.Values { get => Values; set => Values = value.ToArray(); }
 
         public int[] GetValues() => Values;
-        //IEnumerable<int> IBase.GetValues() => GetValues();
+        IEnumerable<int> IBase.GetValues() => GetValues();
     }
 
     // Extends Impl with further signature change
@@ -160,23 +160,6 @@ public class MultiLevelInheritanceTests
         int[] GetIntValues(); // From Impl
         [Shim(typeof(Extr), "GetValues")]
         string[] GetStringValues(); // From Extr
-    }
-
-    public class X : IFullShim
-    {
-        Extr _obj;
-
-        public int[] IntValues { get => ((Impl)_obj).Values; set => ((Impl)_obj).Values = value; }
-
-        public string[] StringValues { get; set; }
-        //IEnumerable<int> IBase.Values { get => IntValues; set => IntValues = value.ToArray(); }
-        //IEnumerable<int> IBase.GetValues() => IntValues;
-        public int[] GetIntValues() { throw new NotImplementedException(); }
-        public System.String[] GetStringValues()
-        {
-            var obj = ((IFY.Shimr.Tests.MultiLevelInheritanceTests.Extr)_obj).GetValues();
-            return obj;
-        }
     }
 
     //    [TestMethod]
@@ -209,22 +192,22 @@ public class MultiLevelInheritanceTests
 
     //    // Shim wants everything, without inheritance
     //#if SHIMRGEN
-    //        [ShimOf(typeof(Extr))]
+    //    [ShimOf(typeof(Extr))]
     //#endif
     //    public interface INotInheritedShim
     //    {
     //        [Shim(typeof(IBase), "Values")]
     //        IEnumerable<int> BaseValues { get; set; }
-    //        [Shim("Values")]
+    //        [Shim(typeof(Impl), "Values")]
     //        int[] IntValues { get; set; } // From Impl
-    //        [Shim("Values")]
+    //        [Shim(typeof(Extr), "Values")]
     //        string[] StringValues { get; } // From Extr
 
     //        [Shim(typeof(IBase))]
     //        IEnumerable<int> GetValues();
-    //        [Shim("GetValues")]
+    //        [Shim(typeof(Impl), "GetValues")]
     //        int[] GetIntValues(); // From Impl
-    //        [Shim("GetValues")]
+    //        [Shim(typeof(Extr), "GetValues")]
     //        string[] GetStringValues(); // From Extr
     //    }
 
@@ -254,5 +237,5 @@ public class MultiLevelInheritanceTests
     //        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetValues().ToArray());
     //        CollectionAssert.AreEqual(new[] { 1, 2, 3 }, shim.GetIntValues());
     //        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, shim.GetStringValues());
-    //}
+    //    }
 }

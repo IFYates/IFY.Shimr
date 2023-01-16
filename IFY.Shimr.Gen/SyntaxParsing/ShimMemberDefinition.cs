@@ -259,7 +259,9 @@ internal class ShimMemberDefinition
         {
             if (shimAttr.TryGetAttributeConstructorValue("definitionType", out var targetDefType))
             {
-                TargetCast = new((INamedTypeSymbol)targetDefType!);
+                TargetCast = targetDefType is INamedTypeSymbol ns && ns.TypeKind == TypeKind.Interface
+                    ? new((INamedTypeSymbol)targetDefType!) : null;
+                // TODO: not interface
             }
             if (shimAttr.TryGetAttributeConstructorValue("name", out var targetName))
             {

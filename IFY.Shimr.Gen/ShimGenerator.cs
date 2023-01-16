@@ -28,6 +28,7 @@ internal class ShimGenerator : ISourceGenerator
     public void Execute(GeneratorExecutionContext context)
     {
         DiagnosticsMessages.PublishDiagnostics(context);
+        _debugOutput.Clear();
 
         // Only continue if our receiver is in use
         if (context.SyntaxContextReceiver is ShimTypeFinder receiver)

@@ -97,7 +97,8 @@ internal class ShimTypeDefinition
                 }
 
                 if (def.TargetMember?.TryGetReturnType(out var targetReturnType) == true
-                    && !targetReturnType.AllInterfaces.Any(i => i.FullName() == def.ReturnType.FullName))
+                    && !targetReturnType.AllInterfaces.Any(i => i.FullName() == def.ReturnType.FullName)
+                    && targetReturnType.FullName != def.ReturnType.FullName)
                 {
                     AdditionalShims.Add((def.ReturnType, targetReturnType));
                     def.TargetReturnType = targetReturnType;

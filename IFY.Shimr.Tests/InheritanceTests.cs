@@ -61,6 +61,22 @@ public class InheritanceTests
         new public int GetValue() { return 1; }
     }
 
+    public class InheritanceTests_IShimIssue11 : IFY.Shimr.Tests.InheritanceTests.IShimIssue11, IFY.Shimr.IShim
+    {
+        private readonly IFY.Shimr.Tests.InheritanceTests.Issue11Class _obj;
+        public InheritanceTests_IShimIssue11(IFY.Shimr.Tests.InheritanceTests.Issue11Class obj)
+        {
+            _obj = obj;
+        }
+        public System.String GetValue()
+        {
+            var obj = ((IFY.Shimr.Tests.InheritanceTests.Issue11BaseClass)_obj).GetValue();
+            return obj;
+        }
+        public object Unshim() => _obj;
+        public override string? ToString() => _obj.ToString();
+    }
+
 #if SHIMRGEN
     [ShimOf<Issue11Class>]
 #endif

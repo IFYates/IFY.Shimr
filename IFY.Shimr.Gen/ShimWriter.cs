@@ -94,9 +94,9 @@ internal class ShimWriter
                     {
                         memRefName = $"(({property.TargetCast.FullName}){memRefName})";
                     }
-                    var implementor = !distinct && property.ShimType.TypeKind == TypeKind.Interface && property.ShimTypeFullName != shim.ShimFullName
+                    var implementor = !distinct && property.ShimType.TypeKind == TypeKind.Interface && property.ShimTypeFullName != shim.ShimFullName && property.ShimType.TypeKind == TypeKind.Interface
                         ? property.ShimTypeFullName
-                        : property.ParentType != null
+                        : property.ParentType != null && property.ParentType.TypeKind == TypeKind.Interface
                         ? property.ParentType.FullName()
                         : null;
                     CreateProperty(2, property.ReturnType!, property.Name, property.IndexType, property.CanRead, property.CanWrite, memRefName, property.TargetReturnType, property.TargetName, implementor, property.UsePropertyMethods, property.Proxy);
@@ -123,12 +123,12 @@ internal class ShimWriter
                         memRefName = $"(({method.TargetCast.FullName}){memRefName})";
                     }
                     var constructorType = method.IsConstructor ? (method.StaticType?.FullName ?? targetType.FullName) : null;
-                    var implementor = !distinct && method.ShimType.TypeKind == TypeKind.Interface && method.ShimTypeFullName != shim.ShimFullName
-                        ? method.ShimTypeFullName
+                    var implementor = !distinct && method.ShimType.TypeKind == TypeKind.Interface && method.ShimTypeFullName != shim.ShimFullName && method.ShimType.TypeKind == TypeKind.Interface
+                        ? method.ShimType
                         : method.ParentType != null
-                        ? method.ParentType.FullName()
+                        ? method.ParentType
                         : null;
-                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor, !distinct, method.GenericContraints, method.Proxy);
+                    CreateMethod(2, method.ReturnType, method.Name, method.Parameters.Values, memRefName, method.TargetReturnType, method.TargetName, constructorType, implementor?.FullName(), !distinct && implementor?.TypeKind == TypeKind.Interface, method.GenericContraints, method.Proxy);
                 }
             }
 
