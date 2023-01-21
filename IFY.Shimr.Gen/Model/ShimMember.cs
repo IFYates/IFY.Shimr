@@ -1,6 +1,5 @@
 ﻿using IFY.Shimr.Gen.SyntaxParsing;
 using Microsoft.CodeAnalysis;
-using System.Text;
 using Tortuga.TestMonkey;
 
 namespace IFY.Shimr.Gen.Model;
@@ -24,6 +23,7 @@ internal abstract class ShimMember
     public string? TargetName { get; set; }
 
     public bool IsStatic { get; set; }
+    public ITypeSymbol? StaticType { get; set; }
 
     public string ReturnType { get; set; } = null!;
     public string Name { get; set; } = null!;
@@ -40,7 +40,7 @@ internal class ShimMethodMember : ShimMember
 {
     new public IMethodSymbol Symbol => (IMethodSymbol)base.Symbol;
 
-    public ShimMethodMember(IMethodSymbol method)
+    public ShimMethodMember(IMethodSymbol method, ShimTypeDefinition typeDef)
     {
         base.Symbol = method;
 
@@ -51,9 +51,41 @@ internal class ShimMethodMember : ShimMember
         Name = method.Name;
 
         SignatureName = Name; // TODO: args
+
+        // ShimProxyAttribute
+        var proxyAttr = Symbol.GetAttribute<ShimProxyAttribute>();
+        if (proxyAttr != null
+            // implementationType is required
+            && proxyAttr.TryGetAttributeConstructorValue("implementationType", out var proxyTypeArg)
+            && proxyTypeArg != null)
+        {
+            StaticType = (ITypeSymbol)proxyTypeArg;
+        }
+
+        // ConstructorShimAttribute
+        var constrAttr = Symbol.GetAttribute<ConstructorShimAttribute>();
+        if (constrAttr != null)
+        {
+            if (proxyAttr != null)
+            {
+                Symbol.ReportConflictingAttributes(Symbol.FullName(), Name, typeof(ShimProxyAttribute).FullName, typeof(StaticShimAttribute).FullName);
+            }
+            else
+            {
+                IsConstructor = true;
+                IsStatic = true;
+                constrAttr.TryGetAttributeConstructorValue("targetType", out var constrTargetType);
+                StaticType = constrTargetType != null
+                    ? (ITypeSymbol)constrTargetType!
+                    : typeDef.StaticType;
+                TargetReturnType = StaticType!.TryFullName();
+                //IsReturnShim = true;
+            }
+        }
     }
 
-    //public bool IsConstructor { get; set; }
+    public bool IsConstructor { get; set; }
+
     // TODO: gen args
 
     public string GetGenArgs()
@@ -67,11 +99,21 @@ internal class ShimMethodMember : ShimMember
     }
     public override string ToString()
     {
-        var objName = "_obj";
+        var objName = !IsStatic
+            ? "_obj"
+            : StaticType!.TryFullName();
+
         string getValue()
         {
             var args = string.Join(", ", Symbol.Parameters.Select(p => p.Name));
-            return $"{objName}.{TargetName ?? Name}({args})";
+            var str = !IsConstructor
+                ? $"{objName}.{TargetName ?? Name}({args})"
+                : $"new {objName}{GetGenArgs()}({args})";
+            if (ReturnType != null && TargetReturnType != null && ReturnType != TargetReturnType)
+            {
+                str += $".Shim<{ReturnType}>()";
+            }
+            return str;
         }
 
         var str = $"{GetMemberStart()}{GetGenArgs()}({GetParams()})\n"
@@ -86,7 +128,7 @@ internal class ShimPropertyMember : ShimMember
 {
     new public IPropertySymbol Symbol => (IPropertySymbol)base.Symbol;
 
-    public ShimPropertyMember(IPropertySymbol property)
+    public ShimPropertyMember(IPropertySymbol property, ShimTypeDefinition typeDef)
     {
         base.Symbol = property;
 

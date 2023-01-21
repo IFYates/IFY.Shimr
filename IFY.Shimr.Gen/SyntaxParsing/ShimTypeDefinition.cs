@@ -14,6 +14,7 @@ internal class ShimTypeDefinition
     public string ShimSafeName { get; }
 
     public bool IsStatic { get; }
+    public ITypeSymbol? StaticType { get; private set; }
     public TypeDef TargetType { get; }
     public string TargetNamespace => TargetType.Namespace;
     public string TargetFullName => TargetType.FullName;
@@ -57,6 +58,14 @@ internal class ShimTypeDefinition
             // Allowed; ignored for inheritance
         }
 
+        // StaticShimAttribute
+        var staticAttr = interfaceDef.Symbol.GetAttribute<StaticShimAttribute>();
+        if (staticAttr != null
+            && staticAttr.TryGetAttributeConstructorValue("targetType", out var staticTypeArg))
+        {
+            StaticType = (ITypeSymbol?)staticTypeArg;
+        }
+
         // Parse interface members
         foreach (var member in interfaceDef.GetMembers())
         {
@@ -69,9 +78,9 @@ internal class ShimTypeDefinition
             // Shape
             ShimMember? def = member switch
             {
-                IPropertySymbol property => new ShimPropertyMember(property),
+                IPropertySymbol property => new ShimPropertyMember(property, this),
                 IMethodSymbol method when method.ConstructedFrom.AssociatedSymbol == null
-                    => new ShimMethodMember(method),
+                    => new ShimMethodMember(method, this),
                 // TODO
                 //IEventSymbol ev => new ShimMemberDefinition(ev),
                 _ => null
