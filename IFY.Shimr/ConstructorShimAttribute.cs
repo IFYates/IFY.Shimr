@@ -1,21 +1,18 @@
-﻿using System;
+﻿namespace IFY.Shimr;
 
-namespace IFY.Shimr
+/// <summary>
+/// Mark a method as being a shim of a constructor.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+public class ConstructorShimAttribute : StaticShimAttribute
 {
-    /// <summary>
-    /// Mark a method as being a shim of a constructor.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public class ConstructorShimAttribute : StaticShimAttribute
+    public ConstructorShimAttribute()
     {
-        public ConstructorShimAttribute()
-        {
-            IsConstructor = true;
-        }
-        public ConstructorShimAttribute(Type targetType)
-            : base(targetType)
-        {
-            IsConstructor = true;
-        }
+        IsConstructor = true;
+    }
+    public ConstructorShimAttribute(Type targetType)
+        : base(targetType)
+    {
+        IsConstructor = true;
     }
 }
