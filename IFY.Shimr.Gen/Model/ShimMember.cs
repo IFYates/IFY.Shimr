@@ -144,8 +144,8 @@ internal class ShimPropertyMember : ShimMember
     }
 
     // The full name of the property type
-    public bool CanRead { get; set; }
-    public bool CanWrite { get; set; }
+    public bool CanRead { get; }
+    public bool CanWrite { get; }
 
     // If the target of this shim is a set of methods (get_, set_)
     public bool UseMethods { get; set; }
@@ -155,8 +155,8 @@ internal class ShimPropertyMember : ShimMember
         var objName = "_obj";
         string getValue()
         {
-            return $"{objName}.{TargetName ?? Name}"
-                + (UseMethods ? "()" : "");
+            return $"{objName}.{(UseMethods ? "get_" : null)}{TargetName ?? Name}"
+                + (UseMethods ? "()" : null);
         }
 
         var res = GetMemberStart();
@@ -175,7 +175,7 @@ internal class ShimPropertyMember : ShimMember
             {
                 var value = "value";
 
-                res += $"\n\tset => {objName}.{TargetName ?? Name}";
+                res += $"\n\tset => {objName}.{(UseMethods ? "set_" : null)}{TargetName ?? Name}";
                 res += UseMethods ? $"({value});" : $" = {value};";
             }
             res += "\n}";

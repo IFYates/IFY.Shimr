@@ -12,27 +12,27 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-	  <DefineConstants>$(DefineConstants)TRACE;SHIMRGEN</DefineConstants>
+		<DefineConstants>$(DefineConstants)TRACE;SHIMRGEN</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Method.cs" Link="ExtendedFunctionalityTests.Method.cs" />
-	  <None Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Property.cs" Link="ExtendedFunctionalityTests.Property.cs" />
+		<None Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Method.cs" Link="ExtendedFunctionalityTests.Method.cs" />
+		<None Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Property.cs" Link="ExtendedFunctionalityTests.Property.cs" />
 		<None Include="..\IFY.Shimr.Tests\IndexerShimTests.cs" Link="IndexerShimTests.cs" />
 		<None Include="..\IFY.Shimr.Tests\InheritanceTests.cs" Link="InheritanceTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="EventShimTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\GenericMethodTests.cs" Link="GenericMethodTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\AccessibilityTests.cs" Link="AccessibilityTests.cs" />
-	  <Compile Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="ConstructorTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\FieldShimTests.cs" Link="FieldShimTests.cs" />
-		<Compile Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="MethodShimTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="EventShimTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\GenericMethodTests.cs" Link="GenericMethodTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\AccessibilityTests.cs" Link="AccessibilityTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="ConstructorTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\FieldShimTests.cs" Link="FieldShimTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="MethodShimTests.cs" />
 		<None Include="..\IFY.Shimr.Tests\MissingMemberTests.cs" Link="MissingMemberTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\GenericConstructorTests.cs" Link="GenericConstructorTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="MultiLevelInheritanceTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\SignatureEnumerableChangeTests.cs" Link="SignatureEnumerableChangeTests.cs" />
-	  <Compile Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\RenameMemberTests.cs" Link="RenameMemberTests.cs" />
-	  <None Include="..\IFY.Shimr.Tests\SignatureChangeTests.cs" Link="SignatureChangeTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\GenericConstructorTests.cs" Link="GenericConstructorTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="MultiLevelInheritanceTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\SignatureEnumerableChangeTests.cs" Link="SignatureEnumerableChangeTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="PropertyShimTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\RenameMemberTests.cs" Link="RenameMemberTests.cs" />
+		<None Include="..\IFY.Shimr.Tests\SignatureChangeTests.cs" Link="SignatureChangeTests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -41,14 +41,11 @@
 		<PackageReference Include="MSTest.TestFramework" Version="2.2.8" />
 		<PackageReference Include="coverlet.collector" Version="3.1.2" />
 		<PackageReference Include="Moq" Version="4.16.1" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="3.9.0" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\IFY.Shimr.Gen\IFY.Shimr.Gen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Gen\" />
-	</ItemGroup>
-	
 </Project>
