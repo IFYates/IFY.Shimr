@@ -13,9 +13,9 @@
 
         <Authors>IFYates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>2.0.1</Version>
-        <AssemblyVersion>2.0.1</AssemblyVersion>
-        <FileVersion>2.0.1</FileVersion>
+        <Version>2.0.2</Version>
+        <AssemblyVersion>2.0.2</AssemblyVersion>
+        <FileVersion>2.0.2</FileVersion>
         <PackageProjectUrl>https://github.com/IFYates/Shimterface</PackageProjectUrl>
         <RepositoryUrl>https://github.com/IFYates/Shimterface</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
