@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace IFY.Shimr.Internal;
 
@@ -194,22 +195,32 @@ internal static class TypeHelpers
         return false;
     }
 
-    // Close enough estimation that we're looking at an IEnumerable<T> implementation
-    private static bool isIEnumerableGeneric(Type type)
+    /// <summary>
+    /// Close enough estimation that we're looking at an interface that implements <see cref="IEnumerable{T}"/>.
+    /// </summary>
+    /// <param name="type">The generic type to compare</param>
+    /// <param name="elementType">The element type of the enumerable</param>
+    /// <returns>True if this type does implement <see cref="IEnumerable{T}"/></returns>
+    public static bool IsIEnumerableGeneric(this Type type, [MaybeNullWhen(false)] out Type elementType)
     {
-        return type.IsInterface
-            && type.IsGenericType
-            && typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
+        if (type.IsInterface && type.IsGenericType && type.GenericTypeArguments.Length == 1
+            && typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
+        {
+            elementType = type.GenericTypeArguments[0];
+            return true;
+        }
+        elementType = null;
+        return false;
     }
 
-    public static bool IsArrayType(this Type type)
+    public static bool IsArrayType(this Type type, out Type? elementType)
     {
-        return type.IsArray || isIEnumerableGeneric(type);
-    }
-
-    public static bool IsInterfaceType(this Type type)
-    {
-        return type.ResolveType().IsInterface;
+        if (type.IsArray)
+        {
+            elementType = type.GetElementType();
+            return true;
+        }
+        return type.IsIEnumerableGeneric(out elementType);
     }
 
     /// <summary>
@@ -245,10 +256,8 @@ internal static class TypeHelpers
     /// <returns>A singular type.</returns>
     public static Type ResolveType(this Type type)
     {
-        if (isIEnumerableGeneric(type))
-        {
-            return type.GenericTypeArguments[0];
-        }
-        return type.IsArray ? type.GetElementType() : type;
+        return type.IsIEnumerableGeneric(out var elementType)
+            ? elementType
+            : type.IsArray ? type.GetElementType() : type;
     }
 }

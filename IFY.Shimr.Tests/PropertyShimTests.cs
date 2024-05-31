@@ -1,7 +1,9 @@
 ﻿using IFY.Shimr.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 #pragma warning disable CA1822 // Mark members as static
 #pragma warning disable IDE1006 // Naming Styles
@@ -171,5 +173,35 @@ namespace IFY.Shimr.Tests
         }
 
         #endregion Issue 12
+
+        #region Issue 28 - Cannot auto-shim IEnumerable return type
+
+        public sealed class ClassWithCollectionProperty
+        {
+            public List<string> Values { get; } = new();
+        }
+
+        public interface IShimWithICollectionAutoshim
+        {
+            ICollection<string> Values { get; }
+        }
+
+        [TestMethod]
+        public void Can_autoshim_using_IEnumerable_return_type()
+        {
+            // Arrange
+            var obj = new ClassWithCollectionProperty();
+            var shim = obj.Shim<IShimWithICollectionAutoshim>();
+
+            // Act
+            obj.Values.Add("A");
+            shim.Values.Add("B");
+
+            // Assert
+            CollectionAssert.AreEqual(new[] { "A", "B" }, shim.Values.ToArray());
+            Assert.AreSame(shim.Values, obj.Values);
+        }
+
+        #endregion
     }
 }

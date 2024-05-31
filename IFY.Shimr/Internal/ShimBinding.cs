@@ -25,7 +25,7 @@ internal class ShimBinding
             .Select(p =>
             {
                 var paramAttr = p.GetCustomAttribute<TypeShimAttribute>();
-                if (paramAttr != null && !p.ParameterType.IsInterfaceType())
+                if (paramAttr != null && !p.ParameterType.ResolveType().IsInterface)
                 {
                     throw new NotSupportedException($"Shimmed parameter type must be an interface: {InterfaceMethod.DeclaringType.FullName}");
                 }
@@ -184,7 +184,8 @@ internal class ShimBinding
         }
 
         // Can only override with an interface
-        if (implReturnType != null && !InterfaceMethod.ReturnType.IsEquivalentGenericMethodType(implReturnType) && !InterfaceMethod.ReturnType.IsInterfaceType())
+        if (implReturnType != null && !InterfaceMethod.ReturnType.IsEquivalentGenericMethodType(implReturnType)
+            && !InterfaceMethod.ReturnType.IsInterface && !InterfaceMethod.ReturnType.ResolveType().IsInterface)
         {
             throw new NotSupportedException($"Shimmed return type ({InterfaceMethod.ReturnType.FullName}) must be an interface, on member: {InterfaceMethod.DeclaringType.FullName}.{reflectMember.Name}");
         }
