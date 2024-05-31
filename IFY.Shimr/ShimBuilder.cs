@@ -231,7 +231,7 @@ public static class ShimBuilder
         }
 
         // Run-time test that type is an interface
-        if (!interfaceType.IsInterfaceType())
+        if (!interfaceType.IsInterface)
         {
             throw new NotSupportedException($"Generic argument must be a direct interface: {interfaceType.FullName}");
         }

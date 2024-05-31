@@ -75,6 +75,14 @@
             <param name="other">The generic type to compare this type against</param>
             <returns>True if <paramref name="other"/> is equivalent to <paramref name="type"/>.</returns>
         </member>
+        <member name="M:IFY.Shimr.Internal.TypeHelpers.IsIEnumerableGeneric(System.Type,System.Type@)">
+            <summary>
+            Close enough estimation that we're looking at an interface that implements <see cref="T:System.Collections.Generic.IEnumerable`1"/>.
+            </summary>
+            <param name="type">The generic type to compare</param>
+            <param name="elementType">The element type of the enumerable</param>
+            <returns>True if this type does implement <see cref="T:System.Collections.Generic.IEnumerable`1"/></returns>
+        </member>
         <member name="M:IFY.Shimr.Internal.TypeHelpers.RebuildGenericType(System.Type,System.Type[])">
             <summary>
             Rebuilds a complex type that may make use of method generic attributes and replaces

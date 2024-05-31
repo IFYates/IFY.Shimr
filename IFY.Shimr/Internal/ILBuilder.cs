@@ -129,9 +129,17 @@ internal static class ILBuilder
         {
             impl.Emit(OpCodes.Box, fromType);
         }
-        var valType = resultType.IsArrayType() ? typeof(IEnumerable<object>) : typeof(object);
-        var shimType = resultType.ResolveType();
-        var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { shimType }, new[] { valType });
+
+        var argType = typeof(object);
+        var shimType = resultType;
+        if (resultType.IsArrayType(out var resultElementType) && fromType.IsArrayType(out var fromElementType)
+            && resultElementType != fromElementType)
+        {
+            argType = typeof(IEnumerable<object>); // Auto-shim collection
+            shimType = resultElementType;
+        }
+
+        var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { shimType }, new[] { argType });
         impl.Emit(OpCodes.Call, shimMethod);
     }
 
@@ -142,7 +150,7 @@ internal static class ILBuilder
             return;
         }
 
-        var valType = realType.IsArrayType() ? typeof(IEnumerable<object>) : typeof(object);
+        var valType = realType.IsArrayType(out _) ? typeof(IEnumerable<object>) : typeof(object);
         var resultType = realType.ResolveType();
         var unshimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Unshim), new[] { resultType }, new[] { valType });
         impl.Emit(OpCodes.Call, unshimMethod);
