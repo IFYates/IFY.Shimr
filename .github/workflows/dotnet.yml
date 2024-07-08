@@ -7,7 +7,7 @@ on:
     paths:
       - src
   pull_request:
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
     branches:
       - master
 
@@ -23,14 +23,14 @@ jobs:
       uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 3.1.x
-    - name: Setup .NET 5
-      uses: actions/setup-dotnet@v1.7.2
-      with:
-        dotnet-version: 5.0.x
     - name: Setup .NET 6
       uses: actions/setup-dotnet@v1.7.2
       with:
         dotnet-version: 6.0.x
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v1.7.2
+      with:
+        dotnet-version: 8.0.x
 
     - name: Restore dependencies
       run: dotnet restore
@@ -63,7 +63,7 @@ jobs:
         coverage-reports: cover.lcov
 
     # Mutation test
-    - name: Configure Stryker.NET for IFY.Phorm
+    - name: Configure Stryker.NET for IFY.Shimr
       uses: DamianReeves/write-file-action@v1.0
       with:
         path: stryker-config.json
