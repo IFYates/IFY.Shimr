@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<!--<TargetFrameworks>netcoreapp3.1;net6.0;net8.0</TargetFrameworks>-->
-		<TargetFrameworks>net8.0</TargetFrameworks>
+		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
@@ -10,7 +10,12 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
+		<DefineConstants>SHIMR_CG</DefineConstants>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\IFY.Shimr.Tests\Examples\DateTimeExample.cs" Link="Examples\DateTimeExample.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
@@ -28,7 +33,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\IFY.Shimr\IFY.Shimr.csproj" />
+		<ProjectReference Include="..\IFY.Shimr.CodeGen\IFY.Shimr.CodeGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Examples\" />
 	</ItemGroup>
 
 </Project>

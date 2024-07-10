@@ -3,6 +3,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
 
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -30,6 +31,10 @@
         <DocumentationFile>IFY.Shimr.xml</DocumentationFile>
     </PropertyGroup>
     
+	<ItemGroup>
+	  <Compile Include="..\IFY.Shimr.CodeGen\_Common\ShimgenAttribute.cs" Link="ShimgenAttribute.cs" />
+	</ItemGroup>
+
     <ItemGroup>
       <None Remove="IFY.Shimr.xml" />
     </ItemGroup>

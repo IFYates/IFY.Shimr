@@ -268,5 +268,15 @@
             Mark signature type as being automatically shimmed from real implementation type
             </summary>
         </member>
+        <member name="T:IFY.Shimr.ShimgenAttribute">
+            <summary>
+            Marks this type as being a sourcegen shim.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ShimgenAttribute.#ctor(System.Type)">
+            <summary>
+            Marks this type as being a sourcegen shim.
+            </summary>
+        </member>
     </members>
 </doc>
