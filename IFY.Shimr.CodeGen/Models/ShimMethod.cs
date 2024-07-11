@@ -4,27 +4,22 @@ namespace IFY.Shimr.CodeGen.Models;
 
 internal class ShimMethod(IMethodSymbol symbol) : BaseReturnableShimMember<IMethodSymbol>
 {
-    public string? Documentation { get; } = symbol.GetDocumentationCommentXml();
     public override string Name { get; } = symbol.Name;
+
     public override ITypeSymbol ReturnType { get; } = symbol.ReturnType;
     public override string ReturnTypeName { get; } = symbol.ReturnType.ToDisplayString();
-    public int ParameterCount { get; } = symbol.Parameters.Length;
-    public string Arguments { get; } = string.Join(", ", symbol.Parameters.Select(p => p.Name));
-    // TODO: out, ref, default
-    // TODO: nullability?
-    // TODO: attributes?
+
+    public ShimMethodParameter[] Parameters { get; }
+        = symbol.Parameters.Select(p => new ShimMethodParameter(p)).ToArray();
 
     protected override IEnumerable<IMethodSymbol> UnderlyingMemberMatch(IEnumerable<IMethodSymbol> underlyingMembers)
         => underlyingMembers.Where(symbol.AllParameterTypesMatch);
 
-    public override void GenerateCode(StringBuilder code, INamedTypeSymbol underlyingType, IMethodSymbol? underlyingMethod)
+    public override void GenerateCode(StringBuilder code, ITypeSymbol underlyingType, IMethodSymbol? underlyingMethod)
     {
-        if (Documentation?.Length > 0)
-        {
-            code.AppendLine(Documentation);
-        }
-
-        code.Append($"            public {ReturnTypeName} {Name}({symbol.GetParametersSignature()})");
+        code.Append($"            public {ReturnTypeName} {Name}(")
+            .Append(string.Join(", ", Parameters.Select(p => p.ToString())))
+            .Append(")");
 
         if (underlyingMethod == null)
         {
@@ -37,6 +32,12 @@ internal class ShimMethod(IMethodSymbol symbol) : BaseReturnableShimMember<IMeth
             return;
         }
 
-        code.Append($" => _inst.{Name}({Arguments})").Append(GetShimCode(underlyingMethod.ReturnType)).AppendLine(";");
+        code.Append($" => _inst.{Name}(")
+            .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
+            .Append($")")
+            .Append(GetShimCode(underlyingMethod.ReturnType)).AppendLine(";");
     }
+
+    public override ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType)
+        => GetUnderlyingMember(underlyingType)?.ReturnType ?? ReturnType;
 }

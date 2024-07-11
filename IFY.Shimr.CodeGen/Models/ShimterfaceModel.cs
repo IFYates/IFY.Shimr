@@ -7,53 +7,44 @@ namespace IFY.Shimr.CodeGen.Models;
 /// </summary>
 internal class ShimterfaceModel
 {
-    #region Object pool
-    private static readonly Dictionary<string, ShimterfaceModel> _pool = [];
-    public static int ShimterfaceCount => _pool.Count;
-
-    public static Random R = new();
-    public static ShimterfaceModel GetOrCreate(INamedTypeSymbol interfaceType)
-    {
-        var key = interfaceType.ToDisplayString();
-        if (!_pool.TryGetValue(key, out var shim))
-        {
-            _pool.Add(key, null!);
-            shim = new ShimterfaceModel(interfaceType);
-            _pool[key] = shim;
-        }
-        return shim;
-    }
-
-    #endregion
-
-    public INamedTypeSymbol InterfaceType { get; }
+    public ITypeSymbol InterfaceType { get; }
     public string InterfaceFullName { get; }
     public List<ShimModel> Shims { get; } = [];
 
     private IShimMember[]? _members = null;
 
-    private ShimterfaceModel(INamedTypeSymbol interfaceType)
+    public ShimterfaceModel(ITypeSymbol interfaceType)
     {
         InterfaceType = interfaceType;
         InterfaceFullName = InterfaceType.ToDisplayString();
     }
 
-    public ShimModel AddShim(INamedTypeSymbol underlyingType)
+    public ShimModel AddShim(ITypeSymbol underlyingType)
     {
         var shim = new ShimModel(this, underlyingType);
         if (!Shims.Any(s => s.Key == shim.Key))
         {
             Shims.Add(shim);
         }
-        return shim;
+        return Shims.Single(s => s.Key == shim.Key);
+    }
+
+    public ShimFactoryModel AddShimFactory(ITypeSymbol underlyingType)
+    {
+        var shim = new ShimFactoryModel(this, underlyingType);
+        if (!Shims.Any(s => s.Key == shim.Key))
+        {
+            Shims.Add(shim);
+        }
+        return (ShimFactoryModel)Shims.Single(s => s.Key == shim.Key);
     }
 
     // fields
     // X properties
-    // - return shim
+    // X- return shim
     // X methods
     // - argument shim
-    // - return shim
+    // X- return shim
     // static methods
     // constructors
     // events
@@ -79,7 +70,7 @@ internal class ShimterfaceModel
                         members.Add(new ShimProperty(ps));
                         break;
                     default:
-                        ShimrSourceGenerator.WriteOutput($"// Unhandled member type: {member.GetType().FullName}");
+                        Diag.WriteOutput($"// Unhandled member type: {member.GetType().FullName}");
                         break;
                 }
             }

@@ -5,17 +5,14 @@ namespace IFY.Shimr.Examples;
 [TestClass]
 public class DateTimeExample
 {
-    [Shimgen(typeof(TimeSpan))]
     public interface ITimeSpan
     {
         double TotalSeconds { get; }
     }
-    [Shimgen(typeof(TimeSpan))]
     public interface ITimeSpan2
     {
         double TotalSeconds { get; }
     }
-    [Shimgen(typeof(DateTime))]
     public interface IDateTime
     {
         ITimeSpan Subtract([TypeShim(typeof(DateTime))] IDateTime value);
@@ -30,17 +27,22 @@ public class DateTimeExample
     }
 
     [TestMethod]
-    public void DateTime_can_be_wrapped()
+    public void DateTime_can_be_wrapped_and_unwrapped()
     {
+        // Arrange
         DateTime dt = DateTime.UtcNow;
         string exp = dt.ToString("o");
 
+        // Act
 #if SHIMR_CG
-        IDateTime shim = dt.Shim<IDateTime>()!;
+        IDateTime shim = dt.Shim<IDateTime>();
 #else
         IDateTime shim = ShimBuilder.Shim<IDateTime>(dt)!;
 #endif
 
+        // Assert
+        Assert.IsInstanceOfType<IDateTime>(shim);
+        Assert.IsInstanceOfType<DateTime>(((IShim)shim).Unshim());
         string res = shim.ToString("o");
         Assert.AreEqual(exp, res);
     }
@@ -66,8 +68,6 @@ public class DateTimeExample
         IDateTime now = dt.Now;
 
         Assert.IsNotInstanceOfType<DateTime>(now);
-        Assert.IsInstanceOfType<IDateTime>(now);
         Assert.IsInstanceOfType<IShim>(now);
-        Assert.IsInstanceOfType<DateTime>(((IShim)now).Unshim());
     }
 }

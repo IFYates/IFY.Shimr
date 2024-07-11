@@ -1,105 +1,100 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+﻿using IFY.Shimr.CodeGen.CodeAnalysis;
+using IFY.Shimr.CodeGen.Models;
+using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen;
 
 [Generator]
 internal class ShimrSourceGenerator : ISourceGenerator
 {
-    private const string OUTPUT_FILE = "F:\\Dev\\IFY.Shimr\\Sourcegen.cs";
-    public static void WriteOutput(string text, bool append = true)
+    private readonly CodeError _errors = new();
+    private readonly ShimRegister _shimRegister = new();
+
+    // Only called after a rebuild
+    public void Initialize(GeneratorInitializationContext context)
     {
-#if DEBUG
-        using FileStream fs = new(OUTPUT_FILE, append ? FileMode.Append : FileMode.Create);
-        using StreamWriter sw = new(fs);
-        try
-        {
-            sw.WriteLine(text);
-        }
-        finally
-        {
-            sw.Close();
-        }
-#endif
+        //System.Diagnostics.Debugger.Launch(); // Do not leave uncommented when exiting VS
+        Diag.WriteOutput($"// Start code generation: {DateTime.Now:o}\r\n", false); // TODO: wrong place to reset file
+
+        var shimUseResolver = new ShimResolver(_errors, _shimRegister);
+        context.RegisterForSyntaxNotifications(new SyntaxContextReceiverCreator(() => shimUseResolver));
     }
 
-    public static string[] KnownShims { get; private set; } = [];
-
+    // Called on each code change
     public void Execute(GeneratorExecutionContext context)
     {
         try
         {
-            WriteOutput($"// Project {context.Compilation.AssemblyName}");
+            _errors.SetContext(context);
             doExecute(context);
         }
         catch (Exception ex)
         {
-            WriteOutput($"/** {ex.GetType().FullName}: {ex.Message}");
-            WriteOutput(ex.StackTrace);
-            WriteOutput("**/");
+            var err = $"{ex.GetType().FullName}: {ex.Message}\r\n{ex.StackTrace}";
+            context.AddSource("ERROR.log.cs", $"// {err}");
+            Diag.WriteOutput($"// ERROR: {err}");
+            // TODO: _errors.CodeGenFailed(ex);
             throw;
         }
     }
     private void doExecute(GeneratorExecutionContext context)
     {
-        // TODO: find uses of .Shim<T>() and drop attribute
+        var code = new StringBuilder();
 
-        var builder = new AutoShimBuilder(context);
-
-        // Find all uses of new attribute
-        var interfaces = context.Compilation.SyntaxTrees
-            .SelectMany(st => st.GetRoot()
-                    .DescendantNodes()
-                    .OfType<InterfaceDeclarationSyntax>()).ToArray();
-        var discoveredShims = interfaces
-            .SelectMany(builder.GetInterfaceShims)
-            .Distinct().ToArray();
-        if (!discoveredShims.Any())
+        var shims = _shimRegister.Interfaces.SelectMany(s => s.Shims ?? []).ToList();
+        var newShims = shims.ToList();
+        while (newShims.Count > 0)
         {
-            WriteOutput($"// Did not find any uses of {builder.AttributeSymbol.Name} on {interfaces.Length} interfaces");
+            var loop = newShims.Distinct().ToArray();
+            newShims.Clear();
+            foreach (var shim in loop)
+            {
+                shim.ResolveImplicitShims(_shimRegister, newShims);
+            }
+            newShims.RemoveAll(shims.Contains);
+            shims.AddRange(newShims.Distinct());
+        }
+
+        // Meta info
+        code.AppendLine($"// Generation time: {DateTime.Now:o}");
+        code.AppendLine($"// Project: {context.Compilation.AssemblyName}");
+        code.AppendLine("// Shim map:");
+        foreach (var shimt in _shimRegister.Interfaces)
+        {
+            code.AppendLine($"// + {shimt.InterfaceFullName}");
+            foreach (var shim in shimt.Shims)
+            {
+                code.AppendLine($"//   - {shim.UnderlyingFullName}");
+            }
+        }
+        addSource("_meta.g.cs", code);
+
+        if (!shims.Any())
+        {
+            Diag.WriteOutput($"// Did not find any uses of Shimr");
             return;
         }
 
-        KnownShims = discoveredShims.Select(s => s.InterfaceFullName).ToArray();
-
-        var code = new StringBuilder();
-        builder.BuildFactoryClass(code);
+        var builder = new AutoShimCodeWriter(context);
+        builder.WriteFactoryClass(code);
         addSource("ShimBuilder.g.cs", code);
 
-        var shims = discoveredShims.SelectMany(s => s.Shims).ToArray();
-        builder.BuildExtensionClass(code, shims);
+        builder.WriteExtensionClass(code, shims);
         addSource("ShimAuto.g.cs", code);
 
         foreach (var shim in shims)
         {
-            builder.BuildShimClass(code, shim);
+            builder.WriteShimClass(code, shim);
             addSource($"Shimr.{shim.Name}.g.cs", code);
         }
+
+        Diag.WriteOutput($"// Code generation complete: {DateTime.Now:o}");
 
         void addSource(string name, StringBuilder code)
         {
             context.AddSource(name, code.ToString());
-            WriteOutput($"/** File: {name} **/\r\n{code}");
+            Diag.WriteOutput($"/** File: {name} **/\r\n{code}");
             code.Clear();
         }
     }
-
-    public void Initialize(GeneratorInitializationContext context)
-    {
-        //Debugger.Launch();
-        WriteOutput($"// Auto-generated code ({DateTime.Now:o})\r\n", false);
-
-        // TODO: use ISyntaxReceiver?
-    }
-
-    //class ShimrReceiver : ISyntaxReceiver
-    //{
-    //    public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
-    //    {
-    //        if (syntaxNode is ClassDeclarationSyntax cds
-    //            && cds.HaveAttribute(ShimrAttribute))
-    //        {
-    //        }
-    //    }
-    //}
 }

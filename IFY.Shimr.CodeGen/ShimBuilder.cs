@@ -1,11 +1,17 @@
 ﻿namespace IFY.Shimr.Extensions;
 
-[Obsolete("Use 'ShimgenAttribute' on interface and rely on generated extension methods")]
 public static partial class ShimBuilder
 {
-    public static T Shim<T>(object obj)
+    [Obsolete("Shimr codegen is either out-of-date or unable to provide design-time reliance on the target shim.")]
+    public static T? Shim<T>(this object? obj)
     {
-        throw new NotSupportedException("Use 'ShimgenAttribute' on interface and rely on generated extension methods");
+        throw new NotSupportedException("Rely on generated extension methods");
+        // TODO: Resolve at runtime?
+    }
+
+    public static T Create<T>()
+    {
+        throw new NotImplementedException();
         // TODO: Resolve at runtime?
     }
 }

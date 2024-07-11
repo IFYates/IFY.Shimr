@@ -30,10 +30,6 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <DocumentationFile>IFY.Shimr.xml</DocumentationFile>
     </PropertyGroup>
-    
-	<ItemGroup>
-	  <Compile Include="..\IFY.Shimr.CodeGen\_Common\ShimgenAttribute.cs" Link="ShimgenAttribute.cs" />
-	</ItemGroup>
 
     <ItemGroup>
       <None Remove="IFY.Shimr.xml" />

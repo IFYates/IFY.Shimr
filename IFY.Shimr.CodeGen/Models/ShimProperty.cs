@@ -11,14 +11,8 @@ internal class ShimProperty(IPropertySymbol symbol) : BaseReturnableShimMember<I
     public bool IsSet { get; } = symbol.SetMethod?.DeclaredAccessibility == Accessibility.Public && symbol.SetMethod?.IsInitOnly == false;
     public bool IsInit { get; } = symbol.GetMethod?.DeclaredAccessibility == Accessibility.Public && symbol.SetMethod?.IsInitOnly == true;
 
-    public override void GenerateCode(StringBuilder code, INamedTypeSymbol underlyingType, IPropertySymbol? underlyingProperty)
+    public override void GenerateCode(StringBuilder code, ITypeSymbol underlyingType, IPropertySymbol? underlyingProperty)
     {
-        var doc = symbol.GetDocumentationCommentXml();
-        if (doc?.Length > 0)
-        {
-            code.AppendLine(doc);
-        }
-
         code.Append($"            public {ReturnTypeName} {Name} {{");
 
         if (underlyingProperty == null)
@@ -55,4 +49,7 @@ internal class ShimProperty(IPropertySymbol symbol) : BaseReturnableShimMember<I
 
         code.AppendLine(" }");
     }
+
+    public override ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType)
+        => GetUnderlyingMember(underlyingType)?.Type ?? ReturnType;
 }
