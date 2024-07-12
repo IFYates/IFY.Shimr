@@ -38,6 +38,7 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
         }
 
         // IEnumerable<> shim
+        // TODO: Any implementation
         if (ReturnType is INamedTypeSymbol returnType && returnType.Name == nameof(System.Collections.IEnumerable)
             && returnType.TypeArguments.Length == 1)
         {
@@ -76,6 +77,7 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
             }
 
             // IEnumerable<>
+            // TODO: Any implementation
             if (ReturnType is INamedTypeSymbol returnType && underlyingReturn is INamedTypeSymbol underlyingType
                 && returnType.Name == nameof(System.Collections.IEnumerable) && underlyingType.Name == nameof(System.Collections.IEnumerable)
                 && returnType.TypeArguments.Length == 1 && underlyingType.TypeArguments.Length == 1)

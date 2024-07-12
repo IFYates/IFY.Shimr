@@ -13,7 +13,7 @@ public class StaticShimAttribute : Attribute
     /// <summary>
     /// True if this member calls a constructor on the target type.
     /// </summary>
-    internal bool IsConstructor { get; set; }
+    public bool IsConstructor { get; protected set; }
 
     protected StaticShimAttribute()
     {

@@ -23,7 +23,7 @@ internal class ShimMemberMethod(BaseShimType baseShimType, IMethodSymbol symbol)
 
         if (underlyingMethod == null)
         {
-            errors.NoMemberError(Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), Name /* TODO: full signature */);
+            errors.NoMemberError(Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax(), underlyingType.ToDisplayString(), Name /* TODO: full signature */);
 
             // TODO: optional, as per 'IgnoreMissingMembers'
             code.AppendLine(" => throw new System.NotImplementedException(/* TODO: explanation */);");

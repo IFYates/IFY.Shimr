@@ -102,9 +102,9 @@ internal class CodeErrorReporter
         isEnabledByDefault: true
     );
 
-    public void NoMemberError(SyntaxNode node, string shimTargetType, string shimMember)
+    public void NoMemberError(SyntaxNode? node, string shimTargetType, string shimMember)
     {
-        reportDiagnostic(ShimOfUnknownMember, node.GetLocation(), shimTargetType, shimMember);
+        reportDiagnostic(ShimOfUnknownMember, node?.GetLocation(), shimTargetType, shimMember);
     }
     public static readonly DiagnosticDescriptor ShimOfUnknownMember = new(
         id: "SHIMR03",
