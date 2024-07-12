@@ -31,12 +31,17 @@ internal abstract class BaseShimType(ITypeSymbol interfaceType)
     }
     public abstract void GenerateCode(StringBuilder code, CodeErrorReporter errors);
 
+    // TODO
     // fields
     // X properties
     // X- return shim
     // X methods
     // X- argument shim
+    // - argument array shim
+    // - argument ienum shim
     // X- return shim
+    // X- return array
+    // X- return ienum
     // X static types
     // X static methods
     // constructors

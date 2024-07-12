@@ -19,7 +19,7 @@ internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol sym
 
         if (underlyingProperty == null)
         {
-            errors.NoMemberError(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), symbol.Name /* TODO: full signature */);
+            errors.NoMemberError(Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), Name /* TODO: full signature */);
 
             // TODO: optional, as per 'IgnoreMissingMembers'
             if (IsGet)
@@ -58,9 +58,4 @@ internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol sym
 
     public override ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType)
         => GetUnderlyingMember(underlyingType)?.Type ?? ReturnType;
-
-    //protected override void DoResolveImplicitShims(ShimRegister shimRegister, IShimTarget target)
-    //{
-    //    throw new NotImplementedException();
-    //}
 }

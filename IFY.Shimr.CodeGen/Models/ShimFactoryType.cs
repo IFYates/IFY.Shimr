@@ -15,9 +15,10 @@ internal class ShimFactoryType(ITypeSymbol interfaceType) : BaseShimType(interfa
 
     public override void GenerateCode(StringBuilder code, CodeErrorReporter errors)
     {
-        code.AppendLine($"using {AutoShimCodeWriter.EXT_NAMESPACE};")
-            .AppendLine($"namespace {AutoShimCodeWriter.SB_NAMESPACE}")
+        code.AppendLine($"namespace {AutoShimCodeWriter.SB_NAMESPACE}")
             .AppendLine("{")
+            .AppendLine($"    using {AutoShimCodeWriter.EXT_NAMESPACE};")
+            .AppendLine($"    using System.Linq;")
             .AppendLine($"    public static partial class {AutoShimCodeWriter.SB_CLASSNAME}")
             .AppendLine("    {")
             .AppendLine($"        protected class {Name} : {InterfaceFullName}")

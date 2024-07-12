@@ -18,6 +18,7 @@ internal class ShimClassType(ITypeSymbol interfaceType) : BaseShimType(interface
     {
         code.AppendLine($"namespace {AutoShimCodeWriter.EXT_NAMESPACE}")
             .AppendLine("{")
+            .AppendLine($"    using System.Linq;")
             .AppendLine($"    public static partial class {AutoShimCodeWriter.EXT_CLASSNAME}")
             .AppendLine("    {");
 

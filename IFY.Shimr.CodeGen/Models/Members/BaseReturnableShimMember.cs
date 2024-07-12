@@ -25,10 +25,27 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
 
     public string? GetShimCode(ITypeSymbol underlyingReturnType)
     {
-        var doShim = !ReturnType.IsMatch(underlyingReturnType);
-        // TODO: check if shim registered
+        if (ReturnType.IsMatch(underlyingReturnType))
+        {
+            return null;
+        }
 
-        return !doShim ? string.Empty : $".Shim<{ReturnTypeName}>()";
+        // Array shim
+        if (ReturnType is IArrayTypeSymbol returnArrayType)
+        {
+            var elementTypeName = returnArrayType.ElementType.ToDisplayString();
+            return $".Select(e => e.Shim<{elementTypeName}>()).ToArray()";
+        }
+
+        // IEnumerable<> shim
+        if (ReturnType is INamedTypeSymbol returnType && returnType.Name == nameof(System.Collections.IEnumerable)
+            && returnType.TypeArguments.Length == 1)
+        {
+            var elementTypeName = returnType.TypeArguments[0].ToDisplayString();
+            return $".Select(e => e.Shim<{elementTypeName}>())";
+        }
+
+        return $".Shim<{ReturnTypeName}>()";
     }
     public string? GetUnshimCode(ITypeSymbol underlyingReturnType)
     {
@@ -47,11 +64,35 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
     {
         // Return types
         var underlyingReturn = GetUnderlyingMemberReturn(target.UnderlyingType);
-        if (!underlyingReturn.IsMatch(ReturnType)
-            && ReturnType.TypeKind == TypeKind.Interface)
+        if (!underlyingReturn.IsMatch(ReturnType))
         {
-            shimRegister.GetOrCreate(ReturnType)
-                .AddShim(underlyingReturn);
+            // Arrays
+            if (ReturnType is IArrayTypeSymbol returnArrayType
+                && underlyingReturn is IArrayTypeSymbol underlyingArrayType)
+            {
+                shimRegister.GetOrCreate(returnArrayType.ElementType)
+                    .AddShim(underlyingArrayType.ElementType);
+                return;
+            }
+
+            // IEnumerable<>
+            if (ReturnType is INamedTypeSymbol returnType && underlyingReturn is INamedTypeSymbol underlyingType
+                && returnType.Name == nameof(System.Collections.IEnumerable) && underlyingType.Name == nameof(System.Collections.IEnumerable)
+                && returnType.TypeArguments.Length == 1 && underlyingType.TypeArguments.Length == 1)
+            {
+                if (returnType.TypeArguments[0].TypeKind == TypeKind.Interface)
+                {
+                    shimRegister.GetOrCreate(returnType.TypeArguments[0])
+                        .AddShim(underlyingType.TypeArguments[0]);
+                }
+                return;
+            }
+
+            if (ReturnType.TypeKind == TypeKind.Interface)
+            {
+                shimRegister.GetOrCreate(ReturnType)
+                    .AddShim(underlyingReturn);
+            }
         }
 
         DoResolveImplicitShims(shimRegister, target);

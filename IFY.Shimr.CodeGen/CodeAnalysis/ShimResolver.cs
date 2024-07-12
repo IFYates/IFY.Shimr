@@ -144,8 +144,3 @@ internal class ShimResolver : ISyntaxContextReceiver
         }
     }
 }
-
-// TODO: And from attributes:
-// - TypeShim
-// - auto return
-// - ...

@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace IFY.Shimr.Examples;
 
@@ -20,7 +22,7 @@ public class FileSystemExample
         bool Exists { get; }
         string FullName { get; } // From DirectoryInfo parent class
         IDirectoryInfo Parent { get; }
-        //IEnumerable<IFileInfo> EnumerateFiles(); // Autoshim enumerable
+        IEnumerable<IFileInfo> EnumerateFiles(); // Autoshim enumerable
         IFileInfo[] GetFiles();
         string ToString();
     }
@@ -47,7 +49,7 @@ public class FileSystemExample
         // Make use of various shimmed methods
         IDirectoryInfo dir = fileSystem.GetParent(assemblyFile);
         IFileInfo[] files = dir.GetFiles();
-        //IFileInfo[] fileEnum = dir.EnumerateFiles().ToArray();
+        IFileInfo[] fileEnum = dir.EnumerateFiles().ToArray();
 
         // Check it returns what we expect
         Assert.IsTrue(dir.Exists);
@@ -55,6 +57,6 @@ public class FileSystemExample
         Assert.AreEqual(Directory.GetParent(assemblyFile)!.FullName, dir.FullName);
 
         Assert.IsTrue(files.Length > 0);
-        //CollectionAssert.AreEqual(files.Select(f => f.FullName).OrderBy(f => f).ToArray(), fileEnum.Select(f => f.FullName).OrderBy(f => f).ToArray());
+        CollectionAssert.AreEqual(files.Select(f => f.FullName).OrderBy(f => f).ToArray(), fileEnum.Select(f => f.FullName).OrderBy(f => f).ToArray());
     }
 }
