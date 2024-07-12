@@ -16,43 +16,15 @@ internal class ShimClassTarget(BaseShimType shimterface, ITypeSymbol underlyingT
 
     public virtual string Name { get; } = $"{shimterface.InterfaceType.Name}_{underlyingType.Name}";
 
-    /// <summary>
-    /// Looks for additional shims required to complete shim.
-    /// </summary>
-    public void ResolveImplicitShims(ShimRegister shimRegister, IList<IShimTarget> shims)
-    {
-        var members = ShimType.ResolveShimMembers();
-
-        // Return types
-        foreach (var member in members.OfType<IReturnableShimMember>())
-        {
-            var underlyingReturn = member.GetUnderlyingMemberReturn(UnderlyingType);
-            if (!underlyingReturn.IsMatch(member.ReturnType)
-                && member.ReturnType.TypeKind == TypeKind.Interface)
-            {
-                shims.Add(shimRegister.GetOrCreate(member.ReturnType)
-                    .AddShim(underlyingReturn));
-            }
-        }
-
-        // Argument overrides
-        foreach (var param in members.OfType<ShimMemberMethod>()
-            .SelectMany(m => m.Parameters).Where(p => p.UnderlyingType != null))
-        {
-            shims.Add(shimRegister.GetOrCreate(param.Type)
-                .AddShim(param.UnderlyingType!));
-        }
-    }
-
     public virtual void GenerateCode(StringBuilder code, CodeErrorReporter errors)
     {
         code.AppendLine($"        protected class {Name} : {InterfaceFullName}, IShim")
             .AppendLine("        {");
 
         // Constructor and Unshim
-        code.AppendLine($"            protected readonly {UnderlyingFullName} _inst;")
+        code.AppendLine($"            private readonly {UnderlyingFullName} _inst;")
             .AppendLine($"            public {Name}({UnderlyingFullName} inst) => _inst = inst;")
-            .AppendLine("            public object Unshim() => _inst;");
+            .AppendLine("            object IShim.Unshim() => _inst;");
 
         // Add ToString(), if not already
         var members = ShimType.ResolveShimMembers();
@@ -68,5 +40,25 @@ internal class ShimClassTarget(BaseShimType shimterface, ITypeSymbol underlyingT
         }
 
         code.AppendLine("        }");
+    }
+
+    /// <summary>
+    /// Looks for additional shims required to complete shim.
+    /// </summary>
+    public void ResolveImplicitShims(ShimRegister shimRegister)
+    {
+        var members = ShimType.ResolveShimMembers();
+        foreach (var member in members)
+        {
+            member.ResolveImplicitShims(shimRegister, this);
+        }
+
+        // Argument overrides
+        foreach (var param in members.OfType<ShimMemberMethod>()
+            .SelectMany(m => m.Parameters).Where(p => p.UnderlyingType != null))
+        {
+            shimRegister.GetOrCreate(param.Type)
+                .AddShim(param.UnderlyingType!);
+        }
     }
 }

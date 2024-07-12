@@ -3,11 +3,14 @@ using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models.Members;
 
-internal abstract class BaseReturnableShimMember<T> : IShimMember, IReturnableShimMember
+internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T symbol)
+    : IShimMember, IReturnableShimMember
     where T : ISymbol
 {
-    public abstract ISymbol Symbol { get; }
-    public abstract string Name { get; }
+    public BaseShimType BaseShimType { get; } = baseShimType;
+    public T Symbol { get; } = symbol;
+    ISymbol IShimMember.Symbol { get; } = symbol;
+    public string Name { get; } = symbol.Name;
     public abstract ITypeSymbol ReturnType { get; }
     public abstract string ReturnTypeName { get; }
 
@@ -39,4 +42,19 @@ internal abstract class BaseReturnableShimMember<T> : IShimMember, IReturnableSh
         => UnderlyingMemberMatch(underlyingType.GetAllMembers().OfType<T>().Where(m => m.Name == Name)).FirstOrDefault();
     protected virtual IEnumerable<T> UnderlyingMemberMatch(IEnumerable<T> underlyingMembers)
         => underlyingMembers;
+
+    public void ResolveImplicitShims(ShimRegister shimRegister, IShimTarget target)
+    {
+        // Return types
+        var underlyingReturn = GetUnderlyingMemberReturn(target.UnderlyingType);
+        if (!underlyingReturn.IsMatch(ReturnType)
+            && ReturnType.TypeKind == TypeKind.Interface)
+        {
+            shimRegister.GetOrCreate(ReturnType)
+                .AddShim(underlyingReturn);
+        }
+
+        DoResolveImplicitShims(shimRegister, target);
+    }
+    protected virtual void DoResolveImplicitShims(ShimRegister shimRegister, IShimTarget target) { }
 }

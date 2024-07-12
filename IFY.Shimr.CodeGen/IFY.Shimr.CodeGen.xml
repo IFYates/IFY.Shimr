@@ -34,6 +34,16 @@
             Models an interface used to shim another type.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.IShimTarget.ResolveImplicitShims(IFY.Shimr.CodeGen.Models.ShimRegister)">
+            <summary>
+            Looks for additional shims required to complete shim.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.Members.IShimMember.ResolveImplicitShims(IFY.Shimr.CodeGen.Models.ShimRegister,IFY.Shimr.CodeGen.Models.IShimTarget)">
+            <summary>
+            Looks for additional shims required to complete shim.
+            </summary>
+        </member>
         <member name="T:IFY.Shimr.CodeGen.Models.ShimClassTarget">
             <summary>
             Models the target of a shimterface.
@@ -44,7 +54,7 @@
             Models the target of a shimterface.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.ShimClassTarget.ResolveImplicitShims(IFY.Shimr.CodeGen.Models.ShimRegister,System.Collections.Generic.IList{IFY.Shimr.CodeGen.Models.IShimTarget})">
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimClassTarget.ResolveImplicitShims(IFY.Shimr.CodeGen.Models.ShimRegister)">
             <summary>
             Looks for additional shims required to complete shim.
             </summary>

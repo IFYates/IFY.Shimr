@@ -29,7 +29,7 @@ internal class ShimrSourceGenerator : ISourceGenerator
         try
         {
             resolver.Errors.SetContext(context);
-            doExecute(context, resolver);
+            doExecute(context, resolver.Errors, resolver.Shims);
         }
         catch (Exception ex)
         {
@@ -40,16 +40,16 @@ internal class ShimrSourceGenerator : ISourceGenerator
             throw;
         }
     }
-    private void doExecute(GeneratorExecutionContext context, ShimResolver resolver)
+    private void doExecute(GeneratorExecutionContext context, CodeErrorReporter errors, ShimRegister shimRegister)
     {
-        var shims = resolver.Shims.ResolveAllShims();
+        var shims = shimRegister.ResolveAllShims();
 
         // Meta info
         var code = new StringBuilder();
         code.AppendLine($"// Generation time: {DateTime.Now:o}");
         code.AppendLine($"// Project: {context.Compilation.AssemblyName}");
-        code.AppendLine($"// Shim map ({shims.Count()}):");
-        foreach (var shimt in resolver.Shims.Types)
+        code.AppendLine($"// Shim map ({shims.Length}):");
+        foreach (var shimt in shimRegister.Types)
         {
             code.AppendLine($"// + {shimt.InterfaceFullName}");
             foreach (var shim in shimt.Shims)
@@ -66,16 +66,16 @@ internal class ShimrSourceGenerator : ISourceGenerator
             return;
         }
 
-        var builder = new AutoShimCodeWriter(context, resolver.Errors);
+        var builder = new AutoShimCodeWriter(context);
         builder.WriteFactoryClass(code, shims);
         addSource("ShimBuilder.g.cs", code);
 
         builder.WriteExtensionClass(code, shims);
         addSource("ObjectExtensions.g.cs", code);
 
-        foreach (var shimType in resolver.Shims.Types)
+        foreach (var shimType in shimRegister.Types)
         {
-            shimType.GenerateCode(code, resolver.Errors);
+            shimType.GenerateCode(code, errors);
             addSource($"Shimr.{shimType.Name}.g.cs", code);
         }
 

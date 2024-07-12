@@ -1,11 +1,10 @@
-﻿using IFY.Shimr.CodeGen.CodeAnalysis;
-using IFY.Shimr.CodeGen.Models;
+﻿using IFY.Shimr.CodeGen.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace IFY.Shimr.CodeGen;
 
-internal class AutoShimCodeWriter(GeneratorExecutionContext context, CodeErrorReporter errors)
+internal class AutoShimCodeWriter(GeneratorExecutionContext context)
 {
     public const string SB_NAMESPACE = "IFY.Shimr";
     public const string SB_CLASSNAME = "ShimBuilder";
@@ -24,7 +23,11 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context, CodeErrorRe
             .AppendLine($"    public static partial class {SB_CLASSNAME}")
             .AppendLine("    {")
 
-            .AppendLine("        public static T Create<T>() where T : class")
+            .AppendLine("        /// <summary>")
+            .AppendLine("        /// Create a factory shim of <typeparamref name=\"TInterface\"/>.")
+            .AppendLine("        /// The type must be decorated with <see cref=\"IFY.Shimr.StaticShimAttribute\"/>, otherwise <see cref=\"System.NotSupportedException\"/> will be thrown.")
+            .AppendLine("        /// </summary>")
+            .AppendLine("        public static TInterface Create<TInterface>() where TInterface : class")
             .AppendLine("        {");
 
         // Factory
@@ -32,13 +35,13 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context, CodeErrorRe
             .GroupBy(s => s.UnderlyingFullName).ToArray();
         foreach (var shimType in shimTypes.Select(g => g.First().ShimType))
         {
-            code.AppendLine($"            if (typeof(T) == typeof({shimType.InterfaceFullName}))")
+            code.AppendLine($"            if (typeof(TInterface) == typeof({shimType.InterfaceFullName}))")
                 .AppendLine("            {")
-                .AppendLine($"                return (T)(object)new {shimType.Name}();")
+                .AppendLine($"                return (TInterface)(object)new {shimType.Name}();")
                 .AppendLine("            }");
         }
 
-        code.AppendLine("            throw new NotSupportedException();") // TODO: detail
+        code.AppendLine("            throw new System.NotSupportedException();") // TODO: detail
             .AppendLine("        }")
             .AppendLine("    }")
             .AppendLine("}");
@@ -64,21 +67,24 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context, CodeErrorRe
                 {
                     code.AppendLine("        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"inst\")]");
                 }
-                code.AppendLine($"        public static T? Shim<T>(this {underlyingShims.Key}? inst)")
+                code.AppendLine($"        public static TInterface? Shim<TInterface>(this {underlyingShims.Key}? inst) where TInterface : class")
                     .Append("            => !inst.HasValue")
-                    .AppendLine($" ? default : Shim<T>(inst.Value);");
+                    .AppendLine($" ? default : Shim<TInterface>(inst.Value);");
             }
 
-            code.AppendLine($"        public static T Shim<T>(this {underlyingShims.Key} inst)")
+            code.AppendLine("        /// <summary>")
+                .AppendLine("        /// Create an instance of <typeparamref name=\"TInterface\"/> shim.")
+                .AppendLine("        /// </summary>")
+                .AppendLine($"        public static TInterface Shim<TInterface>(this {underlyingShims.Key} inst) where TInterface : class")
                 .AppendLine("        {");
             foreach (var shim in underlyingShims)
             {
-                code.AppendLine($"            if (typeof(T) == typeof({shim.InterfaceFullName}))")
+                code.AppendLine($"            if (typeof(TInterface) == typeof({shim.InterfaceFullName}))")
                     .AppendLine("            {")
-                    .AppendLine($"                return (T)(object)new {shim.Name}(inst);")
+                    .AppendLine($"                return (TInterface)(object)new {shim.Name}(inst);")
                     .AppendLine("            }");
             }
-            code.AppendLine("            throw new NotSupportedException();") // TODO: detail
+            code.AppendLine("            throw new System.NotSupportedException();") // TODO: detail
                 .AppendLine("        }");
         }
 

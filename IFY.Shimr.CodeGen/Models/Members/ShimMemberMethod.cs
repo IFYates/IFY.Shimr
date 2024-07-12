@@ -3,11 +3,9 @@ using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models.Members;
 
-internal class ShimMemberMethod(IMethodSymbol symbol) : BaseReturnableShimMember<IMethodSymbol>
+internal class ShimMemberMethod(BaseShimType baseShimType, IMethodSymbol symbol)
+    : BaseReturnableShimMember<IMethodSymbol>(baseShimType, symbol)
 {
-    public override ISymbol Symbol { get; } = symbol;
-    public override string Name { get; } = symbol.Name;
-
     public override ITypeSymbol ReturnType { get; } = symbol.ReturnType;
     public override string ReturnTypeName { get; } = symbol.ReturnType.ToDisplayString();
 
@@ -15,7 +13,7 @@ internal class ShimMemberMethod(IMethodSymbol symbol) : BaseReturnableShimMember
         = symbol.Parameters.Select(p => new ShimMemberMethodParameter(p)).ToArray();
 
     protected override IEnumerable<IMethodSymbol> UnderlyingMemberMatch(IEnumerable<IMethodSymbol> underlyingMembers)
-        => underlyingMembers.Where(symbol.AllParameterTypesMatch);
+        => underlyingMembers.Where(Symbol.AllParameterTypesMatch);
 
     public override void GenerateCode(StringBuilder code, CodeErrorReporter errors, ITypeSymbol underlyingType, IMethodSymbol? underlyingMethod)
     {
@@ -25,7 +23,7 @@ internal class ShimMemberMethod(IMethodSymbol symbol) : BaseReturnableShimMember
 
         if (underlyingMethod == null)
         {
-            errors.NoMemberError(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), symbol.Name /* TODO: full signature */);
+            errors.NoMemberError(Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), Name /* TODO: full signature */);
 
             // TODO: optional, as per 'IgnoreMissingMembers'
             code.AppendLine(" => throw new NotImplementedException(/* TODO: explanation */);");
@@ -43,4 +41,13 @@ internal class ShimMemberMethod(IMethodSymbol symbol) : BaseReturnableShimMember
 
     public override ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType)
         => GetUnderlyingMember(underlyingType)?.ReturnType ?? ReturnType;
+
+    protected override void DoResolveImplicitShims(ShimRegister shimRegister, IShimTarget target)
+    {
+        // Argument overrides
+        foreach (var param in Parameters)
+        {
+            param.ResolveImplicitShims(shimRegister);
+        }
+    }
 }

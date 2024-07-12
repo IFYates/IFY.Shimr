@@ -3,12 +3,12 @@ using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models.Members;
 
-internal class ShimMemberProperty(IPropertySymbol symbol) : BaseReturnableShimMember<IPropertySymbol>
+internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol symbol)
+    : BaseReturnableShimMember<IPropertySymbol>(baseShimType, symbol)
 {
-    public override ISymbol Symbol { get; } = symbol;
-    public override string Name { get; } = symbol.Name;
     public override ITypeSymbol ReturnType { get; } = symbol.Type;
     public override string ReturnTypeName { get; } = symbol.Type.ToDisplayString();
+
     public bool IsGet { get; } = symbol.GetMethod?.DeclaredAccessibility == Accessibility.Public;
     public bool IsSet { get; } = symbol.SetMethod?.DeclaredAccessibility == Accessibility.Public && symbol.SetMethod?.IsInitOnly == false;
     public bool IsInit { get; } = symbol.GetMethod?.DeclaredAccessibility == Accessibility.Public && symbol.SetMethod?.IsInitOnly == true;
@@ -58,4 +58,9 @@ internal class ShimMemberProperty(IPropertySymbol symbol) : BaseReturnableShimMe
 
     public override ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType)
         => GetUnderlyingMember(underlyingType)?.Type ?? ReturnType;
+
+    //protected override void DoResolveImplicitShims(ShimRegister shimRegister, IShimTarget target)
+    //{
+    //    throw new NotImplementedException();
+    //}
 }

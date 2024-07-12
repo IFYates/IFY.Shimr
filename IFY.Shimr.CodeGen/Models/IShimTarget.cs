@@ -10,5 +10,9 @@ internal interface IShimTarget
     string InterfaceFullName { get; }
     ITypeSymbol UnderlyingType { get; }
     string UnderlyingFullName { get; }
-    void ResolveImplicitShims(ShimRegister shimRegister, IList<IShimTarget> shims);
+
+    /// <summary>
+    /// Looks for additional shims required to complete shim.
+    /// </summary>
+    void ResolveImplicitShims(ShimRegister shimRegister);
 }

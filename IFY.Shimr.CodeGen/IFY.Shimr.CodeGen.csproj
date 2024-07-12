@@ -36,12 +36,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="..\IFY.Shimr\ConstructorShimAttribute.cs" Link="ConstructorShimAttribute.cs" />
+		<Compile Include="..\IFY.Shimr\ConstructorShimAttribute.cs" Link="_Api\ConstructorShimAttribute.cs" />
 		<Compile Include="..\IFY.Shimr\GlobalUsings.cs" Link="GlobalUsings.cs" />
-		<Compile Include="..\IFY.Shimr\IShim.cs" Link="_Common\IShim.cs" />
-		<Compile Include="..\IFY.Shimr\ShimAttribute.cs" Link="_Common\ShimAttribute.cs" />
-		<Compile Include="..\IFY.Shimr\StaticShimAttribute.cs" Link="_Common\StaticShimAttribute.cs" />
-		<Compile Include="..\IFY.Shimr\TypeShimAttribute.cs" Link="_Common\TypeShimAttribute.cs" />
+		<Compile Include="..\IFY.Shimr\IShim.cs" Link="_Api\IShim.cs" />
+		<Compile Include="..\IFY.Shimr\ShimAttribute.cs" Link="_Api\ShimAttribute.cs" />
+		<Compile Include="..\IFY.Shimr\StaticShimAttribute.cs" Link="_Api\StaticShimAttribute.cs" />
+		<Compile Include="..\IFY.Shimr\TypeShimAttribute.cs" Link="_Api\TypeShimAttribute.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

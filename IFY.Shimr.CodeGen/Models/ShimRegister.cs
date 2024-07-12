@@ -37,21 +37,20 @@ internal class ShimRegister
     /// Ensure that all implicit shims in registered shims are resolved.
     /// </summary>
     /// <returns>All current shims.</returns>
-    public IEnumerable<IShimTarget> ResolveAllShims()
+    public IShimTarget[] ResolveAllShims()
     {
-        var shims = Types.SelectMany(s => s.Shims ?? []).ToList();
-        var newShims = shims.ToList();
-        while (newShims.Count > 0)
+        var count = _pool.Values.Sum(s => s.Shims.Count());
+        while (_resolveCount != count)
         {
-            var loop = newShims.Distinct().ToArray();
-            newShims.Clear();
-            foreach (var shim in loop)
+            _resolveCount = count;
+            foreach (var shimType in _pool.Values.ToArray())
             {
-                shim.ResolveImplicitShims(this, newShims);
+                shimType.ResolveImplicitShims(this);
             }
-            newShims.RemoveAll(shims.Contains);
-            shims.AddRange(newShims.Distinct());
+            count = _pool.Values.Sum(s => s.Shims.Count());
         }
-        return shims;
+
+        return _pool.Values.SelectMany(s => s.Shims).ToArray();
     }
+    private int _resolveCount = 0;
 }

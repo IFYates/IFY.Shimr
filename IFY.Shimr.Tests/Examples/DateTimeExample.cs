@@ -1,4 +1,5 @@
-﻿using IFY.Shimr.Extensions;
+﻿using System;
+using IFY.Shimr.Extensions;
 
 namespace IFY.Shimr.Examples;
 
