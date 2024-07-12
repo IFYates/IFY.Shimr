@@ -46,7 +46,6 @@ internal class ShimrSourceGenerator : ISourceGenerator
 
         // Meta info
         var code = new StringBuilder();
-        code.AppendLine($"// Generation time: {DateTime.Now:o}");
         code.AppendLine($"// Project: {context.Compilation.AssemblyName}");
         code.AppendLine($"// Shim map ({shims.Length}):");
         foreach (var shimt in shimRegister.Types)

@@ -19,6 +19,12 @@
             Get all the members of this symbol, including those from base type.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.SyntaxHelpers.GetConstructorTypeofArgument(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SemanticModel)">
+            <summary>
+            Get the 'Type' that is represented by a 'typeof()' constant on the only constructor argument of <param name="node"/>.
+            </summary>
+            <Example>[Attribute(typeof(T))]</Example>
+        </member>
         <member name="T:IFY.Shimr.CodeGen.Diag">
             <summary>
             Helpers for diagnosing issues.

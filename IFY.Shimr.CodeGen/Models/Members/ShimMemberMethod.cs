@@ -26,7 +26,7 @@ internal class ShimMemberMethod(BaseShimType baseShimType, IMethodSymbol symbol)
             errors.NoMemberError(Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), Name /* TODO: full signature */);
 
             // TODO: optional, as per 'IgnoreMissingMembers'
-            code.AppendLine(" => throw new NotImplementedException(/* TODO: explanation */);");
+            code.AppendLine(" => throw new System.NotImplementedException(/* TODO: explanation */);");
             return;
         }
 

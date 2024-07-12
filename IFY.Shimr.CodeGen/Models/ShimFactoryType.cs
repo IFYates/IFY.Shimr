@@ -9,7 +9,12 @@ internal class ShimFactoryType(ITypeSymbol interfaceType) : BaseShimType(interfa
 
     public ShimFactoryTarget AddShim(ITypeSymbol underlyingType, ISymbol? singleMember)
     {
-        var shim = new ShimFactoryTarget(this, underlyingType, singleMember);
+        var shim = new ShimFactoryTarget(this, underlyingType, singleMember, false);
+        return AddTarget(shim);
+    }
+    public ShimFactoryTarget AddConstructor(ITypeSymbol underlyingType, IMethodSymbol constructorMethod)
+    {
+        var shim = new ShimFactoryTarget(this, underlyingType, constructorMethod, true);
         return AddTarget(shim);
     }
 

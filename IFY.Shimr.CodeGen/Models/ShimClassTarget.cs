@@ -60,5 +60,8 @@ internal class ShimClassTarget(BaseShimType shimterface, ITypeSymbol underlyingT
             shimRegister.GetOrCreate(param.Type)
                 .AddShim(param.UnderlyingType!);
         }
+
+        DoResolveImplicitShims(shimRegister);
     }
+    public virtual void DoResolveImplicitShims(ShimRegister shimRegister) { }
 }

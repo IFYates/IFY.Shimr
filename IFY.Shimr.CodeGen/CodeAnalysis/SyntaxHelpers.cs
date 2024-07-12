@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace IFY.Shimr.CodeGen.CodeAnalysis;
 
@@ -36,6 +37,23 @@ internal static class SyntaxHelpers
             return (ITypeSymbol)attr.ConstructorArguments.Single().Value!;
         }
         return nullIfNoOverride ? null! : arg.Type;
+    }
+
+    /// <summary>
+    /// Get the 'Type' that is represented by a 'typeof()' constant on the only constructor argument of <param name="node"/>.
+    /// </summary>
+    /// <Example>[Attribute(typeof(T))]</Example>
+    public static ITypeSymbol? GetConstructorTypeofArgument(this SyntaxNode node, SemanticModel semanticModel)
+    {
+        var nodes = node.ChildNodes().ToArray();
+        if (nodes.Length != 2
+            || nodes[1] is not AttributeArgumentListSyntax argList
+            || argList.Arguments.Count != 1
+            || argList.Arguments[0].Expression is not TypeOfExpressionSyntax typeOf)
+        {
+            return null;
+        }
+        return semanticModel.GetTypeInfo(typeOf.Type).Type;
     }
 
     public static bool IsMatch(this ITypeSymbol type1, ITypeSymbol type2)

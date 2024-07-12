@@ -24,15 +24,15 @@ internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol sym
             // TODO: optional, as per 'IgnoreMissingMembers'
             if (IsGet)
             {
-                code.Append(" get => throw new NotImplementedException(/* TODO: explanation */);");
+                code.Append(" get => throw new System.NotImplementedException(/* TODO: explanation */);");
             }
             if (IsSet)
             {
-                code.Append(" set => throw new NotImplementedException(/* TODO: explanation */);");
+                code.Append(" set => throw new System.NotImplementedException(/* TODO: explanation */);");
             }
             if (IsInit)
             {
-                code.Append(" init => throw new NotImplementedException(/* TODO: explanation */);");
+                code.Append(" init => throw new System.NotImplementedException(/* TODO: explanation */);");
             }
         }
         else

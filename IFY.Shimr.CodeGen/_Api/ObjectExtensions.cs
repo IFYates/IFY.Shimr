@@ -6,7 +6,7 @@ public static partial class ObjectExtensions
     public static TInterface? Shim<TInterface>(this object? obj)
         where TInterface : class
     {
-        throw new NotSupportedException("Rely on generated extension methods");
+        throw new NotSupportedException($"Rely on generated extension methods. Tried to shim '{obj?.GetType().FullName}' to '{typeof(TInterface).FullName}' without known registration.");
         // TODO: Resolve at runtime?
     }
 }
