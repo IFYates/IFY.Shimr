@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace IFY.Shimr.CodeGen.CodeAnalysis;
@@ -64,5 +65,14 @@ internal static class SyntaxHelpers
         var symbolFullName = symbol.ToDisplayString(NullableFlowState.None, SymbolDisplayFormat.FullyQualifiedFormat);
         var typeFullName = typeof(T).FullName;
         return symbolFullName == typeFullName || symbolFullName == $"global::{typeFullName}";
+    }
+
+    public static string ToUniqueName(this ISymbol symbol)
+    {
+        return symbol switch
+        {
+            IMethodSymbol ms => $"{ms.Name}__{string.Join("_", ms.Parameters.Select(p => p.Type.Name))}",
+            _ => symbol.Name,
+        };
     }
 }

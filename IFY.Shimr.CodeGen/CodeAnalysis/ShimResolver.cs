@@ -21,8 +21,7 @@ internal class ShimResolver : ISyntaxContextReceiver
         // TODO: reset diag output on first of each run
 
         _ = handleShimMethodCall(context)
-            || handleStaticShim(context)
-            || handleConstructorShim(context);
+            || handleStaticShim(context);
     }
 
     // object.Shim<T>()
@@ -107,6 +106,21 @@ internal class ShimResolver : ISyntaxContextReceiver
             }
         }
 
+        // Find attribute on members (currently only 1 per member)
+        var constructorShimAttrSymbol = context.SemanticModel.Compilation
+            .GetTypeByMetadataName(typeof(ConstructorShimAttribute).FullName)!;
+        foreach (var methodDeclaration in interfaceDeclaration.Members.OfType<MethodDeclarationSyntax>())
+        {
+            var memberAttr = methodDeclaration.AttributeLists
+                .SelectMany(al => al.Attributes)
+                .Where(a => context.SemanticModel.GetTypeInfo(a).Type?.IsMatch(constructorShimAttrSymbol) == true)
+                .SingleOrDefault();
+            if (memberAttr != null)
+            {
+                registerConstructor(memberAttr, methodDeclaration);
+            }
+        }
+
         return false; // Don't stop
 
         void registerFactory(AttributeSyntax attr, SyntaxNode? member)
@@ -135,41 +149,16 @@ internal class ShimResolver : ISyntaxContextReceiver
             Shims.GetOrCreateFactory(factoryType)
                 .AddShim(typeArg, singleMember);
         }
-    }
 
-    // ConstructorShimAttribute(Type)
-    private bool handleConstructorShim(GeneratorSyntaxContext context)
-    {
-        // Check every interface for member attributes
-        if (context.Node is not InterfaceDeclarationSyntax interfaceDeclaration)
-        {
-            return false;
-        }
-
-        // Factory interface type
-        var factoryType = context.SemanticModel.GetDeclaredSymbol(interfaceDeclaration)!;
-
-        // Find attribute on members (currently only 1 per member)
-        var constructorShimAttrSymbol = context.SemanticModel.Compilation
-            .GetTypeByMetadataName(typeof(ConstructorShimAttribute).FullName)!;
-        foreach (var methodDeclaration in interfaceDeclaration.Members.OfType<MethodDeclarationSyntax>())
-        {
-            var memberAttr = methodDeclaration.AttributeLists
-                .SelectMany(al => al.Attributes)
-                .Where(a => context.SemanticModel.GetTypeInfo(a).Type?.IsMatch(constructorShimAttrSymbol) == true)
-                .SingleOrDefault();
-            if (memberAttr != null)
-            {
-                registerFactory(memberAttr, methodDeclaration);
-            }
-        }
-
-        return false; // Don't stop
-
-        void registerFactory(AttributeSyntax attr, MethodDeclarationSyntax method)
+        void registerConstructor(AttributeSyntax attr, MethodDeclarationSyntax method)
         {
             // Get type argument from attribute constructor
             var typeArg = attr.GetConstructorTypeofArgument(context.SemanticModel);
+            if (typeArg == null)
+            {
+                // Resolve type from StaticShimAttribute on interface
+                typeArg = interfaceAttr?.GetConstructorTypeofArgument(context.SemanticModel);
+            }
             if (typeArg?.ToDisplayString() is null or "object")
             {
                 Errors.NoTypeWarning(context.Node, typeArg);
@@ -178,6 +167,14 @@ internal class ShimResolver : ISyntaxContextReceiver
             if (typeArg.TypeKind == TypeKind.Interface)
             {
                 Errors.InterfaceUseError(context.Node, typeArg);
+                return;
+            }
+
+            // Check return type is valid
+            var returnType = context.SemanticModel.GetDeclaredSymbol(method)?.ReturnType;
+            if (returnType == null || (!returnType.IsMatch(typeArg) && returnType.TypeKind != TypeKind.Interface))
+            {
+                Errors.InvalidReturnTypeError(method.ReturnType, method.Identifier.Text /* TODO: signature */, returnType?.ToDisplayString() ?? "Unknown");
                 return;
             }
 

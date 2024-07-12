@@ -32,7 +32,7 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context)
 
         // Factory
         var shimTypes = shims.OfType<ShimFactoryTarget>()
-            .GroupBy(s => s.UnderlyingFullName).ToArray();
+            .GroupBy(s => s.InterfaceFullName).ToArray();
         foreach (var shimType in shimTypes.Select(g => g.First().ShimType))
         {
             code.AppendLine($"            if (typeof(TInterface) == typeof({shimType.InterfaceFullName}))")
@@ -41,7 +41,7 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context)
                 .AppendLine("            }");
         }
 
-        code.AppendLine("            throw new System.NotSupportedException();") // TODO: detail
+        code.AppendLine("            throw new System.NotSupportedException($\"Interface '{typeof(TInterface).FullName}' does not have 'StaticShimAttribute' to register as factory.\");")
             .AppendLine("        }")
             .AppendLine("    }")
             .AppendLine("}");

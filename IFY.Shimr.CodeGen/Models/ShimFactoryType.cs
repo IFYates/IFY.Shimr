@@ -1,4 +1,5 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
+using IFY.Shimr.CodeGen.Models.Members;
 using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models;
@@ -29,13 +30,48 @@ internal class ShimFactoryType(ITypeSymbol interfaceType) : BaseShimType(interfa
             .AppendLine($"        protected class {Name} : {InterfaceFullName}")
             .AppendLine("        {");
 
-        foreach (var shim in Shims.OfType<ShimFactoryTarget>())
+        var members = ResolveShimMembers().ToList();
+        foreach (var memberTarget in Shims.OfType<ShimFactoryTarget>().Where(t => t.SingleMember != null))
         {
-            shim.GenerateCode(code, errors);
+            var member = members.First(m => m.Symbol.Equals(memberTarget.SingleMember, SymbolEqualityComparer.Default));
+            members.Remove(member);
+            writeMemberCode(memberTarget, member);
+        }
+
+        var target = Shims.OfType<ShimFactoryTarget>().FirstOrDefault(t => t.SingleMember == null);
+        if (target != null)
+        {
+            foreach (var member in members)
+            {
+                writeMemberCode(target, member);
+            }
         }
 
         code.AppendLine("        }")
             .AppendLine("    }")
             .AppendLine("}");
+
+        void writeMemberCode(ShimFactoryTarget target, IShimMember member)
+        {
+            if (target.IsConstructor)
+            {
+                // TODO: Find target constructor, or error
+
+                var method = (ShimMemberMethod)member;
+                code.Append($"            public {method.ReturnTypeName} {member.Name}(")
+                    .Append(string.Join(", ", method.Parameters.Select(p => p.ToString())))
+                    .Append(")");
+
+                code.Append($" => new {target.UnderlyingFullName}(")
+                    .Append(string.Join(", ", method.Parameters.Select(p => p.GetTargetArgumentCode())))
+                    .Append($")")
+                    .Append(method.GetShimCode(target.UnderlyingType))
+                    .AppendLine(";");
+            }
+            else
+            {
+                member.GenerateCode(code, errors, target.UnderlyingType);
+            }
+        }
     }
 }

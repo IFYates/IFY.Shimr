@@ -107,9 +107,22 @@ internal class CodeErrorReporter
         reportDiagnostic(ShimOfUnknownMember, node?.GetLocation(), shimTargetType, shimMember);
     }
     public static readonly DiagnosticDescriptor ShimOfUnknownMember = new(
-        id: "SHIMR03",
+        id: "SHIMR103",
         title: "Unable to resolve target member",
         messageFormat: "Shim target '{0}' does not contain member '{1}' and missing members are currently fatal",
+        category: "Correctness",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    public void InvalidReturnTypeError(SyntaxNode? node, string shimMember, string returnType)
+    {
+        reportDiagnostic(InvalidShimReturnType, node?.GetLocation(), shimMember, returnType);
+    }
+    public static readonly DiagnosticDescriptor InvalidShimReturnType = new(
+        id: "SHIMR104",
+        title: "Invalid return type",
+        messageFormat: "Shim target '{0}' has invalid return type '{1}'",
         category: "Correctness",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true
