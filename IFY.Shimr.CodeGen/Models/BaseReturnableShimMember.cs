@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using IFY.Shimr.CodeGen.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models;
 
@@ -11,33 +12,29 @@ internal abstract class BaseReturnableShimMember<T> : IShimMember, IReturnableSh
 
     public abstract ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType);
 
-    public virtual void GenerateCode(StringBuilder code, ITypeSymbol underlyingType)
+    public void GenerateCode(StringBuilder code, CodeErrorReporter errors, ITypeSymbol underlyingType)
     {
         var underlyingMember = GetUnderlyingMember(underlyingType);
-        GenerateCode(code, underlyingType, underlyingMember);
+        GenerateCode(code, errors, underlyingType, underlyingMember);
     }
-    public abstract void GenerateCode(StringBuilder code, ITypeSymbol underlyingType, T? underlyingMember);
+    public abstract void GenerateCode(StringBuilder code, CodeErrorReporter errors, ITypeSymbol underlyingType, T? underlyingMember);
 
     public string? GetShimCode(ITypeSymbol underlyingReturnType)
     {
-        var shimReturnTypeName = ReturnType.ToDisplayString(NullableFlowState.None, SymbolDisplayFormat.FullyQualifiedFormat);
-        var underlyingReturnTypeName = underlyingReturnType.ToDisplayString(NullableFlowState.None, SymbolDisplayFormat.FullyQualifiedFormat);
-        var doShim = shimReturnTypeName != underlyingReturnTypeName;
+        var doShim = !ReturnType.IsMatch(underlyingReturnType);
         // TODO: check if shim registered
 
         return !doShim ? string.Empty : $".Shim<{ReturnTypeName}>()";
     }
     public string? GetUnshimCode(ITypeSymbol underlyingReturnType)
     {
-        var shimReturnTypeName = ReturnType.ToDisplayString(NullableFlowState.None, SymbolDisplayFormat.FullyQualifiedFormat);
-        var underlyingReturnTypeName = underlyingReturnType.ToDisplayString(NullableFlowState.None, SymbolDisplayFormat.FullyQualifiedFormat);
-        var doShim = shimReturnTypeName != underlyingReturnTypeName;
+        var doShim = !ReturnType.IsMatch(underlyingReturnType);
         // TODO: check if shim registered
 
-        return !doShim ? string.Empty : $".Unshim<{underlyingReturnTypeName}>()";
+        return !doShim ? string.Empty : $".Unshim<{underlyingReturnType.ToDisplayString()}>()";
     }
 
-    public virtual T? GetUnderlyingMember(ITypeSymbol underlyingType)
+    public T? GetUnderlyingMember(ITypeSymbol underlyingType)
         => UnderlyingMemberMatch(underlyingType.GetMembers(Name).OfType<T>()).FirstOrDefault();
     protected virtual IEnumerable<T> UnderlyingMemberMatch(IEnumerable<T> underlyingMembers)
         => underlyingMembers;

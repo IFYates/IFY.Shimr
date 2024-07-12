@@ -35,7 +35,7 @@ public class DateTimeExample
 
         // Act
 #if SHIMR_CG
-        IDateTime shim = dt.Shim<IDateTime>();
+        IDateTime shim = dt.Shim<IDateTime>()!;
 #else
         IDateTime shim = ShimBuilder.Shim<IDateTime>(dt)!;
 #endif
@@ -57,7 +57,7 @@ public class DateTimeExample
         IDateTime shim = ShimBuilder.Shim<IDateTime>(dt)!;
 #endif
 
-        var res = shim.Subtract(DateTime.Today.Shim<IDateTime>());
+        var res = shim.Subtract(DateTime.Today.Shim<IDateTime>()!);
         Assert.AreEqual(shim.TimeOfDay.TotalSeconds, res.TotalSeconds);
     }
 

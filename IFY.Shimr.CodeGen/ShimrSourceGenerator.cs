@@ -7,7 +7,7 @@ namespace IFY.Shimr.CodeGen;
 [Generator]
 internal class ShimrSourceGenerator : ISourceGenerator
 {
-    private readonly CodeError _errors = new();
+    private readonly CodeErrorReporter _errors = new();
     private readonly ShimRegister _shimRegister = new();
 
     // Only called after a rebuild
@@ -23,6 +23,11 @@ internal class ShimrSourceGenerator : ISourceGenerator
     // Called on each code change
     public void Execute(GeneratorExecutionContext context)
     {
+        if (context.SyntaxContextReceiver is not ShimResolver)
+        {
+            return;
+        }
+
         try
         {
             _errors.SetContext(context);
@@ -39,23 +44,10 @@ internal class ShimrSourceGenerator : ISourceGenerator
     }
     private void doExecute(GeneratorExecutionContext context)
     {
-        var code = new StringBuilder();
-
-        var shims = _shimRegister.Interfaces.SelectMany(s => s.Shims ?? []).ToList();
-        var newShims = shims.ToList();
-        while (newShims.Count > 0)
-        {
-            var loop = newShims.Distinct().ToArray();
-            newShims.Clear();
-            foreach (var shim in loop)
-            {
-                shim.ResolveImplicitShims(_shimRegister, newShims);
-            }
-            newShims.RemoveAll(shims.Contains);
-            shims.AddRange(newShims.Distinct());
-        }
+        var shims = _shimRegister.ResolveAllShims();
 
         // Meta info
+        var code = new StringBuilder();
         code.AppendLine($"// Generation time: {DateTime.Now:o}");
         code.AppendLine($"// Project: {context.Compilation.AssemblyName}");
         code.AppendLine("// Shim map:");
@@ -64,7 +56,8 @@ internal class ShimrSourceGenerator : ISourceGenerator
             code.AppendLine($"// + {shimt.InterfaceFullName}");
             foreach (var shim in shimt.Shims)
             {
-                code.AppendLine($"//   - {shim.UnderlyingFullName}");
+                code.Append($"//   - {shim.UnderlyingFullName}")
+                    .AppendLine(shim is ShimFactoryModel ? " (Factory)" : null);
             }
         }
         addSource("_meta.g.cs", code);
@@ -75,8 +68,8 @@ internal class ShimrSourceGenerator : ISourceGenerator
             return;
         }
 
-        var builder = new AutoShimCodeWriter(context);
-        builder.WriteFactoryClass(code);
+        var builder = new AutoShimCodeWriter(context, _errors);
+        builder.WriteFactoryClass(code, shims);
         addSource("ShimBuilder.g.cs", code);
 
         builder.WriteExtensionClass(code, shims);
@@ -84,7 +77,7 @@ internal class ShimrSourceGenerator : ISourceGenerator
 
         foreach (var shim in shims)
         {
-            builder.WriteShimClass(code, shim);
+            builder.WriteShim(code, shim);
             addSource($"Shimr.{shim.Name}.g.cs", code);
         }
 

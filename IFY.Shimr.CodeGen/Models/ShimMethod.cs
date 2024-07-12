@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using IFY.Shimr.CodeGen.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models;
 
@@ -15,7 +16,7 @@ internal class ShimMethod(IMethodSymbol symbol) : BaseReturnableShimMember<IMeth
     protected override IEnumerable<IMethodSymbol> UnderlyingMemberMatch(IEnumerable<IMethodSymbol> underlyingMembers)
         => underlyingMembers.Where(symbol.AllParameterTypesMatch);
 
-    public override void GenerateCode(StringBuilder code, ITypeSymbol underlyingType, IMethodSymbol? underlyingMethod)
+    public override void GenerateCode(StringBuilder code, CodeErrorReporter errors, ITypeSymbol underlyingType, IMethodSymbol? underlyingMethod)
     {
         code.Append($"            public {ReturnTypeName} {Name}(")
             .Append(string.Join(", ", Parameters.Select(p => p.ToString())))
@@ -32,10 +33,13 @@ internal class ShimMethod(IMethodSymbol symbol) : BaseReturnableShimMember<IMeth
             return;
         }
 
-        code.Append($" => _inst.{Name}(")
+        var callee = underlyingMethod.IsStatic ? underlyingType.ToDisplayString() : "_inst";
+
+        code.Append($" => {callee}.{Name}(")
             .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
             .Append($")")
-            .Append(GetShimCode(underlyingMethod.ReturnType)).AppendLine(";");
+            .Append(GetShimCode(underlyingMethod.ReturnType))
+            .AppendLine(";");
     }
 
     public override ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType)

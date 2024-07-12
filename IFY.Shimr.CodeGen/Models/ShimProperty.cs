@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using IFY.Shimr.CodeGen.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models;
 
@@ -11,39 +12,43 @@ internal class ShimProperty(IPropertySymbol symbol) : BaseReturnableShimMember<I
     public bool IsSet { get; } = symbol.SetMethod?.DeclaredAccessibility == Accessibility.Public && symbol.SetMethod?.IsInitOnly == false;
     public bool IsInit { get; } = symbol.GetMethod?.DeclaredAccessibility == Accessibility.Public && symbol.SetMethod?.IsInitOnly == true;
 
-    public override void GenerateCode(StringBuilder code, ITypeSymbol underlyingType, IPropertySymbol? underlyingProperty)
+    public override void GenerateCode(StringBuilder code, CodeErrorReporter errors, ITypeSymbol underlyingType, IPropertySymbol? underlyingProperty)
     {
         code.Append($"            public {ReturnTypeName} {Name} {{");
 
         if (underlyingProperty == null)
         {
+            errors.NoMemberWarning(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), symbol.ToDisplayString());
+
             // TODO: optional, as per 'IgnoreMissingMembers'
             if (IsGet)
             {
-                code.Append("get => throw new NotImplementedException(/* TODO: explanation */);");
+                code.Append(" get => throw new NotImplementedException(/* TODO: explanation */);");
             }
             if (IsSet)
             {
-                code.Append($" set => throw new NotImplementedException(/* TODO: explanation */);");
+                code.Append(" set => throw new NotImplementedException(/* TODO: explanation */);");
             }
             if (IsInit)
             {
-                code.Append($" init => throw new NotImplementedException(/* TODO: explanation */);");
+                code.Append(" init => throw new NotImplementedException(/* TODO: explanation */);");
             }
         }
         else
         {
+            var callee = underlyingProperty.IsStatic ? underlyingType.ToDisplayString() : "_inst";
+
             if (IsGet)
             {
-                code.Append($" get => _inst.{Name}").Append(GetShimCode(underlyingProperty.Type)).Append(";");
+                code.Append($" get => {callee}.{Name}{GetShimCode(underlyingProperty.Type)};");
             }
             if (IsSet)
             {
-                code.Append($" set => _inst.{Name} = value").Append(GetUnshimCode(underlyingProperty.Type)).Append(";");
+                code.Append($" set => {callee}.{Name} = value{GetUnshimCode(underlyingProperty.Type)};");
             }
-            if (IsInit)
-            {
-                code.Append($" init => _inst.{Name} = value").Append(GetUnshimCode(underlyingProperty.Type)).Append(";");
+        if (IsInit)
+        {
+            code.Append($" init => {callee}.{Name} = value{GetUnshimCode(underlyingProperty.Type)};");
             }
         }
 

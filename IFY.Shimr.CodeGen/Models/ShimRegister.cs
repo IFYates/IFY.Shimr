@@ -23,4 +23,26 @@ internal class ShimRegister
         }
         return shim;
     }
+
+    /// <summary>
+    /// Ensure that all implicit shims in registered shims are resolved.
+    /// </summary>
+    /// <returns>All current shims.</returns>
+    public IEnumerable<ShimModel> ResolveAllShims()
+    {
+        var shims = Interfaces.SelectMany(s => s.Shims ?? []).ToList();
+        var newShims = shims.ToList();
+        while (newShims.Count > 0)
+        {
+            var loop = newShims.Distinct().ToArray();
+            newShims.Clear();
+            foreach (var shim in loop)
+            {
+                shim.ResolveImplicitShims(this, newShims);
+            }
+            newShims.RemoveAll(shims.Contains);
+            shims.AddRange(newShims.Distinct());
+        }
+        return shims;
+    }
 }

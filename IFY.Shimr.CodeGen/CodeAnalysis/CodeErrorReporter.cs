@@ -5,7 +5,7 @@ namespace IFY.Shimr.CodeGen.CodeAnalysis;
 /// <summary>
 /// Handles raising build errors.
 /// </summary>
-internal class CodeError
+internal class CodeErrorReporter
 {
     private readonly Queue<Diagnostic> _diagnostics = new();
     private void reportDiagnostic(DiagnosticDescriptor descriptor, Location? location, params object?[]? messageArgs)
@@ -15,12 +15,25 @@ internal class CodeError
         {
             if (_context.HasValue)
             {
-                _context.Value.ReportDiagnostic(diagnostic);
+                reportDiagnostic(diagnostic);
             }
             else
             {
                 _diagnostics.Enqueue(diagnostic);
             }
+        }
+    }
+    private void reportDiagnostic(Diagnostic diagnostic)
+    {
+        try
+        {
+            _context!.Value.ReportDiagnostic(diagnostic);
+        }
+        catch (Exception ex)
+        {
+            var err = $"{ex.GetType().FullName}: {ex.Message}\r\n{ex.StackTrace}";
+            _context!.Value.AddSource("ERROR.log.cs", $"// {err}");
+            Diag.WriteOutput($"// ERROR: {err}");
         }
     }
 
@@ -29,11 +42,11 @@ internal class CodeError
     {
         lock (_diagnostics)
         {
+            _context = context;
             while (_diagnostics.Count > 0)
             {
-                context.ReportDiagnostic(_diagnostics.Dequeue());
+                reportDiagnostic(_diagnostics.Dequeue());
             }
-            _context = context;
         }
     }
 
@@ -63,6 +76,19 @@ internal class CodeError
         isEnabledByDefault: true
     );
 
+    public void NoMemberWarning(SyntaxNode node, string shimTargetType, string shimMember)
+    {
+        reportDiagnostic(ShimOfUnknownMember, node.GetLocation(), shimTargetType, shimMember);
+    }
+    public static readonly DiagnosticDescriptor ShimOfUnknownMember = new(
+        id: "SHIMR003",
+        title: "Unable to resolve target member",
+        messageFormat: "Shim target '{0}' does not contain member '{1}'",
+        category: "Correctness",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
     public void NonInterfaceError(SyntaxNode node, ITypeSymbol? argType)
     {
         reportDiagnostic(ShimToNonInterface, node.GetLocation(), argType?.ToDisplayString() ?? "Unknown");
@@ -71,6 +97,19 @@ internal class CodeError
         id: "SHIMR101",
         title: "Invalid Shim type",
         messageFormat: "'{0}' is not an interface and invalid as a shim type",
+        category: "Correctness",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    public void InterfaceUseError(SyntaxNode node, ITypeSymbol? argType)
+    {
+        reportDiagnostic(NeedNonInterface, node.GetLocation(), argType?.ToDisplayString() ?? "Unknown");
+    }
+    public static readonly DiagnosticDescriptor NeedNonInterface = new(
+        id: "SHIMR102",
+        title: "Interface type not allowed",
+        messageFormat: "'{0}' is an interface and invalid for use here",
         category: "Correctness",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true

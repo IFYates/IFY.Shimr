@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using IFY.Shimr.CodeGen.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models;
 
@@ -14,7 +15,7 @@ internal class ShimModel(ShimterfaceModel shimterface, ITypeSymbol underlyingTyp
 
     public string Key { get; } = shimterface.InterfaceType.Name + "_" + underlyingType.Name + keySuffix;
     public string Name { get; }
-        = shimterface.InterfaceType.Name + "_" + underlyingType.Name + "_" + ShimRegister.R.Next();
+        = shimterface.InterfaceType.Name + "_" + underlyingType.Name + keySuffix + "_" + ShimRegister.R.Next();
 
     /// <summary>
     /// Looks for additional shims required to complete shim.
@@ -42,5 +43,37 @@ internal class ShimModel(ShimterfaceModel shimterface, ITypeSymbol underlyingTyp
             shims.Add(shimRegister.GetOrCreate(param.Type)
                 .AddShim(param.UnderlyingType!));
         }
+    }
+
+    public void GenerateCode(StringBuilder code, CodeErrorReporter errors)
+    {
+        var isFactory = this is ShimFactoryModel;
+        var members = Shimterface.ResolveShimMembers();
+
+        code.Append($"        protected class {Name} : {InterfaceFullName}")
+            .AppendLine(!isFactory ? ", IShim" : null)
+            .AppendLine("        {");
+
+        if (!isFactory)
+        {
+            // Constructor and Unshim
+            code.AppendLine($"            protected readonly {UnderlyingFullName} _inst;")
+                .AppendLine($"            public {Name}({UnderlyingFullName} inst) => _inst = inst;")
+                .AppendLine("            public object Unshim() => _inst;");
+
+            // Add ToString(), if not already
+            if (!members.OfType<ShimMethod>().Any(m => m.Name == nameof(ToString) && m.Parameters.Length == 0))
+            {
+                code.AppendLine("            public override string ToString() => _inst.ToString();");
+            }
+        }
+
+        // Shim'd members
+        foreach (var member in members)
+        {
+            member.GenerateCode(code, errors, UnderlyingType);
+        }
+
+        code.AppendLine("        }");
     }
 }

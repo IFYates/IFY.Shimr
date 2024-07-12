@@ -9,15 +9,14 @@ internal static class Diag
     public static void WriteOutput(string text, bool append = true)
     {
 #if DEBUG
-        using FileStream fs = new(OUTPUT_FILE, append ? FileMode.Append : FileMode.Create);
-        using StreamWriter sw = new(fs);
         try
         {
+            using FileStream fs = new(OUTPUT_FILE, append ? FileMode.Append : FileMode.Create);
+            using StreamWriter sw = new(fs);
             sw.WriteLine(text);
         }
-        finally
+        catch
         {
-            sw.Close();
         }
 #endif
     }
