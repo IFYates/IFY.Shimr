@@ -1,9 +1,9 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 
-namespace IFY.Shimr.CodeGen.Models;
+namespace IFY.Shimr.CodeGen.Models.Members;
 
-internal class ShimMethodParameter(IParameterSymbol symbol)
+internal class ShimMemberMethodParameter(IParameterSymbol symbol)
 {
     // TODO: out, ref, default
     // TODO: nullability?

@@ -1,17 +1,18 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 
-namespace IFY.Shimr.CodeGen.Models;
+namespace IFY.Shimr.CodeGen.Models.Members;
 
-internal class ShimMethod(IMethodSymbol symbol) : BaseReturnableShimMember<IMethodSymbol>
+internal class ShimMemberMethod(IMethodSymbol symbol) : BaseReturnableShimMember<IMethodSymbol>
 {
+    public override ISymbol Symbol { get; } = symbol;
     public override string Name { get; } = symbol.Name;
 
     public override ITypeSymbol ReturnType { get; } = symbol.ReturnType;
     public override string ReturnTypeName { get; } = symbol.ReturnType.ToDisplayString();
 
-    public ShimMethodParameter[] Parameters { get; }
-        = symbol.Parameters.Select(p => new ShimMethodParameter(p)).ToArray();
+    public ShimMemberMethodParameter[] Parameters { get; }
+        = symbol.Parameters.Select(p => new ShimMemberMethodParameter(p)).ToArray();
 
     protected override IEnumerable<IMethodSymbol> UnderlyingMemberMatch(IEnumerable<IMethodSymbol> underlyingMembers)
         => underlyingMembers.Where(symbol.AllParameterTypesMatch);
@@ -24,9 +25,7 @@ internal class ShimMethod(IMethodSymbol symbol) : BaseReturnableShimMember<IMeth
 
         if (underlyingMethod == null)
         {
-            //System.Diagnostics.Debugger.Launch();
-            //var members = underlyingType.GetMembers("ToString").OfType<IMethodSymbol>();
-            //var x = UnderlyingMemberMatch(members);
+            errors.NoMemberError(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), symbol.Name /* TODO: full signature */);
 
             // TODO: optional, as per 'IgnoreMissingMembers'
             code.AppendLine(" => throw new NotImplementedException(/* TODO: explanation */);");

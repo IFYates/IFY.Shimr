@@ -6,17 +6,23 @@
 internal static class Diag
 {
     private const string OUTPUT_FILE = "F:\\Dev\\IFY.Shimr\\Sourcegen.cs";
+
+    public static bool IsEnabled { get; set; } = true;
+
     public static void WriteOutput(string text, bool append = true)
     {
 #if DEBUG
-        try
+        if (IsEnabled)
         {
-            using FileStream fs = new(OUTPUT_FILE, append ? FileMode.Append : FileMode.Create);
-            using StreamWriter sw = new(fs);
-            sw.WriteLine(text);
-        }
-        catch
-        {
+            try
+            {
+                using FileStream fs = new(OUTPUT_FILE, append ? FileMode.Append : FileMode.Create);
+                using StreamWriter sw = new(fs);
+                sw.WriteLine(text);
+            }
+            catch
+            {
+            }
         }
 #endif
     }

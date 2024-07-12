@@ -76,19 +76,6 @@ internal class CodeErrorReporter
         isEnabledByDefault: true
     );
 
-    public void NoMemberWarning(SyntaxNode node, string shimTargetType, string shimMember)
-    {
-        reportDiagnostic(ShimOfUnknownMember, node.GetLocation(), shimTargetType, shimMember);
-    }
-    public static readonly DiagnosticDescriptor ShimOfUnknownMember = new(
-        id: "SHIMR003",
-        title: "Unable to resolve target member",
-        messageFormat: "Shim target '{0}' does not contain member '{1}'",
-        category: "Correctness",
-        defaultSeverity: DiagnosticSeverity.Warning,
-        isEnabledByDefault: true
-    );
-
     public void NonInterfaceError(SyntaxNode node, ITypeSymbol? argType)
     {
         reportDiagnostic(ShimToNonInterface, node.GetLocation(), argType?.ToDisplayString() ?? "Unknown");
@@ -110,6 +97,19 @@ internal class CodeErrorReporter
         id: "SHIMR102",
         title: "Interface type not allowed",
         messageFormat: "'{0}' is an interface and invalid for use here",
+        category: "Correctness",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
+    public void NoMemberError(SyntaxNode node, string shimTargetType, string shimMember)
+    {
+        reportDiagnostic(ShimOfUnknownMember, node.GetLocation(), shimTargetType, shimMember);
+    }
+    public static readonly DiagnosticDescriptor ShimOfUnknownMember = new(
+        id: "SHIMR03",
+        title: "Unable to resolve target member",
+        messageFormat: "Shim target '{0}' does not contain member '{1}' and missing members are currently fatal",
         category: "Correctness",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true

@@ -6,8 +6,16 @@ Utility for creating a dynamic object facade/proxy to allow for using an object 
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2FIFYates%2FIFY.Shimr%2Fmaster)](https://dashboard.stryker-mutator.io/reports/github.com/IFYates/IFY.Shimr/master)
 [![Codacy Grade](https://app.codacy.com/project/badge/Grade/8f5585dd2c4f402893420e0ff7edf5f6)](https://app.codacy.com/gh/IFYates/IFY.Shimr/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
-[![NuGet Version](https://img.shields.io/nuget/v/IFY.Shimr)](https://www.nuget.org/packages/IFY.Shimr/)
-[![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Shimr)](https://www.nuget.org/packages/IFY.Shimr/)
+There are two packages options:
+1. "Runtime" - The original implementation using runtime-compiled types. Very little design-time assistance.
+1. "CodeGen" - Source Generator implementation, providing improved design-time information.
+
+Both packages should have feature parity.
+
+Package|Latest Version|
+-|-|-
+Runtime | [![NuGet Version](https://img.shields.io/nuget/v/IFY.Shimr)](https://www.nuget.org/packages/IFY.Shimr/) [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Shimr)](https://www.nuget.org/packages/IFY.Shimr/)
+CodeGen | [![NuGet Version](https://img.shields.io/nuget/v/IFY.Shimr.CodeGen)](https://www.nuget.org/packages/IFY.Shimr.CodeGen/) [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Shimr.CodeGen)](https://www.nuget.org/packages/IFY.Shimr.CodeGen/)
 
 Formerly known as Shimterface:
 [![NuGet Version](https://img.shields.io/nuget/v/Shimterface.Standard)](https://www.nuget.org/packages/Shimterface.Standard/)
@@ -59,9 +67,9 @@ This is not a mocking library.
 Outside of setting up your DI/IOC container and facades, if you're referencing Shimr directly, it's likely that you're thinking about a different problem domain to the one solved by this library.
 
 ## Known Issues
-* If the compilation of the proxy type fails but the application handles it, the Type-Interface combination is now not usable
+* (Runtime) If the compilation of the proxy type fails but the application handles it, the Type-Interface combination is now not usable
 
 ## Future Ideas
-* Generate assembly of compiled shims for direct reference
+* (Runtime) Generate assembly of compiled shims for direct reference
 * Combine multiple target types to single shim
 * Behavioural configuration to attributes (e.g., [Shim(IgnoreMissingMembers = true)])

@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>IFY.Shimr.CodeGen</name>
+    </assembly>
+    <members>
+        <member name="T:IFY.Shimr.CodeGen.CodeAnalysis.CodeErrorReporter">
+            <summary>
+            Handles raising build errors.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.CodeGen.CodeAnalysis.ShimResolver">
+            <summary>
+            Finds all uses of '<see cref="T:IFY.Shimr.Extensions.ObjectExtensions"/>.Shim&lt;T&gt;(object)' extension method and '<see cref="T:IFY.Shimr.Extensions.ObjectExtensions"/>.Create&lt;T&gt;()'.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.SyntaxHelpers.GetAllMembers(Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Get all the members of this symbol, including those from base type.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.CodeGen.Diag">
+            <summary>
+            Helpers for diagnosing issues.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.CodeGen.Models.BaseShimType">
+            <summary>
+            Models an interface used to shim another type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.BaseShimType.#ctor(Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Models an interface used to shim another type.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.CodeGen.Models.ShimClassTarget">
+            <summary>
+            Models the target of a shimterface.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimClassTarget.#ctor(IFY.Shimr.CodeGen.Models.BaseShimType,Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Models the target of a shimterface.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimClassTarget.ResolveImplicitShims(IFY.Shimr.CodeGen.Models.ShimRegister,System.Collections.Generic.IList{IFY.Shimr.CodeGen.Models.IShimTarget})">
+            <summary>
+            Looks for additional shims required to complete shim.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.CodeGen.Models.ShimClassType">
+            <summary>
+            Models an interface used to shim another type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimClassType.#ctor(Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Models an interface used to shim another type.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.CodeGen.Models.ShimRegister">
+            <summary>
+            Pool of registered shims.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimRegister.ResolveAllShims">
+            <summary>
+            Ensure that all implicit shims in registered shims are resolved.
+            </summary>
+            <returns>All current shims.</returns>
+        </member>
+        <member name="T:IFY.Shimr.ConstructorShimAttribute">
+            <summary>
+            Mark a method as being a shim of a constructor.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.IShim">
+            <summary>
+            Interface for all shimmed types
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.IShim.Unshim">
+            <summary>
+            Return the original object that has been shimmed.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.ShimAttribute">
+            <summary>
+            Mark a member type as explicitly shimming an item with a different name.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.ShimAttribute.DefinitionType">
+            <summary>
+            The type that defines the member, for when there's a conflict.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.ShimAttribute.ImplementationName">
+            <summary>
+            The name of the member in the target type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ShimAttribute.#ctor(System.Type)">
+            <summary>
+            
+            </summary>
+            <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
+        </member>
+        <member name="M:IFY.Shimr.ShimAttribute.#ctor(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="name">The name of the member in the target type.</param>
+        </member>
+        <member name="M:IFY.Shimr.ShimAttribute.#ctor(System.Type,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
+            <param name="name">The name of the member in the target type.</param>
+        </member>
+        <member name="T:IFY.Shimr.StaticShimAttribute">
+            <summary>
+            Mark individual properties/fields or methods as being static within another type, or the entire interface.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.StaticShimAttribute.TargetType">
+            <summary>
+            The type that implements this member.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.StaticShimAttribute.IsConstructor">
+            <summary>
+            True if this member calls a constructor on the target type.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.TypeShimAttribute">
+            <summary>
+            Mark signature type as being automatically shimmed from real implementation type
+            </summary>
+        </member>
+    </members>
+</doc>

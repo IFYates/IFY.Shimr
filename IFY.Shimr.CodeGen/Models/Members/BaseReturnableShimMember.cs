@@ -1,11 +1,12 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 
-namespace IFY.Shimr.CodeGen.Models;
+namespace IFY.Shimr.CodeGen.Models.Members;
 
 internal abstract class BaseReturnableShimMember<T> : IShimMember, IReturnableShimMember
     where T : ISymbol
 {
+    public abstract ISymbol Symbol { get; }
     public abstract string Name { get; }
     public abstract ITypeSymbol ReturnType { get; }
     public abstract string ReturnTypeName { get; }
@@ -35,7 +36,7 @@ internal abstract class BaseReturnableShimMember<T> : IShimMember, IReturnableSh
     }
 
     public T? GetUnderlyingMember(ITypeSymbol underlyingType)
-        => UnderlyingMemberMatch(underlyingType.GetMembers(Name).OfType<T>()).FirstOrDefault();
+        => UnderlyingMemberMatch(underlyingType.GetAllMembers().OfType<T>().Where(m => m.Name == Name)).FirstOrDefault();
     protected virtual IEnumerable<T> UnderlyingMemberMatch(IEnumerable<T> underlyingMembers)
         => underlyingMembers;
 }

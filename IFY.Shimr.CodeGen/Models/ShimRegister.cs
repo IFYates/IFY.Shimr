@@ -7,30 +7,39 @@ namespace IFY.Shimr.CodeGen.Models;
 /// </summary>
 internal class ShimRegister
 {
-    public static Random R = new();
+    private readonly Dictionary<string, BaseShimType> _pool = [];
+    public IEnumerable<BaseShimType> Types => _pool.Values;
 
-    private readonly Dictionary<string, ShimterfaceModel> _pool = [];
-    public IEnumerable<ShimterfaceModel> Interfaces => _pool.Values;
-
-    public ShimterfaceModel GetOrCreate(ITypeSymbol interfaceType)
+    public ShimClassType GetOrCreate(ITypeSymbol interfaceType)
     {
         var key = interfaceType.ToDisplayString();
         if (!_pool.TryGetValue(key, out var shim))
         {
             _pool.Add(key, null!);
-            shim = new ShimterfaceModel(interfaceType);
+            shim = new ShimClassType(interfaceType);
             _pool[key] = shim;
         }
-        return shim;
+        return (ShimClassType)shim;
+    }
+    public ShimFactoryType GetOrCreateFactory(ITypeSymbol interfaceType)
+    {
+        var key = interfaceType.ToDisplayString();
+        if (!_pool.TryGetValue(key, out var shim))
+        {
+            _pool.Add(key, null!);
+            shim = new ShimFactoryType(interfaceType);
+            _pool[key] = shim;
+        }
+        return (ShimFactoryType)shim;
     }
 
     /// <summary>
     /// Ensure that all implicit shims in registered shims are resolved.
     /// </summary>
     /// <returns>All current shims.</returns>
-    public IEnumerable<ShimModel> ResolveAllShims()
+    public IEnumerable<IShimTarget> ResolveAllShims()
     {
-        var shims = Interfaces.SelectMany(s => s.Shims ?? []).ToList();
+        var shims = Types.SelectMany(s => s.Shims ?? []).ToList();
         var newShims = shims.ToList();
         while (newShims.Count > 0)
         {

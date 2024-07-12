@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace IFY.Shimr.CodeGen.Models;
+namespace IFY.Shimr.CodeGen.Models.Members;
+
 internal interface IReturnableShimMember : IShimMember
 {
     ITypeSymbol ReturnType { get; }

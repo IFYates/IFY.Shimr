@@ -1,37 +1,35 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
 using IFY.Shimr.CodeGen.Models;
 using Microsoft.CodeAnalysis;
+using System.Reflection;
 
 namespace IFY.Shimr.CodeGen;
 
 [Generator]
 internal class ShimrSourceGenerator : ISourceGenerator
 {
-    private readonly CodeErrorReporter _errors = new();
-    private readonly ShimRegister _shimRegister = new();
-
     // Only called after a rebuild
     public void Initialize(GeneratorInitializationContext context)
     {
         //System.Diagnostics.Debugger.Launch(); // Do not leave uncommented when exiting VS
+        Diag.IsEnabled = !Assembly.GetExecutingAssembly().Location.Contains("\\Temp\\");
         Diag.WriteOutput($"// Start code generation: {DateTime.Now:o}\r\n", false); // TODO: wrong place to reset file
 
-        var shimUseResolver = new ShimResolver(_errors, _shimRegister);
-        context.RegisterForSyntaxNotifications(new SyntaxContextReceiverCreator(() => shimUseResolver));
+        context.RegisterForSyntaxNotifications(new SyntaxContextReceiverCreator(() => new ShimResolver()));
     }
 
     // Called on each code change
     public void Execute(GeneratorExecutionContext context)
     {
-        if (context.SyntaxContextReceiver is not ShimResolver)
+        if (context.SyntaxContextReceiver is not ShimResolver resolver)
         {
             return;
         }
 
         try
         {
-            _errors.SetContext(context);
-            doExecute(context);
+            resolver.Errors.SetContext(context);
+            doExecute(context, resolver);
         }
         catch (Exception ex)
         {
@@ -42,22 +40,22 @@ internal class ShimrSourceGenerator : ISourceGenerator
             throw;
         }
     }
-    private void doExecute(GeneratorExecutionContext context)
+    private void doExecute(GeneratorExecutionContext context, ShimResolver resolver)
     {
-        var shims = _shimRegister.ResolveAllShims();
+        var shims = resolver.Shims.ResolveAllShims();
 
         // Meta info
         var code = new StringBuilder();
         code.AppendLine($"// Generation time: {DateTime.Now:o}");
         code.AppendLine($"// Project: {context.Compilation.AssemblyName}");
-        code.AppendLine("// Shim map:");
-        foreach (var shimt in _shimRegister.Interfaces)
+        code.AppendLine($"// Shim map ({shims.Count()}):");
+        foreach (var shimt in resolver.Shims.Types)
         {
             code.AppendLine($"// + {shimt.InterfaceFullName}");
             foreach (var shim in shimt.Shims)
             {
                 code.Append($"//   - {shim.UnderlyingFullName}")
-                    .AppendLine(shim is ShimFactoryModel ? " (Factory)" : null);
+                    .AppendLine(shim is ShimFactoryTarget ? " (Factory)" : null);
             }
         }
         addSource("_meta.g.cs", code);
@@ -68,23 +66,24 @@ internal class ShimrSourceGenerator : ISourceGenerator
             return;
         }
 
-        var builder = new AutoShimCodeWriter(context, _errors);
+        var builder = new AutoShimCodeWriter(context, resolver.Errors);
         builder.WriteFactoryClass(code, shims);
         addSource("ShimBuilder.g.cs", code);
 
         builder.WriteExtensionClass(code, shims);
-        addSource("ShimAuto.g.cs", code);
+        addSource("ObjectExtensions.g.cs", code);
 
-        foreach (var shim in shims)
+        foreach (var shimType in resolver.Shims.Types)
         {
-            builder.WriteShim(code, shim);
-            addSource($"Shimr.{shim.Name}.g.cs", code);
+            shimType.GenerateCode(code, resolver.Errors);
+            addSource($"Shimr.{shimType.Name}.g.cs", code);
         }
 
         Diag.WriteOutput($"// Code generation complete: {DateTime.Now:o}");
 
         void addSource(string name, StringBuilder code)
         {
+            code.Insert(0, $"// Generated at {DateTime.Now:O}\r\n");
             context.AddSource(name, code.ToString());
             Diag.WriteOutput($"/** File: {name} **/\r\n{code}");
             code.Clear();

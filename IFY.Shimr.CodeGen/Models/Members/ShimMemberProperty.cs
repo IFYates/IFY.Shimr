@@ -1,10 +1,11 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 
-namespace IFY.Shimr.CodeGen.Models;
+namespace IFY.Shimr.CodeGen.Models.Members;
 
-internal class ShimProperty(IPropertySymbol symbol) : BaseReturnableShimMember<IPropertySymbol>
+internal class ShimMemberProperty(IPropertySymbol symbol) : BaseReturnableShimMember<IPropertySymbol>
 {
+    public override ISymbol Symbol { get; } = symbol;
     public override string Name { get; } = symbol.Name;
     public override ITypeSymbol ReturnType { get; } = symbol.Type;
     public override string ReturnTypeName { get; } = symbol.Type.ToDisplayString();
@@ -18,7 +19,7 @@ internal class ShimProperty(IPropertySymbol symbol) : BaseReturnableShimMember<I
 
         if (underlyingProperty == null)
         {
-            errors.NoMemberWarning(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), symbol.ToDisplayString());
+            errors.NoMemberError(symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), symbol.Name /* TODO: full signature */);
 
             // TODO: optional, as per 'IgnoreMissingMembers'
             if (IsGet)
@@ -46,9 +47,9 @@ internal class ShimProperty(IPropertySymbol symbol) : BaseReturnableShimMember<I
             {
                 code.Append($" set => {callee}.{Name} = value{GetUnshimCode(underlyingProperty.Type)};");
             }
-        if (IsInit)
-        {
-            code.Append($" init => {callee}.{Name} = value{GetUnshimCode(underlyingProperty.Type)};");
+            if (IsInit)
+            {
+                code.Append($" init => {callee}.{Name} = value{GetUnshimCode(underlyingProperty.Type)};");
             }
         }
 

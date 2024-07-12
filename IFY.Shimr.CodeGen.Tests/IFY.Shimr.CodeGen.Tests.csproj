@@ -2,10 +2,11 @@
 
 	<PropertyGroup>
 		<!--<TargetFrameworks>netcoreapp3.1;net6.0;net8.0</TargetFrameworks>-->
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFrameworks>net8.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<IsPackable>false</IsPackable>
@@ -14,11 +15,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Include="..\IFY.Shimr.Tests\Examples\DateTimeExample.cs" Link="Examples\DateTimeExample.cs" />
+		<Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+	  <Compile Include="..\IFY.Shimr.Tests\Examples\DateTimeExample.cs" Link="Examples\DateTimeExample.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\Examples\FileSystemExample.cs" Link="Examples\FileSystemExample.cs" />
+	  <Compile Include="..\IFY.Shimr.Tests\Examples\ThreadExample.cs" Link="Examples\ThreadExample.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -34,10 +37,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\IFY.Shimr.CodeGen\IFY.Shimr.CodeGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Examples\" />
 	</ItemGroup>
 
 </Project>
