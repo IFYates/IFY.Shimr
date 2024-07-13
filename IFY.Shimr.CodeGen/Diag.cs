@@ -9,6 +9,20 @@ internal static class Diag
 
     public static bool IsEnabled { get; set; } = true;
 
+    private static bool _hasLaunched = false;
+    public static void Debug()
+    {
+        if (!_hasLaunched)
+        {
+            _hasLaunched = true;
+            System.Diagnostics.Debugger.Launch();
+        }
+        else
+        {
+            System.Diagnostics.Debugger.Break();
+        }
+    }
+
     public static void WriteOutput(string text, bool append = true)
     {
 #if DEBUG

@@ -7,5 +7,5 @@ internal interface IReturnableShimMember : IShimMember
     ITypeSymbol ReturnType { get; }
     string ReturnTypeName { get; }
 
-    ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType);
+    //ITypeSymbol? GetMemberReturn(ISymbol? member);
 }

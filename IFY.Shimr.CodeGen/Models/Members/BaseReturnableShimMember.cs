@@ -14,8 +14,6 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
     public abstract ITypeSymbol ReturnType { get; }
     public abstract string ReturnTypeName { get; }
 
-    public abstract ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType);
-
     public void GenerateCode(StringBuilder code, CodeErrorReporter errors, ITypeSymbol underlyingType)
     {
         var underlyingMember = GetUnderlyingMember(underlyingType);
@@ -23,18 +21,32 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
     }
     public abstract void GenerateCode(StringBuilder code, CodeErrorReporter errors, ITypeSymbol underlyingType, T? underlyingMember);
 
+    public string GetMemberCallee(ITypeSymbol type, T member)
+    {
+        var callee = "_inst";
+        if (member.IsStatic)
+        {
+            callee = type.ToDisplayString();
+        }
+        else if (!member.ContainingType.IsMatch(type))
+        {
+            callee = $"(({member.ContainingType.ToDisplayString()}){callee})";
+        }
+        return callee;
+    }
     public string? GetShimCode(ITypeSymbol underlyingReturnType)
     {
+        string? str = null;// $"/* {underlyingReturnType.ToDisplayString()} */";
         if (ReturnType.IsMatch(underlyingReturnType))
         {
-            return null;
+            return str;
         }
 
         // Array shim
         if (ReturnType is IArrayTypeSymbol returnArrayType)
         {
             var elementTypeName = returnArrayType.ElementType.ToDisplayString();
-            return $".Select(e => e.Shim<{elementTypeName}>()).ToArray()";
+            return $"{str}.Select(e => e.Shim<{elementTypeName}>()).ToArray()";
         }
 
         // IEnumerable<> shim
@@ -43,10 +55,11 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
             && returnType.TypeArguments.Length == 1)
         {
             var elementTypeName = returnType.TypeArguments[0].ToDisplayString();
-            return $".Select(e => e.Shim<{elementTypeName}>())";
+            return $"{str}.Select(e => e.Shim<{elementTypeName}>())";
         }
 
-        return $".Shim<{ReturnTypeName}>()";
+        // Only shim if it's an interface
+        return ReturnType.TypeKind != TypeKind.Interface ? str : $"{str}.Shim<{ReturnTypeName}>()";
     }
     public string? GetUnshimCode(ITypeSymbol underlyingReturnType)
     {
@@ -57,14 +70,22 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
     }
 
     public T? GetUnderlyingMember(ITypeSymbol underlyingType)
-        => UnderlyingMemberMatch(underlyingType.GetAllMembers().OfType<T>().Where(m => m.Name == Name)).FirstOrDefault();
-    protected virtual IEnumerable<T> UnderlyingMemberMatch(IEnumerable<T> underlyingMembers)
-        => underlyingMembers;
+    {
+        var members = underlyingType.GetAllMembers().OfType<T>()
+            .Where(m => m.Name == Name)
+            .Where(IsUnderlyingMemberMatch)
+            .OrderByDescending(m => GetMemberReturn(m)!.IsMatch(ReturnType)).ToArray();
+        return members.FirstOrDefault();
+    }
+    protected virtual bool IsUnderlyingMemberMatch(T member)
+        => true;
+
+    public abstract ITypeSymbol? GetMemberReturn(T? member);
 
     public void ResolveImplicitShims(ShimRegister shimRegister, IShimTarget target)
     {
         // Return types
-        var underlyingReturn = GetUnderlyingMemberReturn(target.UnderlyingType);
+        var underlyingReturn = GetMemberReturn(GetUnderlyingMember(target.UnderlyingType)) ?? ReturnType;
         if (!underlyingReturn.IsMatch(ReturnType))
         {
             // Arrays

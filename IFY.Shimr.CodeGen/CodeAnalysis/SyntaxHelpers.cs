@@ -21,10 +21,13 @@ internal static class SyntaxHelpers
     public static ISymbol[] GetAllMembers(this ITypeSymbol symbol)
     {
         var members = symbol.GetMembers().ToList();
-        while (symbol.BaseType != null)
+        if (symbol.BaseType != null)
         {
-            symbol = symbol.BaseType;
-            members.AddRange(symbol.GetMembers());
+            members.AddRange(symbol.BaseType.GetAllMembers());
+        }
+        foreach (var iface in symbol.AllInterfaces)
+        {
+            members.AddRange(iface.GetMembers());
         }
         return members.Distinct(SymbolEqualityComparer.Default).ToArray();
     }

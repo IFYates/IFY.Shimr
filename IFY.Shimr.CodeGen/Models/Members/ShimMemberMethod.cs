@@ -12,9 +12,6 @@ internal class ShimMemberMethod(BaseShimType baseShimType, IMethodSymbol symbol)
     public ShimMemberMethodParameter[] Parameters { get; }
         = symbol.Parameters.Select(p => new ShimMemberMethodParameter(p)).ToArray();
 
-    protected override IEnumerable<IMethodSymbol> UnderlyingMemberMatch(IEnumerable<IMethodSymbol> underlyingMembers)
-        => underlyingMembers.Where(Symbol.AllParameterTypesMatch);
-
     public override void GenerateCode(StringBuilder code, CodeErrorReporter errors, ITypeSymbol underlyingType, IMethodSymbol? underlyingMethod)
     {
         code.Append($"            public {ReturnTypeName} {Name}(")
@@ -30,17 +27,18 @@ internal class ShimMemberMethod(BaseShimType baseShimType, IMethodSymbol symbol)
             return;
         }
 
-        var callee = underlyingMethod.IsStatic ? underlyingType.ToDisplayString() : "_inst";
-
-        code.Append($" => {callee}.{Name}(")
+        code.Append($" => {GetMemberCallee(underlyingType, underlyingMethod)}.{Name}(")
             .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
             .Append($")")
             .Append(GetShimCode(underlyingMethod.ReturnType))
             .AppendLine(";");
     }
 
-    public override ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType)
-        => GetUnderlyingMember(underlyingType)?.ReturnType ?? ReturnType;
+    public override ITypeSymbol? GetMemberReturn(IMethodSymbol? member)
+        => member?.ReturnType;
+
+    protected override bool IsUnderlyingMemberMatch(IMethodSymbol member)
+        => Symbol.AllParameterTypesMatch(member);
 
     protected override void DoResolveImplicitShims(ShimRegister shimRegister, IShimTarget target)
     {

@@ -54,7 +54,7 @@ internal abstract class BaseShimType(ITypeSymbol interfaceType)
         if (_members is null)
         {
             var members = new List<IShimMember>();
-            foreach (var member in InterfaceType.GetMembers())
+            foreach (var member in InterfaceType.GetAllMembers())
             {
                 switch (member)
                 {

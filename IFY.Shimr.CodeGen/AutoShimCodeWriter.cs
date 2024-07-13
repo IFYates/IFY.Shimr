@@ -18,6 +18,13 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context)
 
     public void WriteFactoryClass(StringBuilder code, IEnumerable<IShimTarget> shims)
     {
+        var shimTypes = shims.OfType<ShimFactoryTarget>()
+            .GroupBy(s => s.InterfaceFullName).ToArray();
+        if (!shimTypes.Any())
+        {
+            return;
+        }
+
         code.AppendLine($"namespace {SB_NAMESPACE}")
             .AppendLine("{")
             .AppendLine($"    public static partial class {SB_CLASSNAME}")
@@ -31,8 +38,6 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context)
             .AppendLine("        {");
 
         // Factory
-        var shimTypes = shims.OfType<ShimFactoryTarget>()
-            .GroupBy(s => s.InterfaceFullName).ToArray();
         foreach (var shimType in shimTypes.Select(g => g.First().ShimType))
         {
             code.AppendLine($"            if (typeof(TInterface) == typeof({shimType.InterfaceFullName}))")
@@ -49,14 +54,19 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context)
 
     public void WriteExtensionClass(StringBuilder code, IEnumerable<IShimTarget> shims)
     {
-        code.AppendLine($"namespace {EXT_NAMESPACE}")
+        var shimTypes = shims.Where(s => s is not ShimFactoryTarget)
+            .GroupBy(s => s.UnderlyingFullName).ToArray();
+        if (!shimTypes.Any())
+        {
+            return;
+        }
+
+        code.AppendLine($"namespace {EXT_NAMESPACE}") // TODO: option to use namespace of underlying?
             .AppendLine("{")
             .AppendLine($"    public static partial class {EXT_CLASSNAME}")
             .AppendLine("    {");
 
         // Shim: Underlying -> Interface
-        var shimTypes = shims.Where(s => s is not ShimFactoryTarget)
-            .GroupBy(s => s.UnderlyingFullName).ToArray();
         foreach (var underlyingShims in shimTypes)
         {
             var underlyingType = underlyingShims.First().UnderlyingType;
@@ -73,7 +83,7 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context)
             }
 
             code.AppendLine("        /// <summary>")
-                .AppendLine("        /// Create an instance of <typeparamref name=\"TInterface\"/> shim.")
+                .AppendLine($"        /// Shim an instance of <see cref=\"{underlyingType.ToDisplayString()}\"/> as <typeparamref name=\"TInterface\"/>.")
                 .AppendLine("        /// </summary>")
                 .AppendLine($"        public static TInterface Shim<TInterface>(this {underlyingShims.Key} inst) where TInterface : class")
                 .AppendLine("        {");

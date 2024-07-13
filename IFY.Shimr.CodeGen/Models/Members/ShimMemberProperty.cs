@@ -37,8 +37,7 @@ internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol sym
         }
         else
         {
-            var callee = underlyingProperty.IsStatic ? underlyingType.ToDisplayString() : "_inst";
-
+            var callee = GetMemberCallee(underlyingType, underlyingProperty);
             if (IsGet)
             {
                 code.Append($" get => {callee}.{Name}{GetShimCode(underlyingProperty.Type)};");
@@ -56,6 +55,6 @@ internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol sym
         code.AppendLine(" }");
     }
 
-    public override ITypeSymbol GetUnderlyingMemberReturn(ITypeSymbol underlyingType)
-        => GetUnderlyingMember(underlyingType)?.Type ?? ReturnType;
+    public override ITypeSymbol? GetMemberReturn(IPropertySymbol? member)
+        => member?.Type;
 }
