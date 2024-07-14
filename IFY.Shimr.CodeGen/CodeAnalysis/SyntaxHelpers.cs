@@ -60,21 +60,45 @@ internal static class SyntaxHelpers
         return semanticModel.GetTypeInfo(typeOf.Type).Type;
     }
 
+    public static string? GetShimName(this ISymbol symbol)
+    {
+        var attr = symbol.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.IsType<ShimAttribute>() == true);
+        Diag.WriteOutput($"//// {symbol.ToDisplayString()} // {attr?.ConstructorArguments[0].Type} // {attr?.ConstructorArguments[0].Type!.IsType<string>()}");
+        //if (symbol.Name == "Value")
+        //{
+        //    Diag.Debug();
+        //}
+        // Could be (string), (Type), or (Type, string)
+        return (attr?.ConstructorArguments.Length) switch
+        {
+            1 => attr.ConstructorArguments[0].Type!.IsType<string>()
+                ? attr.ConstructorArguments[0].Value?.ToString() : null,
+            2 => attr.ConstructorArguments[1].Value?.ToString(),
+            _ => null,
+        };
+    }
+
     public static bool IsMatch(this ITypeSymbol type1, ITypeSymbol type2)
         => type1.Equals(type2, SymbolEqualityComparer.Default);
 
-    public static bool IsType<T>(this INamedTypeSymbol symbol)
-    {
-        var symbolFullName = symbol.ToDisplayString(NullableFlowState.None, SymbolDisplayFormat.FullyQualifiedFormat);
-        var typeFullName = typeof(T).FullName;
-        return symbolFullName == typeFullName || symbolFullName == $"global::{typeFullName}";
-    }
+    public static bool IsType<T>(this ITypeSymbol symbol)
+        => symbol.ToFullName() == typeof(T).FullName;
+
+    private static readonly SymbolDisplayFormat _displayFormat = new(
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
+    );
+    public static string ToFullName(this ITypeSymbol type)
+        => type.ToDisplayString(_displayFormat);
 
     public static string ToUniqueName(this ISymbol symbol)
     {
         return symbol switch
         {
             IMethodSymbol ms => $"{ms.Name}__{string.Join("_", ms.Parameters.Select(p => p.Type.Name))}",
+            // TODO: Others
             _ => symbol.Name,
         };
     }

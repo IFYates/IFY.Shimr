@@ -40,15 +40,15 @@ internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol sym
             var callee = GetMemberCallee(underlyingType, underlyingProperty);
             if (IsGet)
             {
-                code.Append($" get => {callee}.{Name}{GetShimCode(underlyingProperty.Type)};");
+                code.Append($" get => {callee}.{OriginalName}{GetShimCode(underlyingProperty.Type)};");
             }
             if (IsSet)
             {
-                code.Append($" set => {callee}.{Name} = value{GetUnshimCode(underlyingProperty.Type)};");
+                code.Append($" set => {callee}.{OriginalName} = value{GetUnshimCode(underlyingProperty.Type)};");
             }
             if (IsInit)
             {
-                code.Append($" init => {callee}.{Name} = value{GetUnshimCode(underlyingProperty.Type)};");
+                code.Append($" init => {callee}.{OriginalName} = value{GetUnshimCode(underlyingProperty.Type)};");
             }
         }
 

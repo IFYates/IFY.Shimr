@@ -7,6 +7,7 @@ internal interface IShimMember
 {
     ISymbol Symbol { get; }
     string Name { get; }
+    string OriginalName { get; }
     void GenerateCode(StringBuilder code, CodeErrorReporter errors, ITypeSymbol underlyingType);
 
     /// <summary>

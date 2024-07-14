@@ -47,7 +47,7 @@ internal abstract class BaseShimType(ITypeSymbol interfaceType)
     // constructors
     // events
     // renaming
-    // implemented interface members?
+    // implemented interface members
 
     public IShimMember[] ResolveShimMembers()
     {
@@ -59,13 +59,17 @@ internal abstract class BaseShimType(ITypeSymbol interfaceType)
                 switch (member)
                 {
                     case IMethodSymbol ms:
-                        if (ms.MethodKind is not MethodKind.PropertyGet and not MethodKind.PropertySet)
+                        if (ms.MethodKind is not MethodKind.PropertyGet and not MethodKind.PropertySet
+                            && ms.IsAbstract) // Ignore implemented interface members
                         {
                             members.Add(new ShimMemberMethod(this, ms));
                         }
                         break;
                     case IPropertySymbol ps:
-                        members.Add(new ShimMemberProperty(this, ps));
+                        if (!ps.ExplicitInterfaceImplementations.Any())
+                        {
+                            members.Add(new ShimMemberProperty(this, ps));
+                        }
                         break;
                     default:
                         Diag.WriteOutput($"// Unhandled member type: {member.GetType().FullName}");

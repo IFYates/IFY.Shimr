@@ -11,6 +11,7 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
     public T Symbol { get; } = symbol;
     ISymbol IShimMember.Symbol { get; } = symbol;
     public string Name { get; } = symbol.Name;
+    public string OriginalName { get; } = symbol.GetShimName() ?? symbol.Name;
     public abstract ITypeSymbol ReturnType { get; }
     public abstract string ReturnTypeName { get; }
 
@@ -51,7 +52,8 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
 
         // IEnumerable<> shim
         // TODO: Any implementation
-        if (ReturnType is INamedTypeSymbol returnType && returnType.Name == nameof(System.Collections.IEnumerable)
+        if (ReturnType is INamedTypeSymbol returnType
+            && returnType.Name == nameof(System.Collections.IEnumerable)
             && returnType.TypeArguments.Length == 1)
         {
             var elementTypeName = returnType.TypeArguments[0].ToDisplayString();
@@ -72,7 +74,7 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
     public T? GetUnderlyingMember(ITypeSymbol underlyingType)
     {
         var members = underlyingType.GetAllMembers().OfType<T>()
-            .Where(m => m.Name == Name)
+            .Where(m => m.Name == OriginalName)
             .Where(IsUnderlyingMemberMatch)
             .OrderByDescending(m => GetMemberReturn(m)!.IsMatch(ReturnType)).ToArray();
         return members.FirstOrDefault();

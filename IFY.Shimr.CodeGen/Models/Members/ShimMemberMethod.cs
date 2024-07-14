@@ -27,7 +27,7 @@ internal class ShimMemberMethod(BaseShimType baseShimType, IMethodSymbol symbol)
             return;
         }
 
-        code.Append($" => {GetMemberCallee(underlyingType, underlyingMethod)}.{Name}(")
+        code.Append($" => {GetMemberCallee(underlyingType, underlyingMethod)}.{OriginalName}(")
             .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
             .Append($")")
             .Append(GetShimCode(underlyingMethod.ReturnType))
