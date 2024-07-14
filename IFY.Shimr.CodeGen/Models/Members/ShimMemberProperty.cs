@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models.Members;
 
+// TODO: Split Property/Field by resolving on detection
 internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol symbol)
     : BaseReturnableShimMember<IPropertySymbol>(baseShimType, symbol)
 {
@@ -17,7 +18,35 @@ internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol sym
     {
         code.Append($"            public {ReturnTypeName} {Name} {{");
 
+        ISymbol? underlyingMember = underlyingProperty;
+        IFieldSymbol? underlyingField = null;
         if (underlyingProperty == null)
+        {
+            underlyingField = underlyingType.GetAllMembers().OfType<IFieldSymbol>()
+                .Where(m => m.Name == OriginalName)
+                .OrderByDescending(m => m.Type.IsMatch(ReturnType))
+                .FirstOrDefault();
+            underlyingMember = underlyingField;
+        }
+
+        if (underlyingMember != null)
+        {
+            var callee = GetMemberCallee(underlyingType, underlyingMember);
+            var underlyingMemberType = underlyingProperty?.Type ?? underlyingField!.Type;
+            if (IsGet)
+            {
+                code.Append($" get => {callee}.{OriginalName}{GetShimCode(underlyingMemberType)};");
+            }
+            if (IsSet)
+            {
+                code.Append($" set => {callee}.{OriginalName} = value{GetUnshimCode(underlyingMemberType)};");
+            }
+            if (IsInit)
+            {
+                code.Append($" init => {callee}.{OriginalName} = value{GetUnshimCode(underlyingMemberType)};");
+            }
+        }
+        else
         {
             errors.NoMemberError(Symbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax()!, underlyingType.ToDisplayString(), Name /* TODO: full signature */);
 
@@ -33,22 +62,6 @@ internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol sym
             if (IsInit)
             {
                 code.Append(" init => throw new System.NotImplementedException(/* TODO: explanation */);");
-            }
-        }
-        else
-        {
-            var callee = GetMemberCallee(underlyingType, underlyingProperty);
-            if (IsGet)
-            {
-                code.Append($" get => {callee}.{OriginalName}{GetShimCode(underlyingProperty.Type)};");
-            }
-            if (IsSet)
-            {
-                code.Append($" set => {callee}.{OriginalName} = value{GetUnshimCode(underlyingProperty.Type)};");
-            }
-            if (IsInit)
-            {
-                code.Append($" init => {callee}.{OriginalName} = value{GetUnshimCode(underlyingProperty.Type)};");
             }
         }
 

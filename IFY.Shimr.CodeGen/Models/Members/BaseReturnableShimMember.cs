@@ -22,7 +22,7 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
     }
     public abstract void GenerateCode(StringBuilder code, CodeErrorReporter errors, ITypeSymbol underlyingType, T? underlyingMember);
 
-    public string GetMemberCallee(ITypeSymbol type, T member)
+    public string GetMemberCallee(ITypeSymbol type, ISymbol member)
     {
         var callee = "_inst";
         if (member.IsStatic)
