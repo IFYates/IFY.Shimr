@@ -22,7 +22,6 @@
 		<Compile Include="..\IFY.Shimr.Tests\Examples\DateTimeExample.cs" Link="Shared\Examples\DateTimeExample.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\Examples\FileSystemExample.cs" Link="Shared\Examples\FileSystemExample.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\Examples\ThreadExample.cs" Link="Shared\Examples\ThreadExample.cs" />
-		<Compile Include="..\IFY.Shimr.Tests\AccessibilityTests.cs" Link="Shared\AccessibilityTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="Shared\ConstructorTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="Shared\EventShimTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Field.cs" Link="Shared\ExtendedFunctionalityTests.Field.cs" />
@@ -36,11 +35,9 @@
 		<Compile Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="Shared\MethodShimTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\MissingMemberTests.cs" Link="Shared\MissingMemberTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="Shared\MultiLevelInheritanceTests.cs" />
-		<Compile Include="..\IFY.Shimr.Tests\ObjectExtensionsTests.cs" Link="Shared\ObjectExtensionsTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\PerformanceTests.cs" Link="Shared\PerformanceTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="Shared\PropertyShimTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\RenameMemberTests.cs" Link="Shared\RenameMemberTests.cs" />
-		<Compile Include="..\IFY.Shimr.Tests\ShimBuilderTests.cs" Link="Shared\ShimBuilderTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\SignatureArrayChangeTests.cs" Link="Shared\SignatureArrayChangeTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\SignatureChangeTests.cs" Link="Shared\SignatureChangeTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\SignatureEnumerableChangeTests.cs" Link="Shared\SignatureEnumerableChangeTests.cs" />

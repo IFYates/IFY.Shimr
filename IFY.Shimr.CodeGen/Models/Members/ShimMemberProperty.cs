@@ -70,4 +70,8 @@ internal class ShimMemberProperty(BaseShimType baseShimType, IPropertySymbol sym
 
     public override ITypeSymbol? GetMemberReturn(IPropertySymbol? member)
         => member?.Type;
+
+    public override IEnumerable<ISymbol> GetUnderlyingMembersByType(ITypeSymbol underlyingType)
+        => underlyingType.GetAllMembers().OfType<IFieldSymbol>().Cast<ISymbol>()
+        .Concat(underlyingType.GetAllMembers().OfType<IPropertySymbol>());
 }

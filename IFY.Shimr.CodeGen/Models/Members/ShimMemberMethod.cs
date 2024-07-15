@@ -37,8 +37,8 @@ internal class ShimMemberMethod(BaseShimType baseShimType, IMethodSymbol symbol)
     public override ITypeSymbol? GetMemberReturn(IMethodSymbol? member)
         => member?.ReturnType;
 
-    protected override bool IsUnderlyingMemberMatch(IMethodSymbol member)
-        => Symbol.AllParameterTypesMatch(member);
+    protected override bool IsUnderlyingMemberMatch(ISymbol member)
+        => Symbol.AllParameterTypesMatch((IMethodSymbol)member);
 
     protected override void DoResolveImplicitShims(ShimRegister shimRegister, IShimTarget target)
     {

@@ -1,5 +1,6 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
 using Microsoft.CodeAnalysis;
+using System.Collections.Generic;
 
 namespace IFY.Shimr.CodeGen.Models.Members;
 
@@ -71,21 +72,28 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
         return !doShim ? string.Empty : $".Unshim<{underlyingReturnType.ToDisplayString()}>()";
     }
 
+    public virtual IEnumerable<ISymbol> GetUnderlyingMembersByType(ITypeSymbol underlyingType)
+        => (IEnumerable<ISymbol>)underlyingType.GetAllMembers().OfType<T>();
     public T? GetUnderlyingMember(ITypeSymbol underlyingType)
     {
-        var members = underlyingType.GetAllMembers().OfType<T>()
+        var members = GetUnderlyingMembersByType(underlyingType)
             .Where(m => m.Name == OriginalName)
             .Where(IsUnderlyingMemberMatch)
-            .OrderByDescending(m => GetMemberReturn(m)!.IsMatch(ReturnType)).ToArray();
-        return members.FirstOrDefault();
+            .OrderByDescending(m => GetMemberReturn((T)m)!.IsMatch(ReturnType)).ToArray();
+        return (T)members.FirstOrDefault();
     }
-    protected virtual bool IsUnderlyingMemberMatch(T member)
+    protected virtual bool IsUnderlyingMemberMatch(ISymbol member)
         => true;
 
     public abstract ITypeSymbol? GetMemberReturn(T? member);
 
     public void ResolveImplicitShims(ShimRegister shimRegister, IShimTarget target)
     {
+        if (ReturnType.Name == "IChildTest" || BaseShimType.InterfaceType.Name == "IStaticOverrideFieldTest")
+        {
+            Diag.Debug();
+        }
+
         // Return types
         var underlyingReturn = GetMemberReturn(GetUnderlyingMember(target.UnderlyingType)) ?? ReturnType;
         if (!underlyingReturn.IsMatch(ReturnType))
@@ -100,15 +108,13 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
             }
 
             // IEnumerable<>
-            // TODO: Any implementation
-            if (ReturnType is INamedTypeSymbol returnType && underlyingReturn is INamedTypeSymbol underlyingType
-                && returnType.Name == nameof(System.Collections.IEnumerable) && underlyingType.Name == nameof(System.Collections.IEnumerable)
-                && returnType.TypeArguments.Length == 1 && underlyingType.TypeArguments.Length == 1)
+            if (isEnumerableType(ReturnType, out var returnType)
+                && isEnumerableType(underlyingReturn, out var underlyingType))
             {
-                if (returnType.TypeArguments[0].TypeKind == TypeKind.Interface)
+                if (returnType!.TypeArguments[0].TypeKind == TypeKind.Interface)
                 {
                     shimRegister.GetOrCreate(returnType.TypeArguments[0])
-                        .AddShim(underlyingType.TypeArguments[0]);
+                        .AddShim(underlyingType!.TypeArguments[0]);
                 }
                 return;
             }
@@ -121,6 +127,13 @@ internal abstract class BaseReturnableShimMember<T>(BaseShimType baseShimType, T
         }
 
         DoResolveImplicitShims(shimRegister, target);
+
+        static bool isEnumerableType(ITypeSymbol type, out INamedTypeSymbol? namedType)
+        {
+            namedType = type as INamedTypeSymbol;
+            return namedType != null && namedType.TypeArguments.Length == 1
+                && namedType.Name is nameof(System.Collections.ICollection) or nameof(System.Collections.IEnumerable) or nameof(System.Collections.IList);
+        }
     }
     protected virtual void DoResolveImplicitShims(ShimRegister shimRegister, IShimTarget target) { }
 }

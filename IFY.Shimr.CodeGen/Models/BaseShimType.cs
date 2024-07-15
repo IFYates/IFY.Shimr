@@ -32,7 +32,7 @@ internal abstract class BaseShimType(ITypeSymbol interfaceType)
     public abstract void GenerateCode(StringBuilder code, CodeErrorReporter errors);
 
     // TODO
-    // fields
+    // X fields
     // X properties
     // X- return shim
     // X methods
@@ -44,15 +44,20 @@ internal abstract class BaseShimType(ITypeSymbol interfaceType)
     // X- return ienum
     // X static types
     // X static methods
-    // constructors
+    // X constructors
     // events
-    // renaming
+    // X renaming
     // implemented interface members
 
     public IShimMember[] ResolveShimMembers()
     {
         if (_members is null)
         {
+            if (InterfaceType.Name == "IStaticOverrideFieldTest")
+            {
+                Diag.Debug();
+            }
+
             var members = new List<IShimMember>();
             foreach (var member in InterfaceType.GetAllMembers())
             {

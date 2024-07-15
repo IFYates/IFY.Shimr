@@ -6,6 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace IFY.Shimr.CodeGen.CodeAnalysis;
 
+// TODO: refactor so that output structure is "fully" registered here (some information may not available yet)
 /// <summary>
 /// Finds all uses of '<see cref="ObjectExtensions"/>.Shim&lt;T&gt;(object)' extension method and '<see cref="ObjectExtensions"/>.Create&lt;T&gt;()'.
 /// </summary>
@@ -18,8 +19,6 @@ internal class ShimResolver : ISyntaxContextReceiver
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
     {
-        // TODO: reset diag output on first of each run
-
         _ = handleShimMethodCall(context)
             || handleStaticShim(context);
     }

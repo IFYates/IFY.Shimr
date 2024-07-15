@@ -5,6 +5,7 @@ using System.Reflection;
 
 namespace IFY.Shimr.CodeGen;
 
+// TODO: https://github.com/dotnet/roslyn/blob/main/docs/features/source-generators.md#progressive-complexity-opt-in
 [Generator]
 internal class ShimrSourceGenerator : ISourceGenerator
 {

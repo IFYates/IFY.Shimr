@@ -10,6 +10,8 @@ internal class ShimRegister
     private readonly Dictionary<string, BaseShimType> _pool = [];
     public IEnumerable<BaseShimType> Types => _pool.Values;
 
+    // TODO: cannot mix static and instance types
+
     public ShimClassType GetOrCreate(ITypeSymbol interfaceType)
     {
         var key = interfaceType.ToDisplayString();

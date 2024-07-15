@@ -1,105 +1,106 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using IFY.Shimr.Extensions;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable IDE0051 // Remove unused private members
-namespace IFY.Shimr.Tests
+namespace IFY.Shimr.Tests;
+
+[TestClass]
+public class AccessibilityTests
 {
-    [TestClass]
-    public class AccessibilityTests
+    interface IPrivateInterface
     {
-        interface IPrivateInterface
+        void Test();
+    }
+    public interface IPublicInterface : IShim
+    {
+        void Test();
+    }
+
+    [ExcludeFromCodeCoverage]
+    class PrivateTestClass
+    {
+        public void Test()
         {
-            void Test();
+            // Test
         }
-        public interface IPublicInterface : IShim
+    }
+    [ExcludeFromCodeCoverage]
+    public class PublicTestClass
+    {
+        private void Test()
         {
-            void Test();
+            // Test
         }
+    }
 
-        [ExcludeFromCodeCoverage]
-        class PrivateTestClass
+    [TestMethod]
+    public void Can_always_shim_null()
+    {
+        var res = ((PrivateTestClass)null!).Shim<IPrivateInterface>();
+
+        Assert.IsNull(res);
+    }
+
+    [TestMethod]
+    public void Cannot_shim_to_private_interface()
+    {
+        var obj = new PrivateTestClass();
+
+        var ex = Assert.ThrowsException<TypeLoadException>(() =>
         {
-            public void Test()
-            {
-                // Test
-            }
-        }
-        [ExcludeFromCodeCoverage]
-        public class PublicTestClass
+            obj.Shim<IPrivateInterface>();
+        });
+
+        Assert.IsTrue(ex.Message.Contains(" attempting to implement an inaccessible interface."), ex.Message);
+    }
+
+    [TestMethod]
+    public void Cannot_use_shim_of_private_class()
+    {
+        var obj = new PrivateTestClass();
+
+        var shim = obj.Shim<IPublicInterface>();
+
+        var ex = Assert.ThrowsException<MethodAccessException>(() =>
         {
-            private void Test()
-            {
-                // Test
-            }
-        }
+            shim.Test();
+        });
 
-        [TestMethod]
-        public void Can_always_shim_null()
+        Assert.IsTrue(ex.Message.Contains(" access method 'IFY.Shimr.Tests.AccessibilityTests+PrivateTestClass.Test()' failed."), ex.Message);
+    }
+
+    [TestMethod]
+    public void Cannot_shim_class_with_private_interface_member()
+    {
+        var obj = new PublicTestClass();
+
+        var ex = Assert.ThrowsException<MissingMemberException>(() =>
         {
-            ShimBuilder.Shim<IPrivateInterface>((PrivateTestClass)null);
-        }
+            obj.Shim<IPublicInterface>();
+        });
 
-        [TestMethod]
-        public void Cannot_shim_to_private_interface()
-        {
-            var obj = new PrivateTestClass();
+        Assert.IsTrue(ex.Message.Contains(" missing method: Void Test()"), ex.Message);
+    }
 
-            var ex = Assert.ThrowsException<TypeLoadException>(() =>
-            {
-                ShimBuilder.Shim<IPrivateInterface>(obj);
-            });
+    [TestMethod]
+    public void Result_is_IShim()
+    {
+        var obj = new PrivateTestClass();
 
-            Assert.IsTrue(ex.Message.Contains(" attempting to implement an inaccessible interface."), ex.Message);
-        }
+        var shim = obj.Shim<IPublicInterface>();
 
-        [TestMethod]
-        public void Cannot_use_shim_of_private_class()
-        {
-            var obj = new PrivateTestClass();
+        Assert.IsTrue(shim is IShim);
+    }
 
-            var shim = ShimBuilder.Shim<IPublicInterface>(obj);
+    [TestMethod]
+    public void Can_unshim_original_object()
+    {
+        var obj = new PrivateTestClass();
 
-            var ex = Assert.ThrowsException<MethodAccessException>(() =>
-            {
-                shim.Test();
-            });
+        var shim = obj.Shim<IPublicInterface>();
 
-            Assert.IsTrue(ex.Message.Contains(" access method 'IFY.Shimr.Tests.AccessibilityTests+PrivateTestClass.Test()' failed."), ex.Message);
-        }
-
-        [TestMethod]
-        public void Cannot_shim_class_with_private_interface_member()
-        {
-            var obj = new PublicTestClass();
-
-            var ex = Assert.ThrowsException<MissingMemberException>(() =>
-            {
-                ShimBuilder.Shim<IPublicInterface>(obj);
-            });
-
-            Assert.IsTrue(ex.Message.Contains(" missing method: Void Test()"), ex.Message);
-        }
-
-        [TestMethod]
-        public void Result_is_IShim()
-        {
-            var obj = new PrivateTestClass();
-
-            var shim = ShimBuilder.Shim<IPublicInterface>(obj);
-
-            Assert.IsTrue(shim is IShim);
-        }
-
-        [TestMethod]
-        public void Can_unshim_original_object()
-        {
-            var obj = new PrivateTestClass();
-
-            var shim = ShimBuilder.Shim<IPublicInterface>(obj);
-
-            Assert.AreSame(obj, shim.Unshim());
-        }
+        Assert.AreSame(obj, shim.Unshim());
     }
 }
 #pragma warning restore IDE0051 // Remove unused private members

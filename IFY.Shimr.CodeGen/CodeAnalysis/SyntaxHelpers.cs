@@ -64,11 +64,6 @@ internal static class SyntaxHelpers
     {
         var attr = symbol.GetAttributes()
             .FirstOrDefault(a => a.AttributeClass?.IsType<ShimAttribute>() == true);
-        Diag.WriteOutput($"//// {symbol.ToDisplayString()} // {attr?.ConstructorArguments[0].Type} // {attr?.ConstructorArguments[0].Type!.IsType<string>()}");
-        //if (symbol.Name == "Value")
-        //{
-        //    Diag.Debug();
-        //}
         // Could be (string), (Type), or (Type, string)
         return (attr?.ConstructorArguments.Length) switch
         {
