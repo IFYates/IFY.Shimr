@@ -1,7 +1,7 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
 using IFY.Shimr.CodeGen.Models;
+using IFY.Shimr.CodeGen.Models.Bindings;
 using Microsoft.CodeAnalysis;
-using System.Reflection;
 
 namespace IFY.Shimr.CodeGen;
 
@@ -12,9 +12,9 @@ internal class ShimrSourceGenerator : ISourceGenerator
     // Only called after a rebuild
     public void Initialize(GeneratorInitializationContext context)
     {
-        //System.Diagnostics.Debugger.Launch(); // Do not leave uncommented when exiting VS
-        Diag.IsEnabled = !Assembly.GetExecutingAssembly().Location.Contains("\\Temp\\");
+        Diag.IsEnabled = true;// !Assembly.GetExecutingAssembly().Location.Contains("\\Temp\\");
         Diag.WriteOutput($"// Start code generation: {DateTime.Now:o}\r\n", false); // TODO: wrong place to reset file
+        //Diag.WriteOutput($"// {Assembly.GetExecutingAssembly().Location}");
 
         context.RegisterForSyntaxNotifications(new SyntaxContextReceiverCreator(() => new ShimResolver()));
     }
@@ -43,40 +43,38 @@ internal class ShimrSourceGenerator : ISourceGenerator
     }
     private void doExecute(GeneratorExecutionContext context, CodeErrorReporter errors, ShimRegister shimRegister)
     {
-        var shims = shimRegister.ResolveAllShims();
+        // Resolve all shim bindings
+        var allBindings = shimRegister.ResolveAllShims(errors, shimRegister);
 
         // Meta info
         var code = new StringBuilder();
         code.AppendLine($"// Project: {context.Compilation.AssemblyName}");
-        code.AppendLine($"// Shim map ({shims.Length}):");
-        foreach (var shimt in shimRegister.Types)
+        code.AppendLine($"// Shim map ({allBindings.Count}):");
+        foreach (var def in allBindings.GroupBy(b => b.Definition))
         {
-            code.AppendLine($"// + {shimt.InterfaceFullName}");
-            foreach (var shim in shimt.Shims)
+            code.Append($"// + {def.Key.FullTypeName}")
+                .AppendLine(def.Key is ShimFactoryDefinition ? " (Factory)" : null);
+            foreach (var shim in def.OfType<ShimMemberBinding>())
             {
-                code.Append($"//   - {shim.UnderlyingFullName}")
-                    .AppendLine(shim is ShimFactoryTarget ? " (Factory)" : null);
+                code.AppendLine($"//   - {shim.TargetMember.FullName}");
             }
         }
         addSource("_meta.g.cs", code);
 
-        if (!shims.Any())
+        if (!allBindings.Any())
         {
             Diag.WriteOutput($"// Did not find any uses of Shimr");
             return;
         }
 
-        var builder = new AutoShimCodeWriter(context);
-        builder.WriteFactoryClass(code, shims);
-        addSource("ShimBuilder.g.cs", code);
+        var writer = new AutoShimCodeWriter(context);
+        AutoShimCodeWriter.WriteFactoryClass(writer, allBindings);
+        AutoShimCodeWriter.WriteExtensionClass(writer, allBindings);
 
-        builder.WriteExtensionClass(code, shims);
-        addSource("ObjectExtensions.g.cs", code);
-
-        foreach (var shimType in shimRegister.Types)
+        var bindingsByDefinition = allBindings.GroupBy(b => b.Definition).ToArray();
+        foreach (var group in bindingsByDefinition)
         {
-            shimType.GenerateCode(code, errors);
-            addSource($"Shimr.{shimType.Name}.g.cs", code);
+            group.Key.WriteShimClass(writer, group);
         }
 
         Diag.WriteOutput($"// Code generation complete: {DateTime.Now:o}");

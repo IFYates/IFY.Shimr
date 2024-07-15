@@ -19,9 +19,9 @@
             Get all the members of this symbol, including those from base type.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.SyntaxHelpers.GetConstructorTypeofArgument(Microsoft.CodeAnalysis.SyntaxNode,Microsoft.CodeAnalysis.SemanticModel)">
+        <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.SyntaxHelpers.GetAttributeTypeParameter(Microsoft.CodeAnalysis.CSharp.Syntax.AttributeSyntax,Microsoft.CodeAnalysis.SemanticModel)">
             <summary>
-            Get the 'Type' that is represented by a 'typeof()' constant on the only constructor argument of <param name="node"/>.
+            Get the 'Type' that is represented by a 'typeof()' constant on the only constructor argument of <param name="attr"/>.
             </summary>
             <Example>[Attribute(typeof(T))]</Example>
         </member>
@@ -30,49 +30,54 @@
             Helpers for diagnosing issues.
             </summary>
         </member>
-        <member name="T:IFY.Shimr.CodeGen.Models.BaseShimType">
+        <member name="T:IFY.Shimr.CodeGen.Models.Bindings.NullBinding">
             <summary>
-            Models an interface used to shim another type.
+            An empty binding.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.BaseShimType.#ctor(Microsoft.CodeAnalysis.ITypeSymbol)">
+        <member name="M:IFY.Shimr.CodeGen.Models.Bindings.NullBinding.#ctor(IFY.Shimr.CodeGen.Models.IShimDefinition,IFY.Shimr.CodeGen.Models.ShimTarget)">
             <summary>
-            Models an interface used to shim another type.
+            An empty binding.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.IShimTarget.ResolveImplicitShims(IFY.Shimr.CodeGen.Models.ShimRegister)">
+        <member name="T:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding">
             <summary>
-            Looks for additional shims required to complete shim.
+            A binding between a <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.ShimMember"/> and <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.TargetMember"/>.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.Members.IShimMember.ResolveImplicitShims(IFY.Shimr.CodeGen.Models.ShimRegister,IFY.Shimr.CodeGen.Models.IShimTarget)">
+        <member name="M:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.#ctor(IFY.Shimr.CodeGen.Models.Members.ShimMember,IFY.Shimr.CodeGen.Models.Members.TargetMember)">
             <summary>
-            Looks for additional shims required to complete shim.
+            A binding between a <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.ShimMember"/> and <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.TargetMember"/>.
             </summary>
         </member>
-        <member name="T:IFY.Shimr.CodeGen.Models.ShimClassTarget">
+        <member name="T:IFY.Shimr.CodeGen.Models.IShimDefinition">
             <summary>
-            Models the target of a shimterface.
+            A model of an instance or static shim definition.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.ShimClassTarget.#ctor(IFY.Shimr.CodeGen.Models.BaseShimType,Microsoft.CodeAnalysis.ITypeSymbol)">
+        <member name="T:IFY.Shimr.CodeGen.Models.Members.IMember">
             <summary>
-            Models the target of a shimterface.
+            A code member.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.ShimClassTarget.ResolveImplicitShims(IFY.Shimr.CodeGen.Models.ShimRegister)">
+        <member name="T:IFY.Shimr.CodeGen.Models.Members.IParameterisedMember">
             <summary>
-            Looks for additional shims required to complete shim.
+            A type member with parameters.
             </summary>
         </member>
-        <member name="T:IFY.Shimr.CodeGen.Models.ShimClassType">
+        <member name="T:IFY.Shimr.CodeGen.Models.Members.ShimMember">
             <summary>
-            Models an interface used to shim another type.
+            A shim member.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.ShimClassType.#ctor(Microsoft.CodeAnalysis.ITypeSymbol)">
+        <member name="T:IFY.Shimr.CodeGen.Models.Members.TargetMember">
             <summary>
-            Models an interface used to shim another type.
+            A modelled member of the target type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.Members.TargetMember.IsShimmableReturnType(IFY.Shimr.CodeGen.Models.Members.ShimMember)">
+            <summary>
+            Returns true if the <see cref="P:IFY.Shimr.CodeGen.Models.Members.ShimMember.ReturnType"/> of <paramref name="shimMember"/> is shimmable from the <see cref="P:IFY.Shimr.CodeGen.Models.Members.TargetMember.ReturnType"/> of this target member.
             </summary>
         </member>
         <member name="T:IFY.Shimr.CodeGen.Models.ShimRegister">
@@ -80,11 +85,26 @@
             Pool of registered shims.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.ShimRegister.ResolveAllShims">
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimRegister.ResolveAllShims(IFY.Shimr.CodeGen.CodeAnalysis.CodeErrorReporter,IFY.Shimr.CodeGen.Models.ShimRegister)">
             <summary>
             Ensure that all implicit shims in registered shims are resolved.
             </summary>
             <returns>All current shims.</returns>
+        </member>
+        <member name="T:IFY.Shimr.CodeGen.Models.ShimTarget">
+            <summary>
+            A model of a shimmed type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimTarget.#ctor(Microsoft.CodeAnalysis.ITypeSymbol,IFY.Shimr.CodeGen.Models.IShimDefinition)">
+            <summary>
+            A model of a shimmed type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimTarget.GetMatchingMembers(IFY.Shimr.CodeGen.Models.Members.ShimMember)">
+            <summary>
+            Find the <see cref="T:IFY.Shimr.CodeGen.Models.Members.TargetMember"/>s in this <see cref="T:IFY.Shimr.CodeGen.Models.ShimTarget"/> that could be bound to the given <see cref="T:IFY.Shimr.CodeGen.Models.Members.ShimMember"/>.
+            </summary>
         </member>
         <member name="T:IFY.Shimr.ConstructorShimAttribute">
             <summary>

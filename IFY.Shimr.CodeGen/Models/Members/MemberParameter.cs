@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models.Members;
 
-internal class ShimMemberMethodParameter(IParameterSymbol symbol)
+internal class MemberParameter(IParameterSymbol symbol)
 {
     // TODO: out, ref, default
     // TODO: nullability?
@@ -23,13 +23,13 @@ internal class ShimMemberMethodParameter(IParameterSymbol symbol)
     public override string ToString()
         => $"{Type.ToDisplayString()} {Name}";
 
-    public void ResolveImplicitShims(ShimRegister shimRegister)
+    public void RegisterOverride(ShimRegister shimRegister)
     {
         // Argument overrides
         if (UnderlyingType != null)
         {
-            shimRegister.GetOrCreate(Type)
-                .AddShim(UnderlyingType);
+            shimRegister.GetOrCreateShim(Type)
+                .AddTarget(UnderlyingType);
         }
     }
 }

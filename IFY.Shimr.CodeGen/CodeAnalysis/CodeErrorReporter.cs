@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using System.Collections.Frozen;
 
 namespace IFY.Shimr.CodeGen.CodeAnalysis;
 
@@ -102,9 +103,9 @@ internal class CodeErrorReporter
         isEnabledByDefault: true
     );
 
-    public void NoMemberError(SyntaxNode? node, string shimTargetType, string shimMember)
+    public void NoMemberError(ITypeSymbol targetType, ISymbol shimMember)
     {
-        reportDiagnostic(ShimOfUnknownMember, node?.GetLocation(), shimTargetType, shimMember);
+        reportDiagnostic(ShimOfUnknownMember, targetType.GetSyntaxNode()?.GetLocation(), targetType.ToFullName(), $"{shimMember.ContainingType.ToFullName()}.{shimMember.Name}");
     }
     public static readonly DiagnosticDescriptor ShimOfUnknownMember = new(
         id: "SHIMR103",

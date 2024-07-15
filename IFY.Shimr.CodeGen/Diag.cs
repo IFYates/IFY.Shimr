@@ -41,5 +41,3 @@ internal static class Diag
 #endif
     }
 }
-
-// TODO: Instance class that raises diagnostic errors against current context

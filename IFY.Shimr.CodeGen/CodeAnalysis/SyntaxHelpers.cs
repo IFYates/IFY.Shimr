@@ -43,13 +43,34 @@ internal static class SyntaxHelpers
         return nullIfNoOverride ? null! : arg.Type;
     }
 
+    public static AttributeData? GetAttribute<T>(this ISymbol symbol)
+        where T : Attribute
+    {
+        return symbol?.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.IsType<T>() == true);
+    }
+    public static AttributeSyntax? GetAttribute<T>(this MemberDeclarationSyntax member, SemanticModel semanticModel)
+        where T : Attribute
+    {
+        if (!_attributeTypeSymbol.TryGetValue(typeof(T), out var attrSymbol))
+        {
+            attrSymbol = semanticModel.Compilation.GetTypeByMetadataName(typeof(T).FullName)!;
+            _attributeTypeSymbol[typeof(T)] = attrSymbol;
+        }
+        return member.AttributeLists
+            .SelectMany(al => al.Attributes)
+            .Where(a => semanticModel.GetTypeInfo(a).Type?.IsMatch(attrSymbol) == true)
+            .SingleOrDefault();
+    }
+    private static readonly Dictionary<Type, ITypeSymbol> _attributeTypeSymbol = [];
+
     /// <summary>
-    /// Get the 'Type' that is represented by a 'typeof()' constant on the only constructor argument of <param name="node"/>.
+    /// Get the 'Type' that is represented by a 'typeof()' constant on the only constructor argument of <param name="attr"/>.
     /// </summary>
     /// <Example>[Attribute(typeof(T))]</Example>
-    public static ITypeSymbol? GetConstructorTypeofArgument(this SyntaxNode node, SemanticModel semanticModel)
+    public static ITypeSymbol? GetAttributeTypeParameter(this AttributeSyntax attr, SemanticModel semanticModel)
     {
-        var nodes = node.ChildNodes().ToArray();
+        var nodes = attr.ChildNodes().ToArray();
         if (nodes.Length != 2
             || nodes[1] is not AttributeArgumentListSyntax argList
             || argList.Arguments.Count != 1
@@ -60,21 +81,33 @@ internal static class SyntaxHelpers
         return semanticModel.GetTypeInfo(typeOf.Type).Type;
     }
 
-    public static string? GetShimName(this ISymbol symbol)
+    public static SyntaxNode? GetSyntaxNode(this ISymbol symbol)
+        => symbol?.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax();
+
+    public static bool IsEnumerable(this ITypeSymbol type, out ITypeSymbol? elementType)
     {
-        var attr = symbol.GetAttributes()
-            .FirstOrDefault(a => a.AttributeClass?.IsType<ShimAttribute>() == true);
-        // Could be (string), (Type), or (Type, string)
-        return (attr?.ConstructorArguments.Length) switch
+        // Array shim
+        if (type is IArrayTypeSymbol arrayType)
         {
-            1 => attr.ConstructorArguments[0].Type!.IsType<string>()
-                ? attr.ConstructorArguments[0].Value?.ToString() : null,
-            2 => attr.ConstructorArguments[1].Value?.ToString(),
-            _ => null,
-        };
+            elementType = arrayType.ElementType;
+            return true;
+        }
+
+        // IEnumerable<> shim
+        var ienum = type.AllInterfaces.Add((INamedTypeSymbol)type)
+            .Where(i => i.TypeKind == TypeKind.Interface && i.IsGenericType && i.TypeArguments.Length == 1)
+            .FirstOrDefault(i => i.Name == nameof(System.Collections.IEnumerable));
+        if (ienum != null)
+        {
+            elementType = ienum.TypeArguments[0];
+            return true;
+        }
+
+        elementType = null;
+        return false;
     }
 
-    public static bool IsMatch(this ITypeSymbol type1, ITypeSymbol type2)
+    public static bool IsMatch(this ITypeSymbol type1, ITypeSymbol? type2)
         => type1.Equals(type2, SymbolEqualityComparer.Default);
 
     public static bool IsType<T>(this ITypeSymbol symbol)
@@ -87,14 +120,4 @@ internal static class SyntaxHelpers
     );
     public static string ToFullName(this ITypeSymbol type)
         => type.ToDisplayString(_displayFormat);
-
-    public static string ToUniqueName(this ISymbol symbol)
-    {
-        return symbol switch
-        {
-            IMethodSymbol ms => $"{ms.Name}__{string.Join("_", ms.Parameters.Select(p => p.Type.Name))}",
-            // TODO: Others
-            _ => symbol.Name,
-        };
-    }
 }

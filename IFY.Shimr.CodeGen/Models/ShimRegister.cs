@@ -1,58 +1,63 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using IFY.Shimr.CodeGen.CodeAnalysis;
+using IFY.Shimr.CodeGen.Models.Bindings;
+using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models;
 
+// TODO: combine with ShimResolver
 /// <summary>
 /// Pool of registered shims.
 /// </summary>
 internal class ShimRegister
 {
-    private readonly Dictionary<string, BaseShimType> _pool = [];
-    public IEnumerable<BaseShimType> Types => _pool.Values;
+    private readonly Dictionary<string, IShimDefinition> _pool = [];
+    public IEnumerable<IShimDefinition> Definitions => _pool.Values;
 
     // TODO: cannot mix static and instance types
 
-    public ShimClassType GetOrCreate(ITypeSymbol interfaceType)
+    public IShimDefinition GetOrCreate(ITypeSymbol interfaceType, bool asFactory)
     {
-        var key = interfaceType.ToDisplayString();
-        if (!_pool.TryGetValue(key, out var shim))
+        lock (_pool)
         {
-            _pool.Add(key, null!);
-            shim = new ShimClassType(interfaceType);
-            _pool[key] = shim;
+            var key = interfaceType.ToDisplayString();
+            if (!_pool.TryGetValue(key, out var shim))
+            {
+                shim = !asFactory
+                    ? new InstanceShimDefinition(interfaceType)
+                    : new ShimFactoryDefinition(interfaceType);
+                _pool.Add(key, shim);
+            }
+            if (!asFactory && shim is not InstanceShimDefinition)
+            {
+                Diag.WriteOutput("// Got factory as instance shim: " + interfaceType.ToDisplayString());
+            }
+            return shim;
         }
-        return (ShimClassType)shim;
     }
-    public ShimFactoryType GetOrCreateFactory(ITypeSymbol interfaceType)
-    {
-        var key = interfaceType.ToDisplayString();
-        if (!_pool.TryGetValue(key, out var shim))
-        {
-            _pool.Add(key, null!);
-            shim = new ShimFactoryType(interfaceType);
-            _pool[key] = shim;
-        }
-        return (ShimFactoryType)shim;
-    }
+    public InstanceShimDefinition GetOrCreateShim(ITypeSymbol interfaceType)
+        => (InstanceShimDefinition)GetOrCreate(interfaceType, false);
+    public ShimFactoryDefinition GetOrCreateFactory(ITypeSymbol interfaceType)
+        => (ShimFactoryDefinition)GetOrCreate(interfaceType, true);
 
     /// <summary>
     /// Ensure that all implicit shims in registered shims are resolved.
     /// </summary>
     /// <returns>All current shims.</returns>
-    public IShimTarget[] ResolveAllShims()
+    public IList<IBinding> ResolveAllShims(CodeErrorReporter errors, ShimRegister shimRegister)
     {
-        var count = _pool.Values.Sum(s => s.Shims.Count());
-        while (_resolveCount != count)
+        var bindings = new List<IBinding>();
+        var shimsDone = new List<IShimDefinition>();
+        var newShims = _pool.Values.Except(shimsDone).ToArray();
+        while (newShims.Any())
         {
-            _resolveCount = count;
-            foreach (var shimType in _pool.Values.ToArray())
+            foreach (var shimType in newShims)
             {
-                shimType.ResolveImplicitShims(this);
+                shimType.Resolve(bindings, errors, shimRegister);
             }
-            count = _pool.Values.Sum(s => s.Shims.Count());
+            shimsDone.AddRange(newShims);
+            newShims = _pool.Values.Except(shimsDone).ToArray();
         }
 
-        return _pool.Values.SelectMany(s => s.Shims).ToArray();
+        return bindings;
     }
-    private int _resolveCount = 0;
 }

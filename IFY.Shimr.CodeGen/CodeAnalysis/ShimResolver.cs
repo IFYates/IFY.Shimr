@@ -6,7 +6,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace IFY.Shimr.CodeGen.CodeAnalysis;
 
-// TODO: refactor so that output structure is "fully" registered here (some information may not available yet)
 /// <summary>
 /// Finds all uses of '<see cref="ObjectExtensions"/>.Shim&lt;T&gt;(object)' extension method and '<see cref="ObjectExtensions"/>.Create&lt;T&gt;()'.
 /// </summary>
@@ -19,8 +18,17 @@ internal class ShimResolver : ISyntaxContextReceiver
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
     {
-        _ = handleShimMethodCall(context)
-            || handleStaticShim(context);
+        try
+        {
+            _ = handleShimMethodCall(context)
+                || handleStaticShim(context);
+        }
+        catch (Exception ex)
+        {
+            var err = $"{ex.GetType().FullName}: {ex.Message}\r\n{ex.StackTrace}";
+            Diag.WriteOutput($"// ERROR: {err}");
+            // TODO: _errors.CodeGenFailed(ex);
+        }
     }
 
     // object.Shim<T>()
@@ -55,16 +63,16 @@ internal class ShimResolver : ISyntaxContextReceiver
         }
 
         // Underlying type info
-        var shimdType = context.SemanticModel.GetTypeInfo(membAccessExpr.Expression).Type;
-        if (shimdType?.ToDisplayString() is null or "object")
+        var targetType = context.SemanticModel.GetTypeInfo(membAccessExpr.Expression).Type;
+        if (targetType?.ToDisplayString() is null or "object")
         {
-            Errors.NoTypeWarning(context.Node, shimdType);
+            Errors.NoTypeWarning(context.Node, targetType);
             return true;
         }
 
-        // Register shim
-        Shims.GetOrCreate(argTypeInfo)
-            .AddShim(shimdType);
+        // Register shim type
+        Shims.GetOrCreateShim(argTypeInfo)
+            .AddTarget(targetType);
         return true;
     }
 
@@ -81,106 +89,73 @@ internal class ShimResolver : ISyntaxContextReceiver
         var factoryType = context.SemanticModel.GetDeclaredSymbol(interfaceDeclaration)!;
 
         // Get StaticShimAttribute(Type) on interface (currently only 1)
-        var staticShimAttrSymbol = context.SemanticModel.Compilation
-            .GetTypeByMetadataName(typeof(StaticShimAttribute).FullName)!;
-        var interfaceAttr = interfaceDeclaration.AttributeLists
-            .SelectMany(al => al.Attributes)
-            .Where(a => context.SemanticModel.GetTypeInfo(a).Type?.IsMatch(staticShimAttrSymbol) == true)
-            .SingleOrDefault();
+        var interfaceAttr = interfaceDeclaration.GetAttribute<StaticShimAttribute>(context.SemanticModel);
         if (interfaceAttr != null)
         {
-            registerFactory(interfaceAttr, null);
+            Shims.GetOrCreateFactory(factoryType);
         }
 
-        // Find attributes on members (currently only 1 per member)
-        foreach (var memberDeclaration in interfaceDeclaration.Members)
+        // Find StaticShimAttribute(Type) on members (currently only 1 per member)
+        foreach (var member in interfaceDeclaration.Members.Where(m => m is PropertyDeclarationSyntax or MethodDeclarationSyntax))
         {
-            var memberAttr = memberDeclaration.AttributeLists
-                .SelectMany(al => al.Attributes)
-                .Where(a => context.SemanticModel.GetTypeInfo(a).Type?.IsMatch(staticShimAttrSymbol) == true)
-                .SingleOrDefault();
+            var memberAttr = member.GetAttribute<StaticShimAttribute>(context.SemanticModel);
             if (memberAttr != null)
             {
-                registerFactory(memberAttr, memberDeclaration);
+                // Get type argument from attribute
+                var typeArg = memberAttr.GetAttributeTypeParameter(context.SemanticModel);
+                if (typeArg?.ToDisplayString() is null or "object")
+                {
+                    Errors.NoTypeWarning(context.Node, typeArg);
+                    continue;
+                }
+                if (typeArg.TypeKind == TypeKind.Interface)
+                {
+                    Errors.InterfaceUseError(context.Node, typeArg);
+                    continue;
+                }
+
+                var singleMember = context.SemanticModel.GetDeclaredSymbol(member)!;
+                Shims.GetOrCreateFactory(factoryType)
+                    .SetMemberType(singleMember, typeArg);
             }
         }
 
-        // Find attribute on members (currently only 1 per member)
-        var constructorShimAttrSymbol = context.SemanticModel.Compilation
-            .GetTypeByMetadataName(typeof(ConstructorShimAttribute).FullName)!;
-        foreach (var methodDeclaration in interfaceDeclaration.Members.OfType<MethodDeclarationSyntax>())
+        // Find ConstructorShimAttribute(Type) on members (currently only 1 per member)
+        foreach (var method in interfaceDeclaration.Members.OfType<MethodDeclarationSyntax>())
         {
-            var memberAttr = methodDeclaration.AttributeLists
-                .SelectMany(al => al.Attributes)
-                .Where(a => context.SemanticModel.GetTypeInfo(a).Type?.IsMatch(constructorShimAttrSymbol) == true)
-                .SingleOrDefault();
+            var memberAttr = method.GetAttribute<ConstructorShimAttribute>(context.SemanticModel);
             if (memberAttr != null)
             {
-                registerConstructor(memberAttr, methodDeclaration);
+                // Get type argument from member attribute or StaticShimAttribute on interface
+                var typeArg = memberAttr.GetAttributeTypeParameter(context.SemanticModel)
+                    ?? interfaceAttr?.GetAttributeTypeParameter(context.SemanticModel);
+                if (typeArg?.ToDisplayString() is null or "object")
+                {
+                    Errors.NoTypeWarning(context.Node, typeArg);
+                    continue;
+                }
+                if (typeArg.TypeKind == TypeKind.Interface)
+                {
+                    Errors.InterfaceUseError(context.Node, typeArg);
+                    continue;
+                }
+
+                // TODO: move to member logic
+                // Check return type is valid
+                var returnType = context.SemanticModel.GetDeclaredSymbol(method)?.ReturnType;
+                if (returnType == null || (!returnType.IsMatch(typeArg) && returnType.TypeKind != TypeKind.Interface))
+                {
+                    Errors.InvalidReturnTypeError(method.ReturnType, method.Identifier.Text /* TODO: signature */, returnType?.ToDisplayString() ?? "Unknown");
+                    continue;
+                }
+
+                // Register shim factory
+                var member = context.SemanticModel.GetDeclaredSymbol(method)!;
+                Shims.GetOrCreateFactory(factoryType)
+                    .SetMemberType(member, typeArg);
             }
         }
 
-        return false; // Don't stop
-
-        void registerFactory(AttributeSyntax attr, SyntaxNode? member)
-        {
-            // Get type argument from attribute constructor
-            var typeArg = attr.GetConstructorTypeofArgument(context.SemanticModel);
-            if (typeArg?.ToDisplayString() is null or "object")
-            {
-                Errors.NoTypeWarning(context.Node, typeArg);
-                return;
-            }
-            if (typeArg.TypeKind == TypeKind.Interface)
-            {
-                Errors.InterfaceUseError(context.Node, typeArg);
-                return;
-            }
-
-            // May be for single member
-            ISymbol? singleMember = null;
-            if (member != null)
-            {
-                singleMember = context.SemanticModel.GetDeclaredSymbol(member);
-            }
-
-            // Register shim factory
-            Shims.GetOrCreateFactory(factoryType)
-                .AddShim(typeArg, singleMember);
-        }
-
-        void registerConstructor(AttributeSyntax attr, MethodDeclarationSyntax method)
-        {
-            // Get type argument from attribute constructor
-            var typeArg = attr.GetConstructorTypeofArgument(context.SemanticModel);
-            if (typeArg == null)
-            {
-                // Resolve type from StaticShimAttribute on interface
-                typeArg = interfaceAttr?.GetConstructorTypeofArgument(context.SemanticModel);
-            }
-            if (typeArg?.ToDisplayString() is null or "object")
-            {
-                Errors.NoTypeWarning(context.Node, typeArg);
-                return;
-            }
-            if (typeArg.TypeKind == TypeKind.Interface)
-            {
-                Errors.InterfaceUseError(context.Node, typeArg);
-                return;
-            }
-
-            // Check return type is valid
-            var returnType = context.SemanticModel.GetDeclaredSymbol(method)?.ReturnType;
-            if (returnType == null || (!returnType.IsMatch(typeArg) && returnType.TypeKind != TypeKind.Interface))
-            {
-                Errors.InvalidReturnTypeError(method.ReturnType, method.Identifier.Text /* TODO: signature */, returnType?.ToDisplayString() ?? "Unknown");
-                return;
-            }
-
-            // Register shim factory
-            var member = context.SemanticModel.GetDeclaredSymbol(method);
-            Shims.GetOrCreateFactory(factoryType)
-                .AddConstructor(typeArg, member!);
-        }
+        return true;
     }
 }

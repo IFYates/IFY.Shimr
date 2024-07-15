@@ -1,10 +1,11 @@
 ﻿using IFY.Shimr.CodeGen.Models;
+using IFY.Shimr.CodeGen.Models.Bindings;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace IFY.Shimr.CodeGen;
 
-internal class AutoShimCodeWriter(GeneratorExecutionContext context)
+internal class AutoShimCodeWriter(GeneratorExecutionContext context) : ICodeWriter
 {
     public const string SB_NAMESPACE = "IFY.Shimr";
     public const string SB_CLASSNAME = "ShimBuilder";
@@ -16,15 +17,23 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context)
         = (context.Compilation.SyntaxTrees.FirstOrDefault().Options as CSharpParseOptions)?.LanguageVersion
         ?? LanguageVersion.Default;
 
-    public void WriteFactoryClass(StringBuilder code, IEnumerable<IShimTarget> shims)
+    public void AddSource(string name, StringBuilder code)
     {
-        var shimTypes = shims.OfType<ShimFactoryTarget>()
-            .GroupBy(s => s.InterfaceFullName).ToArray();
-        if (!shimTypes.Any())
+        code.Insert(0, $"// Generated at {DateTime.Now:O}\r\n");
+        context.AddSource(name, code.ToString());
+        Diag.WriteOutput($"/** File: {name} **/\r\n{code}");
+    }
+
+    public static void WriteFactoryClass(ICodeWriter writer, IEnumerable<IBinding> shims)
+    {
+        var factoryDefs = shims.Where(s => s.Definition is ShimFactoryDefinition)
+            .Select(s => s.Definition).ToArray();
+        if (!factoryDefs.Any())
         {
             return;
         }
 
+        var code = new StringBuilder();
         code.AppendLine($"namespace {SB_NAMESPACE}")
             .AppendLine("{")
             .AppendLine($"    public static partial class {SB_CLASSNAME}")
@@ -38,11 +47,11 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context)
             .AppendLine("        {");
 
         // Factory
-        foreach (var shimType in shimTypes.Select(g => g.First().ShimType))
+        foreach (var def in factoryDefs.Distinct())
         {
-            code.AppendLine($"            if (typeof(TInterface) == typeof({shimType.InterfaceFullName}))")
+            code.AppendLine($"            if (typeof(TInterface) == typeof({def.FullTypeName}))")
                 .AppendLine("            {")
-                .AppendLine($"                return (TInterface)(object)new {shimType.Name}();")
+                .AppendLine($"                return (TInterface)(object)new {def.Name}();")
                 .AppendLine("            }");
         }
 
@@ -50,64 +59,70 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context)
             .AppendLine("        }")
             .AppendLine("    }")
             .AppendLine("}");
+
+        writer.AddSource($"{SB_CLASSNAME}.g.cs", code);
     }
 
-    public void WriteExtensionClass(StringBuilder code, IEnumerable<IShimTarget> shims)
+    public static void WriteExtensionClass(ICodeWriter writer, IEnumerable<IBinding> allBindings)
     {
-        var shimTypes = shims.Where(s => s is not ShimFactoryTarget)
-            .GroupBy(s => s.UnderlyingFullName).ToArray();
-        if (!shimTypes.Any())
+        var targetTypes = allBindings.Where(b => b.Definition is InstanceShimDefinition)
+            .GroupBy(b => b.Target.FullTypeName).ToArray();
+        if (!targetTypes.Any())
         {
             return;
         }
 
-        code.AppendLine($"namespace {EXT_NAMESPACE}") // TODO: option to use namespace of underlying?
+        var code = new StringBuilder();
+        code.AppendLine("#nullable enable")
+            .AppendLine($"namespace {EXT_NAMESPACE}") // TODO: option to use namespace of underlying?
             .AppendLine("{")
             .AppendLine($"    public static partial class {EXT_CLASSNAME}")
             .AppendLine("    {");
 
-        // Shim: Underlying -> Interface
-        foreach (var underlyingShims in shimTypes)
+        foreach (var targetBinding in targetTypes)
         {
-            var underlyingType = underlyingShims.First().UnderlyingType;
-
-            if (underlyingType.IsValueType)
+            // ValueType shim wrap, for better IntelliSense
+            var targetType = targetBinding.First().Target;
+            if (targetType.IsValueType)
             {
-                if (CSLangver >= LanguageVersion.CSharp8)
+                if (writer.CSLangver >= LanguageVersion.CSharp8)
                 {
                     code.AppendLine("        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"inst\")]");
                 }
-                code.AppendLine($"        public static TInterface? Shim<TInterface>(this {underlyingShims.Key}? inst) where TInterface : class")
+                code.AppendLine($"        public static TInterface? Shim<TInterface>(this {targetType.FullTypeName}? inst) where TInterface : class")
                     .Append("            => !inst.HasValue")
                     .AppendLine($" ? default : Shim<TInterface>(inst.Value);");
             }
 
+            // Shim: Underlying -> Interface
             code.AppendLine("        /// <summary>")
-                .AppendLine($"        /// Shim an instance of <see cref=\"{underlyingType.ToDisplayString()}\"/> as <typeparamref name=\"TInterface\"/>.")
+                .AppendLine($"        /// Shim an instance of <see cref=\"{targetType.FullTypeName}\"/> as <typeparamref name=\"TInterface\"/>.")
+                .AppendLine($"        /// {targetBinding.Count()} {string.Join(", ", targetBinding.Select(b => b.Definition.Name))}")
                 .AppendLine("        /// </summary>")
-                .AppendLine($"        public static TInterface Shim<TInterface>(this {underlyingShims.Key} inst) where TInterface : class")
+                .AppendLine($"        public static TInterface Shim<TInterface>(this {targetType.FullTypeName} inst) where TInterface : class")
                 .AppendLine("        {");
-            foreach (var shim in underlyingShims)
+            var bindings = targetBinding.GroupBy(b => b.Definition).ToArray();
+            foreach (var binding in bindings)
             {
-                code.AppendLine($"            if (typeof(TInterface) == typeof({shim.InterfaceFullName}))")
+                code.AppendLine($"            if (typeof(TInterface) == typeof({binding.Key.FullTypeName}))")
                     .AppendLine("            {")
-                    .AppendLine($"                return (TInterface)(object)new {shim.Name}(inst);")
+                    .AppendLine($"                return (TInterface)(object)new {binding.First().ClassName}(inst);")
                     .AppendLine("            }");
             }
-            code.AppendLine("            throw new System.NotSupportedException();") // TODO: detail
+            code.AppendLine($"            throw new System.NotSupportedException($\"Interface '{{typeof(TInterface).FullName}}' is not registered as a shim for '{targetType.FullTypeName}'.\");")
                 .AppendLine("        }");
-        }
 
-        // Unshim: Interface -> Underlying
-        shimTypes = shims.Where(s => s is not ShimFactoryTarget)
-            .GroupBy(s => s.InterfaceFullName).ToArray();
-        foreach (var shim in shimTypes)
-        {
-            code.AppendLine($"        public static object Unshim(this {shim.Key} shim) => ((IShim)shim).Unshim();")
-                .AppendLine($"        public static T Unshim<T>(this {shim.Key} shim) => (T)(object)((IShim)shim).Unshim();");
+            // Unshim: Interface -> Underlying
+            foreach (var binding in bindings)
+            {
+                code.AppendLine($"        public static object Unshim(this {binding.Key.FullTypeName} shim) => ((IShim)shim).Unshim();")
+                    .AppendLine($"        public static T Unshim<T>(this {binding.Key.FullTypeName} shim) => (T)(object)((IShim)shim).Unshim();");
+            }
         }
 
         code.AppendLine("    }")
             .AppendLine("}");
+
+        writer.AddSource($"{EXT_CLASSNAME}.g.cs", code);
     }
 }
