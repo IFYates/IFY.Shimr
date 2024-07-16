@@ -2,6 +2,7 @@
 
 public enum MemberType
 {
+    Event,
     Field,
     Property,
     Method,

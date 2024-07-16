@@ -21,7 +21,7 @@ internal class InstanceShimDefinition : IShimDefinition
             .OfType<ShimMember>().ToArray();
 
         FullTypeName = symbol.ToFullName();
-        Name = FullTypeName.Replace('.', '_');
+        Name = FullTypeName.Replace('.', '_').Replace('<', '_').Replace(',', '_').Replace(" ", "").Replace('>', '_'); // TODO: better deterministic way to uniquely name class
     }
 
     public ShimTarget AddTarget(ITypeSymbol symbol)

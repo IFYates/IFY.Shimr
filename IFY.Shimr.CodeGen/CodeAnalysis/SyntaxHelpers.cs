@@ -107,8 +107,20 @@ internal static class SyntaxHelpers
         return false;
     }
 
+    /// <summary>
+    /// Are <paramref name="type1"/> and <paramref name="type2"/> referring to the same type.
+    /// </summary>
     public static bool IsMatch(this ITypeSymbol type1, ITypeSymbol? type2)
-        => type1.Equals(type2, SymbolEqualityComparer.Default);
+        => (type1 is ITypeParameterSymbol && type2 is ITypeParameterSymbol) // TODO: Is this enough?
+        || type1.Equals(type2, SymbolEqualityComparer.Default);
+    /// <summary>
+    /// Can <paramref name="type1"/> be used to refer to the use of <paramref name="type2"/>.
+    /// This includes inheritiance.
+    /// </summary>
+    public static bool IsMatchable(this ITypeSymbol type1, ITypeSymbol? type2)
+        => type1.IsMatch(type2)
+        || (type1.TypeKind == TypeKind.Interface && type2?.AllInterfaces.Any(type1.IsMatch) == true)
+        || (type2?.BaseType != null && type1.IsMatch(type2.BaseType));
 
     public static bool IsType<T>(this ITypeSymbol symbol)
         => symbol.ToFullName() == typeof(T).FullName;

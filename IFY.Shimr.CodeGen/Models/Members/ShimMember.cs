@@ -9,6 +9,20 @@ namespace IFY.Shimr.CodeGen.Models.Members;
 /// </summary>
 internal abstract class ShimMember : IMember
 {
+    protected sealed class ShimEventMember(IShimDefinition shim, IEventSymbol symbol)
+        : ShimMember(shim, symbol, MemberType.Event)
+    {
+        public override ITypeSymbol? ReturnType { get; } = symbol.Type;
+
+        public override void GenerateCode(StringBuilder code, TargetMember targetMember)
+        {
+            code.Append($"            public event {ReturnType?.ToDisplayString() ?? "void"} {Name} {{")
+                .Append($" add {{ _inst.{OriginalName} += value; }}")
+                .Append($" remove {{ _inst.{OriginalName} -= value; }}")
+                .AppendLine(" }");
+        }
+    }
+
     protected sealed class ShimFieldMember(IShimDefinition shim, IFieldSymbol symbol)
         : ShimMember(shim, symbol, MemberType.Field)
     {
@@ -141,10 +155,11 @@ internal abstract class ShimMember : IMember
         return symbol switch
         {
             ISymbol { IsAbstract: false } => null,
+            IEventSymbol eventSymbol => new ShimEventMember(shim, eventSymbol),
             IFieldSymbol field => new ShimFieldMember(shim, field),
             IPropertySymbol property => new ShimPropertyMember(shim, property),
             // TODO: property.ExplicitInterfaceImplementations.Any()?
-            IMethodSymbol { MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.ExplicitInterfaceImplementation } => null,
+            IMethodSymbol { MethodKind: MethodKind.EventAdd or MethodKind.EventRemove or MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.ExplicitInterfaceImplementation } => null,
             IMethodSymbol method => constructionType == null
                 ? new ShimMethodMember(shim, method)
                 : new ShimConstructorMember(shim, method, constructionType!),

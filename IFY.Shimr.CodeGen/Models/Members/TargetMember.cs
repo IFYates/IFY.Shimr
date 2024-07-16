@@ -8,6 +8,12 @@ namespace IFY.Shimr.CodeGen.Models.Members;
 /// </summary>
 internal abstract class TargetMember : IMember
 {
+    protected sealed class TargetEventMember(ShimTarget target, IEventSymbol symbol)
+        : TargetMember(target, symbol, MemberType.Event)
+    {
+        public override ITypeSymbol? ReturnType { get; } = symbol.Type;
+    }
+
     protected sealed class TargetFieldMember(ShimTarget target, IFieldSymbol symbol)
         : TargetMember(target, symbol, MemberType.Field)
     {
@@ -41,6 +47,7 @@ internal abstract class TargetMember : IMember
         return symbol switch
         {
             IFieldSymbol field => new TargetFieldMember(target, field),
+            IEventSymbol eventSymbol => new TargetEventMember(target, eventSymbol),
             IPropertySymbol property => new TargetPropertyMember(target, property),
             IMethodSymbol { MethodKind: MethodKind.Constructor } method => new TargetConstructorMember(target, method),
             IMethodSymbol { MethodKind: MethodKind.Ordinary or MethodKind.ExplicitInterfaceImplementation } method => new TargetMethodMember(target, method),
@@ -77,6 +84,11 @@ internal abstract class TargetMember : IMember
     {
         targetElement = null;
         shimElement = null;
+
+        if (shimMember.ReturnType!.Name == "IDictionary" && ((INamedTypeSymbol)shimMember.ReturnType).TypeArguments.Length == 2)
+        {
+            Diag.WriteOutput($"//// DICT: {shimMember.ReturnType} {shimMember.Name} -> {ReturnType} {Name} = {ReturnType.IsMatchable(shimMember.ReturnType)} = {ReturnType.ToFullName()} == {shimMember.ReturnType.ToFullName()}");
+        }
 
         if (ReturnType == null || shimMember.ReturnType == null)
         {

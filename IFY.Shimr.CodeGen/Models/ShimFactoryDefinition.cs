@@ -23,7 +23,7 @@ internal class ShimFactoryDefinition : IShimDefinition
         }
 
         FullTypeName = symbol.ToFullName();
-        Name = $"ShimFactory_{FullTypeName.Replace('.', '_')}";
+        Name = $"ShimFactory_{FullTypeName.Replace('.', '_').Replace('<', '_').Replace(',', '_').Replace(" ", "").Replace('>', '_')}"; // TODO: better deterministic way to uniquely name class
 
         _members = symbol.GetAllMembers()
             .Select(m => ShimMember.Parse(m, this))

@@ -31,6 +31,17 @@
             </summary>
             <Example>[Attribute(typeof(T))]</Example>
         </member>
+        <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.SyntaxHelpers.IsMatch(Microsoft.CodeAnalysis.ITypeSymbol,Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Are <paramref name="type1"/> and <paramref name="type2"/> referring to the same type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.SyntaxHelpers.IsMatchable(Microsoft.CodeAnalysis.ITypeSymbol,Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Can <paramref name="type1"/> be used to refer to the use of <paramref name="type2"/>.
+            This includes inheritiance.
+            </summary>
+        </member>
         <member name="T:IFY.Shimr.CodeGen.Diag">
             <summary>
             Helpers for diagnosing issues.
