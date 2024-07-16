@@ -1,7 +1,8 @@
 ﻿using IFY.Shimr.Extensions;
-using System;
 using System.Diagnostics.CodeAnalysis;
 
+#pragma warning disable CA2211 // Non-constant fields should not be visible
+#pragma warning disable IDE1006 // Naming Styles
 namespace IFY.Shimr.Tests;
 
 [TestClass]
@@ -36,11 +37,13 @@ public class StaticFieldShimTests
     }
 #endif
 
+#if !SHIMR_CG
     public interface IStaticOverrideFieldTest
     {
         [StaticShim(typeof(TestClass))]
         IGetSetFieldTest Child { get; set; }
     }
+#endif
     public interface IOverrideFieldTest
     {
         [StaticShim(typeof(TestClass))]
@@ -139,7 +142,7 @@ public class StaticFieldShimTests
     {
         var shim = ShimBuilder.Create<IReadonlyFieldTest>();
 
-        var ex = Assert.ThrowsException<InvalidOperationException>(() =>
+        var ex = Assert.ThrowsException<System.InvalidOperationException>(() =>
         {
             shim.Immutable = "new_value";
         });
@@ -148,6 +151,7 @@ public class StaticFieldShimTests
     }
 #endif
 
+#if !SHIMR_CG
     [TestMethod]
     public void Shim_static_field_cannot_shim_return_as_static()
     {
@@ -155,13 +159,14 @@ public class StaticFieldShimTests
 
         var shim = ShimBuilder.Create<IStaticOverrideFieldTest>();
 
-        var ex = Assert.ThrowsException<InvalidCastException>(() =>
+        var ex = Assert.ThrowsException<System.InvalidCastException>(() =>
         {
             shim.Child.ToString(); // Throws exception on auto-shim
         });
 
         Assert.AreEqual("Instance shim cannot implement static member: IFY.Shimr.Tests.StaticFieldShimTests+IGetSetFieldTest get_VValue", ex.Message);
     }
+#endif
 
     [TestMethod]
     public void Shim_static_field_with_changed_return_type()

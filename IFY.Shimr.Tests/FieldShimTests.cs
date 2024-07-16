@@ -1,5 +1,4 @@
 ﻿using IFY.Shimr.Extensions;
-using System;
 
 namespace IFY.Shimr.Tests;
 
@@ -37,7 +36,7 @@ public class FieldShimTests
         public string RValue = "value";
         public readonly string Immutable = "readonly";
 
-        public TestClass Child;
+        public TestClass Child = null!;
     }
 
     [TestMethod]
@@ -122,7 +121,7 @@ public class FieldShimTests
 
         var shim = obj.Shim<IReadonlyFieldTest>();
 
-        Assert.ThrowsException<InvalidOperationException>(() =>
+        Assert.ThrowsException<System.InvalidOperationException>(() =>
         {
             shim.Immutable = "new_value";
         });

@@ -1,9 +1,7 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
-
-namespace IFY.Shimr.CodeGen;
+﻿namespace IFY.Shimr.CodeGen;
 
 internal interface ICodeWriter
 {
-    LanguageVersion CSLangver { get; }
+    bool HasNullableAttributes { get; }
     void AddSource(string name, StringBuilder code);
 }

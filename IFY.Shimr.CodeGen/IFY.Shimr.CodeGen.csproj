@@ -32,12 +32,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Models\_old\**" />
-	  <EmbeddedResource Remove="Models\_old\**" />
-	  <None Remove="Models\_old\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<None Remove="IFY.Shimr.CodeGen.xml" />
 	</ItemGroup>
 

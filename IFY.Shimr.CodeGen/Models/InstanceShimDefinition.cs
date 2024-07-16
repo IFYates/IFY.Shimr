@@ -20,8 +20,8 @@ internal class InstanceShimDefinition : IShimDefinition
             .Select(m => ShimMember.Parse(m, this))
             .OfType<ShimMember>().ToArray();
 
-        FullTypeName = symbol.ToDisplayString();
-        Name = symbol.Name;
+        FullTypeName = symbol.ToFullName();
+        Name = FullTypeName.Replace('.', '_');
     }
 
     public ShimTarget AddTarget(ITypeSymbol symbol)
@@ -41,10 +41,10 @@ internal class InstanceShimDefinition : IShimDefinition
     public void WriteShimClass(ICodeWriter writer, IEnumerable<IBinding> bindings)
     {
         var code = new StringBuilder();
-        code.AppendLine($"namespace {AutoShimCodeWriter.EXT_NAMESPACE}")
+        code.AppendLine($"namespace {GlobalCodeWriter.EXT_NAMESPACE}")
             .AppendLine("{")
             .AppendLine($"    using System.Linq;")
-            .AppendLine($"    public static partial class {AutoShimCodeWriter.EXT_CLASSNAME}")
+            .AppendLine($"    public static partial class {GlobalCodeWriter.EXT_CLASSNAME}")
             .AppendLine("    {");
 
         // Each target has a class
@@ -84,7 +84,7 @@ internal class InstanceShimDefinition : IShimDefinition
         writer.AddSource($"Shimr.{Name}.g.cs", code);
     }
 
-    public void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimRegister shimRegister)
+    public void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimResolver shimResolver)
     {
         // Map shim members against targets
         foreach (var target in _targets.Values)
@@ -103,7 +103,7 @@ internal class InstanceShimDefinition : IShimDefinition
                 }
 
                 // If have multiple, will pick highest in hierarchy
-                member.ResolveBinding(allBindings, targets[0], errors, shimRegister);
+                member.ResolveBinding(allBindings, targets[0], errors, shimResolver);
             }
         }
     }

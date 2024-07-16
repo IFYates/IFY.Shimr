@@ -26,7 +26,7 @@ public static class ObjectExtensions
     /// Use a shim to make the given object look like the required type.
     /// Result will also implement <see cref="IShim"/>.
     /// </summary>
-    [return: NotNullIfNotNull("inst")]
+    [return: NotNullIfNotNull(nameof(inst))]
     public static TInterface? Shim<TInterface>(this object? inst)
         where TInterface : class
     {
@@ -37,7 +37,7 @@ public static class ObjectExtensions
     /// Use a shim to make the given objects look like the required type.
     /// Results will also implement <see cref="IShim"/>.
     /// </summary>
-    [return: NotNullIfNotNull("inst")]
+    [return: NotNullIfNotNull(nameof(inst))]
     public static IEnumerable<TInterface?>? Shim<TInterface>(this IEnumerable<object>? inst)
         where TInterface : class
     {

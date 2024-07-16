@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
+#pragma warning disable CA1861 // Avoid constant arrays as arguments
 namespace IFY.Shimr.Tests;
 
 // Specific issues around these structures
@@ -27,7 +28,7 @@ public class MultiLevelInheritanceTests
     // Explicitly implements interface and changes signature
     public class Impl : IBase
     {
-        public int[] Values { get; set; }
+        public int[] Values { get; set; } = null!;
         IEnumerable<int> IBase.Values { get => Values; set => Values = value.ToArray(); }
 
         public int[] GetValues() => Values;

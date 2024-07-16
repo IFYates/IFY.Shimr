@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace IFY.Shimr.Tests;
 
@@ -68,7 +67,7 @@ public class ConstructorTests
     [TestMethod]
     public void Can_not_shim_to_constructor_with_void_return_type()
     {
-        var ex = Assert.ThrowsException<ArgumentException>(() =>
+        var ex = Assert.ThrowsException<System.ArgumentException>(() =>
         {
             ShimBuilder.Create<IFactoryInterface2>();
         });
@@ -86,7 +85,7 @@ public class ConstructorTests
     [TestMethod]
     public void Can_not_shim_to_constructor_with_incorrect_return_type()
     {
-        var ex = Assert.ThrowsException<ArgumentException>(() =>
+        var ex = Assert.ThrowsException<System.ArgumentException>(() =>
          {
              ShimBuilder.Create<IFactoryInterface3>();
          });
@@ -120,7 +119,7 @@ public class ConstructorTests
     [TestMethod]
     public void Can_not_shim_to_missing_constructor()
     {
-        var ex = Assert.ThrowsException<MissingMemberException>(() =>
+        var ex = Assert.ThrowsException<System.MissingMemberException>(() =>
         {
             ShimBuilder.Create<IFactoryInterface5>();
         });

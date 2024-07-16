@@ -2,12 +2,14 @@
 
 	<PropertyGroup>
 		<!--<TargetFrameworks>netcoreapp3.1;net6.0;net8.0</TargetFrameworks>-->
+		<!--<TargetFrameworks>netcoreapp3.1</TargetFrameworks>-->
 		<TargetFrameworks>net8.0</TargetFrameworks>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 		<!-- Don't enable implicit usings as we want to ensure the generated code is complete -->
-
+		
+		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>

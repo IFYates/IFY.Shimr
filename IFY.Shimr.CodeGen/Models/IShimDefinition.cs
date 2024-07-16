@@ -14,5 +14,5 @@ internal interface IShimDefinition
 
     void WriteShimClass(ICodeWriter writer, IEnumerable<IBinding> bindings);
 
-    void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimRegister shimRegister);
+    void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimResolver shimResolver);
 }

@@ -1,8 +1,11 @@
-﻿using IFY.Shimr.Extensions;
+﻿#if !SHIMR_CG
+using IFY.Shimr.Extensions;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
+#pragma warning disable CA1822 // Mark members as static
 #pragma warning disable IDE0051 // Remove unused private members
+#pragma warning disable IDE1006 // Naming Styles
 namespace IFY.Shimr.Tests;
 
 [TestClass]
@@ -103,4 +106,4 @@ public class AccessibilityTests
         Assert.AreSame(obj, shim.Unshim());
     }
 }
-#pragma warning restore IDE0051 // Remove unused private members
+#endif

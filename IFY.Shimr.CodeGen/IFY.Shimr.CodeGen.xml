@@ -14,6 +14,12 @@
             Finds all uses of '<see cref="T:IFY.Shimr.Extensions.ObjectExtensions"/>.Shim&lt;T&gt;(object)' extension method and '<see cref="T:IFY.Shimr.Extensions.ObjectExtensions"/>.Create&lt;T&gt;()'.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.ShimResolver.ResolveAllShims(IFY.Shimr.CodeGen.CodeAnalysis.CodeErrorReporter,IFY.Shimr.CodeGen.CodeAnalysis.ShimResolver)">
+            <summary>
+            Ensure that all implicit shims in registered shims are resolved.
+            </summary>
+            <returns>All current shims.</returns>
+        </member>
         <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.SyntaxHelpers.GetAllMembers(Microsoft.CodeAnalysis.ITypeSymbol)">
             <summary>
             Get all the members of this symbol, including those from base type.
@@ -79,17 +85,6 @@
             <summary>
             Returns true if the <see cref="P:IFY.Shimr.CodeGen.Models.Members.ShimMember.ReturnType"/> of <paramref name="shimMember"/> is shimmable from the <see cref="P:IFY.Shimr.CodeGen.Models.Members.TargetMember.ReturnType"/> of this target member.
             </summary>
-        </member>
-        <member name="T:IFY.Shimr.CodeGen.Models.ShimRegister">
-            <summary>
-            Pool of registered shims.
-            </summary>
-        </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.ShimRegister.ResolveAllShims(IFY.Shimr.CodeGen.CodeAnalysis.CodeErrorReporter,IFY.Shimr.CodeGen.Models.ShimRegister)">
-            <summary>
-            Ensure that all implicit shims in registered shims are resolved.
-            </summary>
-            <returns>All current shims.</returns>
         </member>
         <member name="T:IFY.Shimr.CodeGen.Models.ShimTarget">
             <summary>

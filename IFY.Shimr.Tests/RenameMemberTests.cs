@@ -3,6 +3,8 @@ using System;
 
 namespace IFY.Shimr.Tests;
 
+#pragma warning disable CA2211 // Non-constant fields should not be visible
+#pragma warning disable IDE1006 // Naming Styles
 [TestClass]
 public class RenameMemberTests
 {
@@ -19,9 +21,9 @@ public class RenameMemberTests
 
     public interface IStaticMembers
     {
-        //[StaticShim(typeof(TestClass))]
-        //[Shim(nameof(TestClass.StaticField))]
-        //string Field { get; set; }
+        [StaticShim(typeof(TestClass))]
+        [Shim(nameof(TestClass.StaticField))]
+        string Field { get; set; }
         [StaticShim(typeof(TestClass))]
         [Shim(nameof(TestClass.StaticValue))]
         string Value { get; set; }
@@ -32,58 +34,58 @@ public class RenameMemberTests
 
     public interface IInstanceMembers
     {
-        //[Shim(nameof(TestClass.InstanceField))]
-        //string Field { get; set; }
+        [Shim(nameof(TestClass.InstanceField))]
+        string Field { get; set; }
         [Shim(nameof(TestClass.InstanceValue))]
         string Value { get; set; }
         [Shim(nameof(TestClass.InstanceTest))]
         string Test();
     }
 
-    //[TestMethod]
-    //public void Can_get_from_renamed_field()
-    //{
-    //    var obj = new TestClass
-    //    {
-    //        InstanceField = DateTime.UtcNow.ToString("o")
-    //    };
+    [TestMethod]
+    public void Can_get_from_renamed_field()
+    {
+        var obj = new TestClass
+        {
+            InstanceField = DateTime.UtcNow.ToString("o")
+        };
 
-    //    var shim = obj.Shim<IInstanceMembers>();
+        var shim = obj.Shim<IInstanceMembers>();
 
-    //    Assert.AreSame(obj.InstanceField, shim.Field);
-    //}
+        Assert.AreSame(obj.InstanceField, shim.Field);
+    }
 
-    //[TestMethod]
-    //public void Can_get_from_renamed_static_field()
-    //{
-    //    TestClass.StaticField = DateTime.UtcNow.ToString("o");
+    [TestMethod]
+    public void Can_get_from_renamed_static_field()
+    {
+        TestClass.StaticField = DateTime.UtcNow.ToString("o");
 
-    //    var factory = ShimBuilder.Create<IStaticMembers>();
+        var factory = ShimBuilder.Create<IStaticMembers>();
 
-    //    Assert.AreSame(TestClass.StaticField, factory.Field);
-    //}
+        Assert.AreSame(TestClass.StaticField, factory.Field);
+    }
 
-    //[TestMethod]
-    //public void Can_set_renamed_field()
-    //{
-    //    var obj = new TestClass();
+    [TestMethod]
+    public void Can_set_renamed_field()
+    {
+        var obj = new TestClass();
 
-    //    var shim = obj.Shim<IInstanceMembers>();
-    //    shim.Field = DateTime.UtcNow.ToString("o");
+        var shim = obj.Shim<IInstanceMembers>();
+        shim.Field = DateTime.UtcNow.ToString("o");
 
-    //    Assert.AreSame(shim.Field, obj.InstanceField);
-    //}
+        Assert.AreSame(shim.Field, obj.InstanceField);
+    }
 
-    //[TestMethod]
-    //public void Can_set_renamed_static_field()
-    //{
-    //    TestClass.StaticField = null;
+    [TestMethod]
+    public void Can_set_renamed_static_field()
+    {
+        TestClass.StaticField = null!;
 
-    //    var factory = ShimBuilder.Create<IStaticMembers>();
-    //    factory.Field = DateTime.UtcNow.ToString("o");
+        var factory = ShimBuilder.Create<IStaticMembers>();
+        factory.Field = DateTime.UtcNow.ToString("o");
 
-    //    Assert.AreSame(factory.Field, TestClass.StaticField);
-    //}
+        Assert.AreSame(factory.Field, TestClass.StaticField);
+    }
 
     [TestMethod]
     public void Can_get_from_renamed_property()
@@ -122,7 +124,7 @@ public class RenameMemberTests
     [TestMethod]
     public void Can_set_renamed_static_property()
     {
-        TestClass.StaticValue = null;
+        TestClass.StaticValue = null!;
 
         var factory = ShimBuilder.Create<IStaticMembers>();
         factory.Value = DateTime.UtcNow.ToString("o");

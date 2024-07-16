@@ -23,7 +23,7 @@ internal class ShimFactoryDefinition : IShimDefinition
         }
 
         FullTypeName = symbol.ToFullName();
-        Name = $"ShimFactory_{symbol.Name}";
+        Name = $"ShimFactory_{FullTypeName.Replace('.', '_')}";
 
         _members = symbol.GetAllMembers()
             .Select(m => ShimMember.Parse(m, this))
@@ -39,11 +39,11 @@ internal class ShimFactoryDefinition : IShimDefinition
     public void WriteShimClass(ICodeWriter writer, IEnumerable<IBinding> bindings)
     {
         var code = new StringBuilder();
-        code.AppendLine($"namespace {AutoShimCodeWriter.SB_NAMESPACE}")
+        code.AppendLine($"namespace {GlobalCodeWriter.SB_NAMESPACE}")
             .AppendLine("{")
-            .AppendLine($"    using {AutoShimCodeWriter.EXT_NAMESPACE};")
+            .AppendLine($"    using {GlobalCodeWriter.EXT_NAMESPACE};")
             .AppendLine($"    using System.Linq;")
-            .AppendLine($"    public static partial class {AutoShimCodeWriter.SB_CLASSNAME}")
+            .AppendLine($"    public static partial class {GlobalCodeWriter.SB_CLASSNAME}")
             .AppendLine("    {")
             .AppendLine($"        protected class {Name} : {FullTypeName}")
             .AppendLine("        {");
@@ -59,7 +59,7 @@ internal class ShimFactoryDefinition : IShimDefinition
         writer.AddSource($"Shimr.{Name}.g.cs", code);
     }
 
-    public void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimRegister shimRegister)
+    public void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimResolver shimResolver)
     {
         // Map shim members against targets
         foreach (var member in _members)
@@ -82,7 +82,7 @@ internal class ShimFactoryDefinition : IShimDefinition
             }
 
             // If have multiple, will pick highest in hierarchy
-            member.ResolveBinding(allBindings, targets[0], errors, shimRegister);
+            member.ResolveBinding(allBindings, targets[0], errors, shimResolver);
         }
     }
 }

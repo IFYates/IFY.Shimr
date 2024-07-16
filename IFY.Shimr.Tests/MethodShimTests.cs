@@ -1,7 +1,8 @@
 ﻿using IFY.Shimr.Extensions;
-using System;
 using System.Diagnostics.CodeAnalysis;
 
+#pragma warning disable CA1822 // Mark members as static
+#pragma warning disable IDE1006 // Naming Styles
 namespace IFY.Shimr.Tests;
 
 [TestClass]
@@ -56,7 +57,7 @@ public class MethodShimTests
     [ExcludeFromCodeCoverage]
     public class TestClass : TestParentClass
     {
-        internal object[] VoidMethodArgsCalled;
+        internal object[] VoidMethodArgsCalled = null!;
         public void VoidMethodArgs(string arg1, int arg2)
         {
             VoidMethodArgsCalled = [arg1, arg2];
@@ -84,12 +85,8 @@ public class MethodShimTests
         var obj = new TestClass();
         Assert.IsFalse(obj.VoidMethodCalled);
 
-#if SHIMR_CG
         var shim = obj.Shim<IVoidMethodTest>();
-#else
-        var shim = ShimBuilder.Shim<IVoidMethodTest>(obj);
-#endif
-        shim.VoidMethod();
+        shim!.VoidMethod();
 
         Assert.IsTrue(obj.VoidMethodCalled);
     }
@@ -134,7 +131,7 @@ public class MethodShimTests
     {
         var obj = new TestClass();
 
-        Assert.ThrowsException<MissingMemberException>(() =>
+        Assert.ThrowsException<System.MissingMemberException>(() =>
         {
             ShimBuilder.Shim<IDifferentMethodSig>(obj);
         });

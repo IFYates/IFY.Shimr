@@ -88,15 +88,15 @@ internal abstract class ShimMember : IMember
                 && method.AllParameterTypesMatch((IMethodSymbol)Symbol);
         }
 
-        public override void ResolveBinding(IList<IBinding> bindings, TargetMember target, CodeErrorReporter errors, ShimRegister shimRegister)
+        public override void ResolveBinding(IList<IBinding> bindings, TargetMember target, CodeErrorReporter errors, ShimResolver shimResolver)
         {
             // Resolve parameter overrides
             foreach (var param in Parameters)
             {
-                param.RegisterOverride(shimRegister);
+                param.RegisterOverride(shimResolver);
             }
 
-            base.ResolveBinding(bindings, target, errors, shimRegister);
+            base.ResolveBinding(bindings, target, errors, shimResolver);
         }
     }
 
@@ -216,7 +216,7 @@ internal abstract class ShimMember : IMember
         return symbol.Name == OriginalName;
     }
 
-    public virtual void ResolveBinding(IList<IBinding> bindings, TargetMember target, CodeErrorReporter errors, ShimRegister shimRegister)
+    public virtual void ResolveBinding(IList<IBinding> bindings, TargetMember target, CodeErrorReporter errors, ShimResolver shimResolver)
     {
         // Register return shim, if needed
         if (target.IsShimmableReturnType(this, out var targetElement, out var shimElement))
@@ -242,7 +242,7 @@ internal abstract class ShimMember : IMember
 
         void safeRegister(ITypeSymbol shimType, ITypeSymbol targetType)
         {
-            var shim = shimRegister.GetOrCreate(shimType, false);
+            var shim = shimResolver.GetOrCreate(shimType, false);
             if (shim is InstanceShimDefinition def)
             {
                 def.AddTarget(targetType);

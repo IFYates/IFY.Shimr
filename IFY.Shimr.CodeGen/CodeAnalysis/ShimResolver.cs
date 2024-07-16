@@ -1,4 +1,5 @@
 ﻿using IFY.Shimr.CodeGen.Models;
+using IFY.Shimr.CodeGen.Models.Bindings;
 using IFY.Shimr.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -13,8 +14,34 @@ internal class ShimResolver : ISyntaxContextReceiver
 {
     private static readonly string ShimExtensionType = typeof(ObjectExtensions).FullName;
 
+    private readonly Dictionary<string, IShimDefinition> _pool = [];
+    public IEnumerable<IShimDefinition> Definitions => _pool.Values;
+
     public CodeErrorReporter Errors { get; } = new();
-    public ShimRegister Shims { get; } = new();
+
+    public IShimDefinition GetOrCreate(ITypeSymbol interfaceType, bool asFactory)
+    {
+        lock (_pool)
+        {
+            var key = interfaceType.ToDisplayString();
+            if (!_pool.TryGetValue(key, out var shim))
+            {
+                shim = !asFactory
+                    ? new InstanceShimDefinition(interfaceType)
+                    : new ShimFactoryDefinition(interfaceType);
+                _pool.Add(key, shim);
+            }
+            if (!asFactory && shim is not InstanceShimDefinition)
+            {
+                Diag.WriteOutput("// Got factory as instance shim: " + interfaceType.ToDisplayString());
+            }
+            return shim;
+        }
+    }
+    public InstanceShimDefinition GetOrCreateShim(ITypeSymbol interfaceType)
+        => (InstanceShimDefinition)GetOrCreate(interfaceType, false);
+    public ShimFactoryDefinition GetOrCreateFactory(ITypeSymbol interfaceType)
+        => (ShimFactoryDefinition)GetOrCreate(interfaceType, true);
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
     {
@@ -71,7 +98,7 @@ internal class ShimResolver : ISyntaxContextReceiver
         }
 
         // Register shim type
-        Shims.GetOrCreateShim(argTypeInfo)
+        GetOrCreateShim(argTypeInfo)
             .AddTarget(targetType);
         return true;
     }
@@ -92,7 +119,7 @@ internal class ShimResolver : ISyntaxContextReceiver
         var interfaceAttr = interfaceDeclaration.GetAttribute<StaticShimAttribute>(context.SemanticModel);
         if (interfaceAttr != null)
         {
-            Shims.GetOrCreateFactory(factoryType);
+            GetOrCreateFactory(factoryType);
         }
 
         // Find StaticShimAttribute(Type) on members (currently only 1 per member)
@@ -115,7 +142,7 @@ internal class ShimResolver : ISyntaxContextReceiver
                 }
 
                 var singleMember = context.SemanticModel.GetDeclaredSymbol(member)!;
-                Shims.GetOrCreateFactory(factoryType)
+                GetOrCreateFactory(factoryType)
                     .SetMemberType(singleMember, typeArg);
             }
         }
@@ -151,11 +178,33 @@ internal class ShimResolver : ISyntaxContextReceiver
 
                 // Register shim factory
                 var member = context.SemanticModel.GetDeclaredSymbol(method)!;
-                Shims.GetOrCreateFactory(factoryType)
+                GetOrCreateFactory(factoryType)
                     .SetMemberType(member, typeArg);
             }
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Ensure that all implicit shims in registered shims are resolved.
+    /// </summary>
+    /// <returns>All current shims.</returns>
+    public IList<IBinding> ResolveAllShims(CodeErrorReporter errors, ShimResolver shimResolver)
+    {
+        var bindings = new List<IBinding>();
+        var shimsDone = new List<IShimDefinition>();
+        var newShims = _pool.Values.Except(shimsDone).ToArray();
+        while (newShims.Any())
+        {
+            foreach (var shimType in newShims)
+            {
+                shimType.Resolve(bindings, errors, shimResolver);
+            }
+            shimsDone.AddRange(newShims);
+            newShims = _pool.Values.Except(shimsDone).ToArray();
+        }
+
+        return bindings;
     }
 }

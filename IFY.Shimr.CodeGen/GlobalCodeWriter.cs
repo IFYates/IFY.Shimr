@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace IFY.Shimr.CodeGen;
 
-internal class AutoShimCodeWriter(GeneratorExecutionContext context) : ICodeWriter
+internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
 {
     public const string SB_NAMESPACE = "IFY.Shimr";
     public const string SB_CLASSNAME = "ShimBuilder";
@@ -13,9 +13,7 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context) : ICodeWrit
     public const string EXT_CLASSNAME = nameof(Extensions.ObjectExtensions);
     public const string EXT_CLASSNAMEFULL = $"{EXT_NAMESPACE}.{EXT_CLASSNAME}";
 
-    public LanguageVersion CSLangver { get; }
-        = (context.Compilation.SyntaxTrees.FirstOrDefault().Options as CSharpParseOptions)?.LanguageVersion
-        ?? LanguageVersion.Default;
+    public bool HasNullableAttributes { get; } = context.Compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute") != null;
 
     public void AddSource(string name, StringBuilder code)
     {
@@ -30,6 +28,13 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context) : ICodeWrit
             .Select(s => s.Definition).ToArray();
         if (!factoryDefs.Any())
         {
+                var sb = new StringBuilder();
+            sb.AppendLine("// " + shims.Count());
+            foreach (var def in factoryDefs.Distinct())
+            {
+                sb.AppendLine("////// " + def.FullTypeName);
+            }
+                writer.AddSource($"{SB_CLASSNAME}.g.cs", sb);
             return;
         }
 
@@ -85,7 +90,7 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context) : ICodeWrit
             var targetType = targetBinding.First().Target;
             if (targetType.IsValueType)
             {
-                if (writer.CSLangver >= LanguageVersion.CSharp8)
+                if (writer.HasNullableAttributes)
                 {
                     code.AppendLine("        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"inst\")]");
                 }
@@ -97,7 +102,6 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context) : ICodeWrit
             // Shim: Underlying -> Interface
             code.AppendLine("        /// <summary>")
                 .AppendLine($"        /// Shim an instance of <see cref=\"{targetType.FullTypeName}\"/> as <typeparamref name=\"TInterface\"/>.")
-                .AppendLine($"        /// {targetBinding.Count()} {string.Join(", ", targetBinding.Select(b => b.Definition.Name))}")
                 .AppendLine("        /// </summary>")
                 .AppendLine($"        public static TInterface Shim<TInterface>(this {targetType.FullTypeName} inst) where TInterface : class")
                 .AppendLine("        {");
@@ -111,13 +115,13 @@ internal class AutoShimCodeWriter(GeneratorExecutionContext context) : ICodeWrit
             }
             code.AppendLine($"            throw new System.NotSupportedException($\"Interface '{{typeof(TInterface).FullName}}' is not registered as a shim for '{targetType.FullTypeName}'.\");")
                 .AppendLine("        }");
+        }
 
-            // Unshim: Interface -> Underlying
-            foreach (var binding in bindings)
-            {
-                code.AppendLine($"        public static object Unshim(this {binding.Key.FullTypeName} shim) => ((IShim)shim).Unshim();")
-                    .AppendLine($"        public static T Unshim<T>(this {binding.Key.FullTypeName} shim) => (T)(object)((IShim)shim).Unshim();");
-            }
+        // Unshim: Interface -> Underlying
+        foreach (var shim in allBindings.Select(b => b.Definition).Distinct())
+        {
+            code.AppendLine($"        public static object Unshim(this {shim.FullTypeName} shim) => ((IShim)shim).Unshim();")
+                .AppendLine($"        public static T Unshim<T>(this {shim.FullTypeName} shim) => (T)(object)((IShim)shim).Unshim();");
         }
 
         code.AppendLine("    }")

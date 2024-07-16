@@ -23,12 +23,12 @@ internal class MemberParameter(IParameterSymbol symbol)
     public override string ToString()
         => $"{Type.ToDisplayString()} {Name}";
 
-    public void RegisterOverride(ShimRegister shimRegister)
+    public void RegisterOverride(ShimResolver shimResolver)
     {
         // Argument overrides
         if (UnderlyingType != null)
         {
-            shimRegister.GetOrCreateShim(Type)
+            shimResolver.GetOrCreateShim(Type)
                 .AddTarget(UnderlyingType);
         }
     }

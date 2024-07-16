@@ -16,7 +16,8 @@ internal class ShimrSourceGenerator : ISourceGenerator
         Diag.WriteOutput($"// Start code generation: {DateTime.Now:o}\r\n", false); // TODO: wrong place to reset file
         //Diag.WriteOutput($"// {Assembly.GetExecutingAssembly().Location}");
 
-        context.RegisterForSyntaxNotifications(new SyntaxContextReceiverCreator(() => new ShimResolver()));
+        // TODO: This approach does not support multiple target frameworks
+        context.RegisterForSyntaxNotifications(() => new ShimResolver());
     }
 
     // Called on each code change
@@ -30,7 +31,7 @@ internal class ShimrSourceGenerator : ISourceGenerator
         try
         {
             resolver.Errors.SetContext(context);
-            doExecute(context, resolver.Errors, resolver.Shims);
+            doExecute(context, resolver.Errors, resolver);
         }
         catch (Exception ex)
         {
@@ -41,10 +42,10 @@ internal class ShimrSourceGenerator : ISourceGenerator
             throw;
         }
     }
-    private void doExecute(GeneratorExecutionContext context, CodeErrorReporter errors, ShimRegister shimRegister)
+    private void doExecute(GeneratorExecutionContext context, CodeErrorReporter errors, ShimResolver shimResolver)
     {
         // Resolve all shim bindings
-        var allBindings = shimRegister.ResolveAllShims(errors, shimRegister);
+        var allBindings = shimResolver.ResolveAllShims(errors, shimResolver);
 
         // Meta info
         var code = new StringBuilder();
@@ -67,9 +68,9 @@ internal class ShimrSourceGenerator : ISourceGenerator
             return;
         }
 
-        var writer = new AutoShimCodeWriter(context);
-        AutoShimCodeWriter.WriteFactoryClass(writer, allBindings);
-        AutoShimCodeWriter.WriteExtensionClass(writer, allBindings);
+        var writer = new GlobalCodeWriter(context);
+        GlobalCodeWriter.WriteFactoryClass(writer, allBindings);
+        GlobalCodeWriter.WriteExtensionClass(writer, allBindings);
 
         var bindingsByDefinition = allBindings.GroupBy(b => b.Definition).ToArray();
         foreach (var group in bindingsByDefinition)
