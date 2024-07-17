@@ -23,6 +23,11 @@ internal class ShimrSourceGenerator : ISourceGenerator
     // Called on each code change
     public void Execute(GeneratorExecutionContext context)
     {
+        if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.ProjectDir", out var projectDir))
+        {
+            Diag.OutputPath = projectDir;
+        }
+
         if (context.SyntaxContextReceiver is not ShimResolver resolver)
         {
             return;
@@ -38,7 +43,7 @@ internal class ShimrSourceGenerator : ISourceGenerator
             var err = $"{ex.GetType().FullName}: {ex.Message}\r\n{ex.StackTrace}";
             context.AddSource("ERROR.log.cs", $"// {err}");
             Diag.WriteOutput($"// ERROR: {err}");
-            // TODO: _errors.CodeGenFailed(ex);
+            resolver.Errors.CodeGenError(ex);
             throw;
         }
     }

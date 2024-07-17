@@ -5,11 +5,28 @@
 /// </summary>
 internal static class Diag
 {
-    private const string OUTPUT_FILE = "F:\\Dev\\IFY.Shimr\\Sourcegen.cs";
+    private static readonly StringBuilder _text = new();
+    private const string OUTPUT_FILE = "obj\\Diag.Output.cs";
 
     public static bool IsEnabled { get; set; } = true;
 
+    private static string? _outputPath;
+    public static string? OutputPath
+    {
+        get => _outputPath;
+        set
+        {
+            _outputPath = Path.Combine(value, OUTPUT_FILE);
+            if (_text.Length > 0)
+            {
+                WriteOutput(_text.ToString(), false);
+                _text.Clear();
+            }
+        }
+    }
+
     private static bool _hasLaunched = false;
+
     public static void Debug()
     {
         if (!_hasLaunched)
@@ -28,9 +45,15 @@ internal static class Diag
 #if DEBUG
         if (IsEnabled)
         {
+            if (OutputPath == null)
+            {
+                _text.AppendLine(text);
+                return;
+            }
+
             try
             {
-                using FileStream fs = new(OUTPUT_FILE, append ? FileMode.Append : FileMode.Create);
+                using FileStream fs = new(_outputPath, append ? FileMode.Append : FileMode.Create);
                 using StreamWriter sw = new(fs);
                 sw.WriteLine(text);
             }
