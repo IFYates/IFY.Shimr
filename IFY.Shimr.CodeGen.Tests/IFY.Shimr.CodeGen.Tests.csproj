@@ -24,6 +24,7 @@
 		<Compile Include="..\IFY.Shimr.Tests\Examples\DateTimeExample.cs" Link="Shared\Examples\DateTimeExample.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\Examples\FileSystemExample.cs" Link="Shared\Examples\FileSystemExample.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\Examples\ThreadExample.cs" Link="Shared\Examples\ThreadExample.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\Issues\Issue19.cs" Link="Shared\Issues\Issue19.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="Shared\ConstructorTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="Shared\EventShimTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Field.cs" Link="Shared\ExtendedFunctionalityTests.Field.cs" />
