@@ -2,9 +2,10 @@
 
 public enum MemberType
 {
+    Constructor,
     Event,
     Field,
-    Property,
+    Indexer,
     Method,
-    Constructor
+    Property,
 }

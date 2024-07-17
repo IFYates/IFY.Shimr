@@ -45,6 +45,37 @@ internal abstract class ShimMember : IMember
         }
     }
 
+    public sealed class ShimIndexerMember(IShimDefinition shim, IPropertySymbol symbol)
+        : ShimPropertyMember(shim, symbol, MemberType.Indexer)
+    {
+        public string IndexerArgType { get; } = symbol.Parameters[0].Type.ToString();
+        public string IndexerArgName { get; } = symbol.Parameters[0].Name;
+
+        public override void GenerateCode(StringBuilder code, TargetMember targetMember)
+        {
+            code.Append($"            public {ReturnType?.ToDisplayString() ?? "void"} this[{IndexerArgType} {IndexerArgName}] {{");
+
+            
+            var callee = IsFactoryMember || targetMember.IsStatic
+                ? $"{targetMember.ContainingType.ToFullName()}[{IndexerArgName}]"
+                : $"(({targetMember.ContainingType.ToFullName()})_inst)[{IndexerArgName}]";
+            if (IsGet)
+            {
+                code.Append($" get => {callee}{GetShimCode(targetMember)};");
+            }
+            if (IsSet)
+            {
+                code.Append($" set => {callee} = value{GetUnshimCode(targetMember)};");
+            }
+            if (IsInit)
+            {
+                code.Append($" init => {callee} = value{GetUnshimCode(targetMember)};");
+            }
+
+            code.AppendLine(" }");
+        }
+    }
+
     public class ShimMethodMember(IShimDefinition shim, IMethodSymbol symbol, MemberType type = MemberType.Method)
         : ShimMember(shim, symbol, type), IParameterisedMember
     {
@@ -97,8 +128,8 @@ internal abstract class ShimMember : IMember
         }
     }
 
-    public sealed class ShimPropertyMember(IShimDefinition shim, IPropertySymbol symbol)
-        : ShimMember(shim, symbol, MemberType.Property)
+    public class ShimPropertyMember(IShimDefinition shim, IPropertySymbol symbol, MemberType type = MemberType.Property)
+        : ShimMember(shim, symbol, type)
     {
         public override ITypeSymbol? ReturnType { get; } = symbol.Type;
 
@@ -147,11 +178,17 @@ internal abstract class ShimMember : IMember
             }
         }
 
+        if (symbol is IPropertySymbol ps)
+        {
+            Diag.WriteOutput($"//// {symbol.Name} {symbol.Kind} {ps.IsIndexer} {ps.Parameters.Length} {ps.Parameters[0].ToDisplayString()}");
+        }
+
         // Build member
         return symbol switch
         {
             ISymbol { IsAbstract: false } => null,
             IEventSymbol eventSymbol => new ShimEventMember(shim, eventSymbol),
+            IPropertySymbol { IsIndexer: true } property => new ShimIndexerMember(shim, property),
             IPropertySymbol property => new ShimPropertyMember(shim, property),
             // TODO: property.ExplicitInterfaceImplementations.Any()?
             IMethodSymbol { MethodKind: MethodKind.EventAdd or MethodKind.EventRemove or MethodKind.ExplicitInterfaceImplementation or MethodKind.PropertyGet or MethodKind.PropertySet } => null,
@@ -164,9 +201,9 @@ internal abstract class ShimMember : IMember
 
     public IShimDefinition Definition { get; }
     public ISymbol Symbol { get; }
-    public INamedTypeSymbol ContainingType { get; }
+    public INamedTypeSymbol ContainingType => Symbol.ContainingType;
     public bool IsFactoryMember { get; }
-    public string Name { get; }
+    public string Name => Symbol.Name;
     public MemberType Type { get; }
     public virtual ITypeSymbol? ReturnType { get; }
     public string TargetName { get; }
@@ -178,9 +215,7 @@ internal abstract class ShimMember : IMember
     {
         Definition = shim;
         Symbol = symbol;
-        ContainingType = symbol.ContainingType;
         IsFactoryMember = shim is ShimFactoryDefinition;
-        Name = symbol.Name;
         Type = type;
 
         // Check for proxy attribute

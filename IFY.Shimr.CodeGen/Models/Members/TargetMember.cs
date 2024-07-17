@@ -29,9 +29,7 @@ internal abstract class TargetMember : IMember
     protected class TargetMethodMember(ShimTarget target, IMethodSymbol symbol, MemberType type = MemberType.Method)
         : TargetMember(target, symbol, type), IParameterisedMember
     {
-        // TODO
-        public MemberParameter[] Parameters { get; }
-            = symbol.Parameters.Select(p => new MemberParameter(p)).ToArray();
+        public MemberParameter[] Parameters { get; } = symbol.Parameters.Select(p => new MemberParameter(p)).ToArray();
 
         public override ITypeSymbol? ReturnType { get; } = symbol.ReturnType;
     }
