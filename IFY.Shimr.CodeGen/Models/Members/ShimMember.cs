@@ -25,10 +25,9 @@ internal abstract class ShimMember : IMember
 
         public override bool IsMatch(IMember member)
         {
-            return member is IMethodSymbol method
+            return member.Symbol is IMethodSymbol method
                 && method.MethodKind == MethodKind.Constructor
-                && method.Parameters.Length == Parameters.Length
-                && method.AllParameterTypesMatch(((IMethodSymbol)Symbol).Parameters);
+                && ((IMethodSymbol)Symbol).AllParameterTypesMatch(method.Parameters);
         }
     }
 
@@ -57,7 +56,8 @@ internal abstract class ShimMember : IMember
         public override void GenerateCode(StringBuilder code, TargetMember targetMember)
         {
             code.Append($"            public ");
-            if (((IParameterisedMember)targetMember).Parameters.Length == 0 && Name is nameof(ToString) or nameof(GetHashCode))
+            if (((IParameterisedMember)targetMember).Parameters.Length == 0
+                && Name is nameof(ToString) or nameof(GetHashCode))
             {
                 code.Append("override ");
             }
@@ -71,9 +71,15 @@ internal abstract class ShimMember : IMember
                 .AppendLine(";");
         }
 
+        public bool FirstParameterIsInstance(IParameterisedMember targetMethod)
+        {
+            return targetMethod.Parameters.Length == Parameters.Length + 1
+                && targetMethod.Parameters[0].Type.IsMatch(ContainingType);
+        }
+
         public override bool IsMatch(IMember member)
         {
-            return member is IMethodSymbol method
+            return member.Symbol is IMethodSymbol method
                 && method.MethodKind is MethodKind.Ordinary or MethodKind.ExplicitInterfaceImplementation
                 && method.Name == TargetName
                 && ((IMethodSymbol)Symbol).AllParameterTypesMatch(method.Parameters);

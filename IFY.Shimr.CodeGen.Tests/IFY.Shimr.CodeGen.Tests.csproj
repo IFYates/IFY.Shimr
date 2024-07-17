@@ -21,12 +21,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!--<Compile Include="..\IFY.Shimr.Tests\Examples\DateTimeExample.cs" Link="Shared\Examples\DateTimeExample.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\Examples\DateTimeExample.cs" Link="Shared\Examples\DateTimeExample.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\Examples\FileSystemExample.cs" Link="Shared\Examples\FileSystemExample.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\Examples\ThreadExample.cs" Link="Shared\Examples\ThreadExample.cs" />
-		<Compile Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="Shared\ConstructorTests.cs" />-->
+		<Compile Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="Shared\ConstructorTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="Shared\EventShimTests.cs" />
-		<!--<Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Field.cs" Link="Shared\ExtendedFunctionalityTests.Field.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Field.cs" Link="Shared\ExtendedFunctionalityTests.Field.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Method.cs" Link="Shared\ExtendedFunctionalityTests.Method.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Property.cs" Link="Shared\ExtendedFunctionalityTests.Property.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\FieldShimTests.cs" Link="Shared\FieldShimTests.cs" />
@@ -46,7 +46,7 @@
 		<Compile Include="..\IFY.Shimr.Tests\StaticFieldShimTests.cs" Link="Shared\StaticFieldShimTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\StaticInterfaceTests.cs" Link="Shared\StaticInterfaceTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\StaticMemberTests.cs" Link="Shared\StaticMemberTests.cs" />
-		<Compile Include="..\IFY.Shimr.Tests\StructTests.cs" Link="Shared\StructTests.cs" />-->
+		<Compile Include="..\IFY.Shimr.Tests\StructTests.cs" Link="Shared\StructTests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

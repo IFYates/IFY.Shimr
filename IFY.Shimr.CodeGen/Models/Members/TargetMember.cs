@@ -51,7 +51,7 @@ internal abstract class TargetMember : IMember
             IPropertySymbol property => new TargetPropertyMember(target, property),
             IMethodSymbol { MethodKind: MethodKind.Constructor } method => new TargetConstructorMember(target, method),
             IMethodSymbol { MethodKind: MethodKind.ExplicitInterfaceImplementation or MethodKind.Ordinary } method => new TargetMethodMember(target, method),
-            IMethodSymbol { MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.Destructor or MethodKind.StaticConstructor or MethodKind.UserDefinedOperator } => null,
+            IMethodSymbol { MethodKind: MethodKind.Conversion or MethodKind.Destructor or MethodKind.EventAdd or MethodKind.EventRemove or MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.StaticConstructor or MethodKind.UserDefinedOperator } => null,
             IMethodSymbol method => throw new NotSupportedException($"Unhandled method kind: {method.MethodKind}"),
             _ => throw new NotSupportedException($"Unhandled symbol type: {symbol.GetType().FullName}"),
         };

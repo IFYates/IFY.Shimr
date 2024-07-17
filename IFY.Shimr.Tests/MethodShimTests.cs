@@ -29,6 +29,7 @@ public class MethodShimTests
         void DifferentMethodSig(string arg1);
     }
 
+#if NET
     public interface IAddedMethod
     {
         bool AddedMethod(string arg1)
@@ -36,6 +37,7 @@ public class MethodShimTests
             return true;
         }
     }
+#endif
 
     [ExcludeFromCodeCoverage]
     public abstract class TestParentClass
@@ -149,6 +151,7 @@ public class MethodShimTests
         Assert.AreSame(shim1.GetType(), shim2.GetType());
     }
 
+#if NET
     [TestMethod]
     public void Method_defined_in_facade_is_used()
     {
@@ -157,4 +160,5 @@ public class MethodShimTests
 
         Assert.IsTrue(shim.AddedMethod("TEST"));
     }
+#endif
 }

@@ -29,11 +29,16 @@ internal class ShimMemberProxyBinding(ShimMember shimMember, ShimTarget target, 
 
     private void writeMethod(StringBuilder code, ShimMember.ShimMethodMember methodMember)
     {
+        var proxyMethod = (IParameterisedMember)ProxyMember;
+        var proxyParams = methodMember.FirstParameterIsInstance(proxyMethod)
+            ? new[] { "this" }.Concat(proxyMethod.Parameters.Skip(1).Select(p => p.GetTargetArgumentCode())).ToArray()
+            : proxyMethod.Parameters.Select(p => p.GetTargetArgumentCode()).ToArray();
+
         code.Append($"            public ")
             .Append($"{ShimMember.ReturnType?.ToDisplayString() ?? "void"} {ShimMember.Name}(")
             .Append(string.Join(", ", methodMember.Parameters.Select(p => p.ToString())))
             .Append($") => {methodMember.GetMemberCallee(ProxyMember)}(")
-            .Append(string.Join(", ", ((IParameterisedMember)ProxyMember).Parameters.Select(p => p.GetTargetArgumentCode())))
+            .Append(string.Join(", ", proxyParams))
             .Append($")")
             .Append(methodMember.GetShimCode(ProxyMember))
             .AppendLine(";");

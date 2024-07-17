@@ -19,13 +19,13 @@ internal class ShimTarget(ITypeSymbol symbol)
     /// </summary>
     public virtual TargetMember[] GetMatchingMembers(ShimMember shimMember, CodeErrorReporter errors)
     {
-        var members = getMatchingMembers(shimMember, false, null);
+        var members = getMatchingMembers(shimMember);
 
         var proxyBehaviour = shimMember.Proxy?.Behaviour ?? ProxyBehaviour.Override; // Non-proxy is an override
         if (!members.Any() && proxyBehaviour == ProxyBehaviour.Override)
         {
             // TODO: optional, as per 'IgnoreMissingMembers'
-            Diag.WriteOutput($"//// No match: {FullTypeName}.{shimMember.TargetName} for {shimMember.Definition.FullTypeName}.{shimMember.Name} [ProxyBehaviour.{proxyBehaviour}]");
+            Diag.WriteOutput($"//// No match: {FullTypeName}.{shimMember.TargetName} for {shimMember.Type} {shimMember.Definition.FullTypeName}.{shimMember.Name} [ProxyBehaviour.{proxyBehaviour}]");
             errors.NoMemberError(Symbol, shimMember.Symbol);
             return [];
         }
@@ -39,41 +39,19 @@ internal class ShimTarget(ITypeSymbol symbol)
         return members;
     }
 
-    protected TargetMember[] getMatchingMembers(ShimMember shimMember, bool asProxy, string? proxyMemberName)
+    protected virtual TargetMember[] getPotentialMatchingMembers(ShimMember shimMember)
     {
-        // TODO: Property -> Methods
-
         var members = Symbol.GetAllMembers()
             .Select(m => TargetMember.Parse(m, this))
             .OfType<TargetMember>();
+        return members.Where(shimMember.IsMatch).ToArray();
+    }
 
-        if (asProxy)
-        {
-            members = members.Where(m => m.Name == (proxyMemberName ?? shimMember.Name));
+    protected TargetMember[] getMatchingMembers(ShimMember shimMember)
+    {
+        // TODO: Property -> Methods
 
-            // If proxy of method, may need to ignore first parameter
-            if (shimMember is IParameterisedMember shimMethod)
-            {
-                members = members.Where(m =>
-                {
-                    if (m is not IParameterisedMember targetMethod
-                        || targetMethod.Parameters.Length != shimMethod.Parameters.Length + 1
-                        || !targetMethod.Parameters[0].Type.IsMatch(shimMember.ContainingType))
-                    {
-                        return shimMember.IsMatch(m);
-                    }
-
-                    Diag.WriteOutput($"///// Ignoring first parameter of {shimMethod.ContainingType.ToFullName()}.{shimMethod.Name}");
-                    return shimMethod.Parameters.Select(isParameterMatch).All(v => v);
-                    bool isParameterMatch(MemberParameter param1, int idx)
-                        => (param1.UnderlyingType ?? param1.Type).IsMatch(targetMethod.Parameters[idx + 1].Type);
-                });
-            }
-        }
-        else
-        {
-            members = members.Where(shimMember.IsMatch);
-        }
+        var members = getPotentialMatchingMembers(shimMember);
 
         if (shimMember.ReturnType == null)
         {
@@ -92,14 +70,14 @@ internal class ShimTarget(ITypeSymbol symbol)
         var matchMembers = members.Where(m => shimMember.ReturnType!.IsMatch(m.ReturnType)).ToArray();
         if (matchMembers.Any())
         {
-            return matchMembers;
+            return [matchMembers[0]];
         }
 
         // Shimmable
         matchMembers = members.Where(m => m.IsShimmableReturnType(shimMember)).ToArray();
         if (matchMembers.Any())
         {
-            return matchMembers;
+            return [matchMembers[0]];
         }
 
         // Fallback to highest in hierarchy
