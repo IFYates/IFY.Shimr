@@ -1,6 +1,5 @@
 ﻿using IFY.Shimr.CodeGen.Models;
 using IFY.Shimr.CodeGen.Models.Bindings;
-using IFY.Shimr.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -8,12 +7,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace IFY.Shimr.CodeGen.CodeAnalysis;
 
 /// <summary>
-/// Finds all uses of '<see cref="ObjectExtensions"/>.Shim&lt;T&gt;(object)' extension method and '<see cref="ObjectExtensions"/>.Create&lt;T&gt;()'.
+/// Finds all uses of 'ObjectExtensions.Shim&lt;T&gt;(object)' extension method and 'ObjectExtensions.Create&lt;T&gt;()'.
 /// </summary>
 internal class ShimResolver : ISyntaxContextReceiver
 {
-    private static readonly string ShimExtensionType = typeof(ObjectExtensions).FullName;
-
     private readonly Dictionary<string, IShimDefinition> _pool = [];
     public IEnumerable<IShimDefinition> Definitions => _pool.Values;
 
@@ -68,7 +65,7 @@ internal class ShimResolver : ISyntaxContextReceiver
             || membAccessExpr.Name is not GenericNameSyntax name
             || name.TypeArgumentList.Arguments.Count != 1
             || name.TypeArgumentList.Arguments[0] is not TypeSyntax argType
-            || name.Identifier.ValueText != nameof(ObjectExtensions.Shim))
+            || name.Identifier.ValueText != "Shim")
         {
             return false;
         }
@@ -76,7 +73,7 @@ internal class ShimResolver : ISyntaxContextReceiver
         // Only look at reference to ShimBuilder or generated coded (null)
         var memberSymbolInfo = context.SemanticModel.GetSymbolInfo(membAccessExpr.Name);
         if (memberSymbolInfo.Symbol != null
-            && memberSymbolInfo.Symbol.ContainingType.ToDisplayString() != ShimExtensionType)
+            && memberSymbolInfo.Symbol.ContainingType.ToDisplayString() != GlobalCodeWriter.EXT_CLASSNAMEFULL)
         {
             return false;
         }

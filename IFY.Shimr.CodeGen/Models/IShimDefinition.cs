@@ -1,5 +1,6 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
 using IFY.Shimr.CodeGen.Models.Bindings;
+using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models;
 
@@ -8,6 +9,7 @@ namespace IFY.Shimr.CodeGen.Models;
 /// </summary>
 internal interface IShimDefinition
 {
+    INamedTypeSymbol Symbol { get; }
     string FullTypeName { get; }
     string Name { get; }
 

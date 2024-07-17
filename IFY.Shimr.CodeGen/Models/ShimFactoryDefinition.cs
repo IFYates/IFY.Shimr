@@ -9,6 +9,7 @@ internal class ShimFactoryDefinition : IShimDefinition
 {
     private readonly ShimMember[] _members;
 
+    public INamedTypeSymbol Symbol { get; }
     public string FullTypeName { get; }
     public string Name { get; }
     public ShimTarget? StaticTarget { get; }
@@ -21,6 +22,7 @@ internal class ShimFactoryDefinition : IShimDefinition
             StaticTarget = new((ITypeSymbol)staticAttr.ConstructorArguments[0].Value!);
         }
 
+        Symbol = (INamedTypeSymbol)symbol;
         FullTypeName = symbol.ToFullName();
         Name = $"ShimFactory__{symbol.ToFullName().Hash()}_{symbol.Name}";
 

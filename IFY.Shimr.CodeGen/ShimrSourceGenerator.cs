@@ -65,15 +65,16 @@ internal class ShimrSourceGenerator : ISourceGenerator
         }
         addSource("_meta.g.cs", code);
 
+        var writer = new GlobalCodeWriter(context);
+        GlobalCodeWriter.WriteExtensionClass(writer, allBindings);
+
         if (!allBindings.Any())
         {
             Diag.WriteOutput($"// Did not find any uses of Shimr");
             return;
         }
 
-        var writer = new GlobalCodeWriter(context);
         GlobalCodeWriter.WriteFactoryClass(writer, allBindings);
-        GlobalCodeWriter.WriteExtensionClass(writer, allBindings);
 
         var bindingsByDefinition = allBindings.GroupBy(b => b.Definition).ToArray();
         foreach (var group in bindingsByDefinition)

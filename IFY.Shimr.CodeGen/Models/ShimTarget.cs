@@ -9,7 +9,7 @@ namespace IFY.Shimr.CodeGen.Models;
 /// </summary>
 internal class ShimTarget(ITypeSymbol symbol)
 {
-    public ITypeSymbol Symbol { get; } = symbol;
+    public INamedTypeSymbol Symbol { get; } = (INamedTypeSymbol)symbol;
     public string FullTypeName { get; } = symbol.ToFullName();
     public string Name { get; } = $"{symbol.ToFullName().Hash()}_{symbol.Name}";
     public bool IsValueType { get; } = symbol.IsValueType;

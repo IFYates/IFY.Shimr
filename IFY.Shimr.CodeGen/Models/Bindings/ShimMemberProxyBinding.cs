@@ -55,11 +55,11 @@ internal class ShimMemberProxyBinding(ShimMember shimMember, ShimTarget target, 
         }
         if (propertyMember.IsSet)
         {
-            code.Append($" set => {callee} = value{propertyMember.GetUnshimCode(ProxyMember)};");
+            code.Append($" set => {callee} = {propertyMember.GetUnshimCode("value", ProxyMember)};");
         }
         if (propertyMember.IsInit)
         {
-            code.Append($" init => {callee} = value{propertyMember.GetUnshimCode(ProxyMember)};");
+            code.Append($" init => {callee} = {propertyMember.GetUnshimCode("value", ProxyMember)};");
         }
 
         code.AppendLine(" }");

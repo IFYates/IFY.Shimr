@@ -11,7 +11,7 @@
         </member>
         <member name="T:IFY.Shimr.CodeGen.CodeAnalysis.ShimResolver">
             <summary>
-            Finds all uses of '<see cref="T:IFY.Shimr.Extensions.ObjectExtensions"/>.Shim&lt;T&gt;(object)' extension method and '<see cref="T:IFY.Shimr.Extensions.ObjectExtensions"/>.Create&lt;T&gt;()'.
+            Finds all uses of 'ObjectExtensions.Shim&lt;T&gt;(object)' extension method and 'ObjectExtensions.Create&lt;T&gt;()'.
             </summary>
         </member>
         <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.ShimResolver.ResolveAllShims(IFY.Shimr.CodeGen.CodeAnalysis.CodeErrorReporter)">

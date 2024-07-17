@@ -7,6 +7,9 @@ namespace IFY.Shimr.CodeGen.CodeAnalysis;
 
 internal static class SyntaxHelpers
 {
+    public static StringBuilder AppendLine(this StringBuilder sb, int indent, string value)
+        => sb.Append(' ', indent * 4).AppendLine(value);
+
     public static bool AllParameterTypesMatch(this IMethodSymbol method, IEnumerable<IParameterSymbol> parameters)
     {
         // TODO: out, ref
@@ -22,6 +25,11 @@ internal static class SyntaxHelpers
     /// </summary>
     public static IEnumerable<ISymbol> GetAllMembers(this ITypeSymbol symbol)
     {
+        if (symbol is INamedTypeSymbol typeSymbol && typeSymbol.IsUnboundGenericType)
+        {
+            symbol = typeSymbol.ConstructedFrom;
+        }
+
         var members = symbol.GetMembers().ToList();
         if (symbol.BaseType != null)
         {
@@ -136,16 +144,29 @@ internal static class SyntaxHelpers
     public static bool IsType<T>(this ITypeSymbol symbol)
         => symbol.ToFullName() == typeof(T).FullName;
 
-    private static readonly SymbolDisplayFormat _displayFormat = new(
+    private static readonly SymbolDisplayFormat _displayFormatFull = new(
         typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
         miscellaneousOptions: SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
     );
+    private static readonly SymbolDisplayFormat _displayFormatGeneric = new(
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        genericsOptions: SymbolDisplayGenericsOptions.None,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
+    );
     public static string ToFullName(this ITypeSymbol type)
-        => type.ToDisplayString(_displayFormat);
+        => type.ToDisplayString(_displayFormatFull);
+    public static string ToGenericName(this INamedTypeSymbol type)
+        => type.ToDisplayString(_displayFormatGeneric) + (type.IsGenericType ? "<>" : null);
 
+    public static string ToTypeParameterList(this IEnumerable<ITypeParameterSymbol> typeParameters, bool withAngles = true)
+    {
+        var args = string.Join(", ", typeParameters.Select(p => p.Name + (p.NullableAnnotation == NullableAnnotation.Annotated ? "?" : null)));
+        return withAngles ? $"<{args}>" : args;
+    }
     public static string ToWhereClause(this IEnumerable<ITypeParameterSymbol> typeParameters)
     {
+        // TODO: SymbolDisplayGenericsOptions.IncludeTypeConstraints exists
         var sb = new StringBuilder();
         foreach (var parameter in typeParameters)
         {

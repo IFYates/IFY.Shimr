@@ -10,6 +10,7 @@ internal class InstanceShimDefinition : IShimDefinition
     private readonly Dictionary<string, ShimTarget> _targets = [];
     private readonly ShimMember[] _members;
 
+    public INamedTypeSymbol Symbol { get; }
     public string FullTypeName { get; }
     public string Name { get; }
 
@@ -19,6 +20,7 @@ internal class InstanceShimDefinition : IShimDefinition
             .Select(m => ShimMember.Parse(m, this))
             .OfType<ShimMember>().ToArray();
 
+        Symbol = (INamedTypeSymbol)symbol;
         FullTypeName = symbol.ToFullName();
         Name = $"{symbol.ToFullName().Hash()}_{symbol.Name}";
     }
@@ -52,10 +54,18 @@ internal class InstanceShimDefinition : IShimDefinition
         foreach (var group in targetBindings)
         {
             var className = group.First().ClassName;
+            var symbol = group.First().Definition.Symbol;
             var interfaceType = group.First().Definition.FullTypeName;
             var implType = group.First().Target.FullTypeName;
 
-            code.AppendLine($"        protected class {className} : {interfaceType}, IShim")
+            string? defTypeArgs = null, whereClause = null;
+            if (symbol.IsGenericType)
+            {
+                defTypeArgs = symbol.TypeParameters.ToTypeParameterList();
+                whereClause = symbol.TypeParameters.ToWhereClause();
+            }
+
+            code.AppendLine($"        protected class {className}{defTypeArgs} : {interfaceType}, IShim{whereClause}")
                 .AppendLine("        {");
 
             // Constructor and Unshim

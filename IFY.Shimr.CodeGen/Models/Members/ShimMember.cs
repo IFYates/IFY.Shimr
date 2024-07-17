@@ -9,18 +9,12 @@ namespace IFY.Shimr.CodeGen.Models.Members;
 /// </summary>
 internal abstract class ShimMember : IMember
 {
-    public sealed class ShimConstructorMember(IShimDefinition shim, IMethodSymbol symbol, ITypeSymbol targetType)
+    public sealed class ShimConstructorMember(IShimDefinition shim, IMethodSymbol symbol)
         : ShimMethodMember(shim, symbol, MemberType.Constructor), IParameterisedMember
     {
-        public override void GenerateCode(StringBuilder code, TargetMember targetMember)
+        protected override void AddInvocationCode(StringBuilder code, TargetMember targetMember, string? defTypeArgs)
         {
-            code.Append($"            public {ReturnType?.ToDisplayString() ?? "void"} {Name}(")
-                .Append(string.Join(", ", Parameters.Select(p => p.ToString())))
-                .Append($") => new {targetType}(")
-                .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
-                .Append($")")
-                .Append(GetShimCode(targetMember))
-                .AppendLine(";");
+            code.Append($"new {GetMemberCallee(targetMember)}");
         }
 
         public override bool IsMatch(IMember member)
@@ -62,11 +56,11 @@ internal abstract class ShimMember : IMember
             }
             if (IsSet)
             {
-                code.Append($" set => {callee} = value{GetUnshimCode(targetMember)};");
+                code.Append($" set => {callee} = {GetUnshimCode("value", targetMember)};");
             }
             if (IsInit)
             {
-                code.Append($" init => {callee} = value{GetUnshimCode(targetMember)};");
+                code.Append($" init => {callee} = {GetUnshimCode("value", targetMember)};");
             }
 
             code.AppendLine(" }");
@@ -90,20 +84,26 @@ internal abstract class ShimMember : IMember
                 code.Append("override ");
             }
 
-            string? typeArgs = null, whereClause = null;
+            string? defTypeArgs = null, whereClause = null;
             if (symbol.IsGenericMethod)
             {
-                typeArgs = "<" + string.Join(", ", symbol.TypeParameters.Select(p => p.Name + (p.NullableAnnotation == NullableAnnotation.Annotated ? "?" : ""))) + ">";
+                defTypeArgs = symbol.TypeParameters.ToTypeParameterList();
                 whereClause = symbol.TypeParameters.ToWhereClause();
             }
 
-            code.Append($"{ReturnType?.ToDisplayString() ?? "void"} {Name}{typeArgs}(")
+            code.Append($"{ReturnType?.ToDisplayString() ?? "void"} {Name}{defTypeArgs}(")
                 .Append(string.Join(", ", Parameters.Select(p => p.ToString())))
-                .Append($"){whereClause} => {GetMemberCallee(targetMember)}.{targetMember.Name}{typeArgs}(")
+                .Append($"){whereClause} => ");
+            AddInvocationCode(code, targetMember, defTypeArgs);
+            code.Append("(")
                 .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
                 .Append($")")
                 .Append(GetShimCode(targetMember))
                 .AppendLine(";");
+        }
+        protected virtual void AddInvocationCode(StringBuilder code, TargetMember targetMember, string? defTypeArgs)
+        {
+            code.Append($"{GetMemberCallee(targetMember)}.{targetMember.Name}{defTypeArgs}");
         }
 
         public bool FirstParameterIsInstance(IParameterisedMember targetMethod)
@@ -157,11 +157,11 @@ internal abstract class ShimMember : IMember
             }
             if (IsSet)
             {
-                code.Append($" set => {callee} = value{GetUnshimCode(targetMember)};");
+                code.Append($" set => {callee} = {GetUnshimCode("value", targetMember)};");
             }
             if (IsInit)
             {
-                code.Append($" init => {callee} = value{GetUnshimCode(targetMember)};");
+                code.Append($" init => {callee} = {GetUnshimCode("value", targetMember)};");
             }
 
             code.AppendLine(" }");
@@ -171,21 +171,8 @@ internal abstract class ShimMember : IMember
     public static ShimMember? Parse(ISymbol symbol, IShimDefinition shim)
     {
         // Get constructor attribute
-        ITypeSymbol? constructionType = null;
-        if (shim is ShimFactoryDefinition factory)
-        {
-            var constructorAttr = symbol.GetAttribute<ConstructorShimAttribute>();
-            if (constructorAttr != null)
-            {
-                constructionType = (ITypeSymbol?)constructorAttr?.ConstructorArguments.FirstOrDefault().Value
-                    ?? factory.StaticTarget?.Symbol;
-            }
-        }
-
-        if (symbol is IPropertySymbol ps)
-        {
-            Diag.WriteOutput($"//// {symbol.Name} {symbol.Kind} {ps.IsIndexer} {ps.Parameters.Length} {ps.Parameters[0].ToDisplayString()}");
-        }
+        var isConstructor = shim is ShimFactoryDefinition
+            && symbol.GetAttribute<ConstructorShimAttribute>() != null;
 
         // Build member
         return symbol switch
@@ -196,9 +183,9 @@ internal abstract class ShimMember : IMember
             IPropertySymbol property => new ShimPropertyMember(shim, property),
             // TODO: property.ExplicitInterfaceImplementations.Any()?
             IMethodSymbol { MethodKind: MethodKind.EventAdd or MethodKind.EventRemove or MethodKind.ExplicitInterfaceImplementation or MethodKind.PropertyGet or MethodKind.PropertySet } => null,
-            IMethodSymbol method => constructionType == null
+            IMethodSymbol method => !isConstructor
                 ? new ShimMethodMember(shim, method)
-                : new ShimConstructorMember(shim, method, constructionType!),
+                : new ShimConstructorMember(shim, method),
             _ => throw new NotSupportedException($"Unhandled symbol type: {symbol.GetType().FullName}"),
         };
     }
@@ -264,10 +251,10 @@ internal abstract class ShimMember : IMember
         // Only shim if it's an interface
         return ReturnType!.TypeKind != TypeKind.Interface ? str : $"{str}.Shim<{ReturnType.ToDisplayString()}>()";
     }
-    public string GetUnshimCode(TargetMember target)
+    public string GetUnshimCode(string name, TargetMember target)
         => ReturnType?.IsMatch(target.ReturnType) == false
-        ? $".Unshim<{target.ReturnType!.ToDisplayString()}>()"
-        : string.Empty;
+        ? $"({target.ReturnType!.ToDisplayString()})((IShim){name}).Unshim()"
+        : name;
 
     public virtual bool IsMatch(IMember member)
     {

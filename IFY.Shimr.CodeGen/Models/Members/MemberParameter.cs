@@ -17,7 +17,7 @@ internal class MemberParameter(IParameterSymbol symbol)
     {
         return UnderlyingType == null
             ? Name
-            : $"{Name}.Unshim<{UnderlyingType.ToDisplayString()}>()";
+            : $"({UnderlyingType.ToDisplayString()})((IShim){Name}).Unshim()";
     }
 
     public override string ToString()
