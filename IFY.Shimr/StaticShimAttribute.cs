@@ -1,4 +1,8 @@
-﻿namespace IFY.Shimr;
+﻿#if SHIMR_CG
+using Microsoft.CodeAnalysis;
+#endif
+
+namespace IFY.Shimr;
 
 /// <summary>
 /// Mark individual properties/fields or methods as being static within another type, or the entire interface.
@@ -23,4 +27,13 @@ public class StaticShimAttribute : Attribute
     {
         TargetType = targetType;
     }
+
+#if SHIMR_CG
+    public static ITypeSymbol? GetArgument(AttributeData attribute)
+    {
+        return attribute.ConstructorArguments.Length == 1
+            ? (ITypeSymbol)attribute.ConstructorArguments[0].Value!
+            : null;
+    }
+#endif
 }

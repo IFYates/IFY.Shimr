@@ -1,4 +1,8 @@
-﻿namespace IFY.Shimr;
+﻿#if SHIMR_CG
+using Microsoft.CodeAnalysis;
+#endif
+
+namespace IFY.Shimr;
 
 /// <summary>
 /// Mark a method as being a shim of a constructor.
@@ -15,4 +19,13 @@ public class ConstructorShimAttribute : StaticShimAttribute
     {
         IsConstructor = true;
     }
+
+#if SHIMR_CG
+    public static ITypeSymbol? GetArgument(AttributeData attribute)
+    {
+        return attribute.ConstructorArguments.Length == 1
+            ? (ITypeSymbol)attribute.ConstructorArguments[0].Value!
+            : null;
+    }
+#endif
 }

@@ -1,4 +1,9 @@
-﻿namespace IFY.Shimr;
+﻿#if SHIMR_CG
+using IFY.Shimr.CodeGen.CodeAnalysis;
+using Microsoft.CodeAnalysis;
+#endif
+
+namespace IFY.Shimr;
 
 /// <summary>
 /// Mark a member type as explicitly shimming an item with a different name.
@@ -42,4 +47,29 @@ public class ShimAttribute : Attribute
         DefinitionType = definitionType;
         ImplementationName = name;
     }
+
+#if SHIMR_CG
+    public static (ITypeSymbol? DefinitionType, string? ImplementationName) GetArguments(AttributeData attribute)
+    {
+        ITypeSymbol? definitionType = null;
+        string? implementationName = null;
+        if (attribute.ConstructorArguments.Length == 1)
+        {
+            if (attribute.ConstructorArguments[0].Type!.IsType<ITypeSymbol>())
+            {
+                definitionType = (ITypeSymbol)attribute.ConstructorArguments[0].Value!;
+            }
+            else
+            {
+                implementationName = (string)attribute.ConstructorArguments[0].Value!;
+            }
+        }
+        else if (attribute.ConstructorArguments.Length == 2)
+        {
+            definitionType = (ITypeSymbol)attribute.ConstructorArguments[0].Value!;
+            implementationName = (string)attribute.ConstructorArguments[1].Value!;
+        }
+        return (definitionType, implementationName);
+    }
+#endif
 }

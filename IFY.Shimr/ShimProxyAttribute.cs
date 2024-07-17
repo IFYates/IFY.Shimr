@@ -1,4 +1,9 @@
-﻿namespace IFY.Shimr;
+﻿#if SHIMR_CG
+using IFY.Shimr.CodeGen.CodeAnalysis;
+using Microsoft.CodeAnalysis;
+#endif
+
+namespace IFY.Shimr;
 
 /// <summary>
 /// Mark a shim member as being a proxy to an implementation elsewhere.
@@ -37,4 +42,30 @@ public class ShimProxyAttribute : Attribute
         ImplementationName = implementationName;
         Behaviour = behaviour;
     }
+
+#if SHIMR_CG
+    public static (ITypeSymbol ImplementationType, string? ImplementationName, ProxyBehaviour Behaviour) GetArguments(AttributeData attribute)
+    {
+        var implementationType = (ITypeSymbol)attribute.ConstructorArguments[0].Value!;
+        string? implementationName = null;
+        ProxyBehaviour behaviour = ProxyBehaviour.Default;
+        if (attribute.ConstructorArguments.Length == 3)
+        {
+            implementationName = (string?)attribute.ConstructorArguments[1].Value;
+            behaviour = (ProxyBehaviour)attribute.ConstructorArguments[2].Value!;
+        }
+        else if (attribute.ConstructorArguments.Length == 2)
+        {
+            if (attribute.ConstructorArguments[1].Type!.IsType<ProxyBehaviour>())
+            {
+                behaviour = (ProxyBehaviour)attribute.ConstructorArguments[1].Value!;
+            }
+            else
+            {
+                implementationName = (string?)attribute.ConstructorArguments[1].Value;
+            }
+        }
+        return (implementationType, implementationName, behaviour);
+    }
+#endif
 }

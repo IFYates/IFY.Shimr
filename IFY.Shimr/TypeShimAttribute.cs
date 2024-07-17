@@ -1,4 +1,8 @@
-﻿namespace IFY.Shimr;
+﻿#if SHIMR_CG
+using Microsoft.CodeAnalysis;
+#endif
+
+namespace IFY.Shimr;
 
 /// <summary>
 /// Mark signature type as being automatically shimmed from real implementation type
@@ -12,4 +16,13 @@ public class TypeShimAttribute : Attribute
     {
         RealType = realType;
     }
+
+#if SHIMR_CG
+    public static ITypeSymbol? GetArgument(AttributeData attribute)
+    {
+        return attribute.ConstructorArguments.Length == 1
+            ? (ITypeSymbol)attribute.ConstructorArguments[0].Value!
+            : null;
+    }
+#endif
 }

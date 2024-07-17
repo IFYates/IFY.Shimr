@@ -114,6 +114,11 @@
             Specify how the <see cref="T:IFY.Shimr.ShimProxyAttribute"/> member is expected to behave.
             </summary>
         </member>
+        <member name="F:IFY.Shimr.ProxyBehaviour.Graceful">
+            <summary>
+            Will override existing members, otherwise adds.
+            </summary>
+        </member>
         <member name="F:IFY.Shimr.ProxyBehaviour.Default">
             <summary>
             Will override existing members, otherwise adds.
