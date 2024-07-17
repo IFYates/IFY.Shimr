@@ -8,7 +8,11 @@ public enum ProxyBehaviour
     /// <summary>
     /// Will override existing members, otherwise adds.
     /// </summary>
-    Default,
+    Graceful,
+    /// <summary>
+    /// Will override existing members, otherwise adds.
+    /// </summary>
+    Default = Graceful,
     /// <summary>
     /// Shimmed type must provide the member to be overriden.
     /// </summary>

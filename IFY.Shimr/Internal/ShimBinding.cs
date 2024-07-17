@@ -48,7 +48,7 @@ internal class ShimBinding
             proxiedBinding.resolve(implType, false, false);
 
             // Confirm behaviour is valid
-            if (proxyAttr.Behaviour != ProxyBehaviour.Default)
+            if (proxyAttr.Behaviour != ProxyBehaviour.Graceful)
             {
                 if (proxyAttr.Behaviour == ProxyBehaviour.Add)
                 {
