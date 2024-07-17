@@ -54,11 +54,8 @@ internal abstract class ShimMember : IMember
         public override void GenerateCode(StringBuilder code, TargetMember targetMember)
         {
             code.Append($"            public {ReturnType?.ToDisplayString() ?? "void"} this[{IndexerArgType} {IndexerArgName}] {{");
-
             
-            var callee = IsFactoryMember || targetMember.IsStatic
-                ? $"{targetMember.ContainingType.ToFullName()}[{IndexerArgName}]"
-                : $"(({targetMember.ContainingType.ToFullName()})_inst)[{IndexerArgName}]";
+            var callee = $"{GetMemberCallee(targetMember)}[{IndexerArgName}]";
             if (IsGet)
             {
                 code.Append($" get => {callee}{GetShimCode(targetMember)};");
@@ -93,9 +90,16 @@ internal abstract class ShimMember : IMember
                 code.Append("override ");
             }
 
-            code.Append($"{ReturnType?.ToDisplayString() ?? "void"} {Name}(")
+            string? typeArgs = null, whereClause = null;
+            if (symbol.IsGenericMethod)
+            {
+                typeArgs = "<" + string.Join(", ", symbol.TypeParameters.Select(p => p.Name + (p.NullableAnnotation == NullableAnnotation.Annotated ? "?" : ""))) + ">";
+                whereClause = symbol.TypeParameters.ToWhereClause();
+            }
+
+            code.Append($"{ReturnType?.ToDisplayString() ?? "void"} {Name}{typeArgs}(")
                 .Append(string.Join(", ", Parameters.Select(p => p.ToString())))
-                .Append($") => {GetMemberCallee(targetMember)}(")
+                .Append($"){whereClause} => {GetMemberCallee(targetMember)}.{targetMember.Name}{typeArgs}(")
                 .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
                 .Append($")")
                 .Append(GetShimCode(targetMember))
@@ -146,7 +150,7 @@ internal abstract class ShimMember : IMember
         {
             code.Append($"            public {ReturnType?.ToDisplayString() ?? "void"} {Name} {{");
 
-            var callee = GetMemberCallee(targetMember);
+            var callee = $"{GetMemberCallee(targetMember)}.{targetMember.Name}";
             if (IsGet)
             {
                 code.Append($" get => {callee}{GetShimCode(targetMember)};");
@@ -240,8 +244,8 @@ internal abstract class ShimMember : IMember
 
     public string GetMemberCallee(TargetMember targetMember)
         => IsFactoryMember || targetMember.IsStatic
-        ? $"{targetMember.ContainingType.ToFullName()}.{targetMember.Name}"
-        : $"(({targetMember.ContainingType.ToFullName()})_inst).{targetMember.Name}";
+        ? targetMember.ContainingType.ToFullName()
+        : $"(({targetMember.ContainingType.ToFullName()})_inst)";
 
     public string? GetShimCode(TargetMember target)
     {

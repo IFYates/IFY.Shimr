@@ -7,14 +7,6 @@ namespace IFY.Shimr.CodeGen.CodeAnalysis;
 
 internal static class SyntaxHelpers
 {
-    public static string Hash(this string input)
-    {
-        using var md5 = MD5.Create();
-        var buffer = Encoding.UTF8.GetBytes(input);
-        var hash = md5.ComputeHash(buffer);
-        return string.Concat(hash.Select(b => b.ToString("X2")));
-    }
-
     public static bool AllParameterTypesMatch(this IMethodSymbol method, IEnumerable<IParameterSymbol> parameters)
     {
         // TODO: out, ref
@@ -117,6 +109,14 @@ internal static class SyntaxHelpers
         return false;
     }
 
+    public static string Hash(this string input)
+    {
+        using var md5 = MD5.Create();
+        var buffer = Encoding.UTF8.GetBytes(input);
+        var hash = md5.ComputeHash(buffer);
+        return string.Concat(hash.Select(b => b.ToString("X2")));
+    }
+
     /// <summary>
     /// Are <paramref name="type1"/> and <paramref name="type2"/> referring to the same type.
     /// </summary>
@@ -143,4 +143,42 @@ internal static class SyntaxHelpers
     );
     public static string ToFullName(this ITypeSymbol type)
         => type.ToDisplayString(_displayFormat);
+
+    public static string ToWhereClause(this IEnumerable<ITypeParameterSymbol> typeParameters)
+    {
+        var sb = new StringBuilder();
+        foreach (var parameter in typeParameters)
+        {
+            var p = new StringBuilder();
+            if (parameter.HasConstructorConstraint)
+            {
+                p.Append(", new()");
+            }
+            if (parameter.HasReferenceTypeConstraint)
+            {
+                p.Append(", class");
+            }
+            if (parameter.HasValueTypeConstraint)
+            {
+                p.Append(", struct");
+            }
+            if (parameter.HasNotNullConstraint)
+            {
+                p.Append(", notnull");
+            }
+            foreach (var classConstraint in parameter.ConstraintTypes.Where(t => t.TypeKind == TypeKind.Class))
+            {
+                p.Append(", ").Append(classConstraint.ToFullName());
+            }
+            foreach (var interfaceConstraint in parameter.ConstraintTypes.Where(t => t.TypeKind == TypeKind.Interface))
+            {
+                p.Append(", ").Append(interfaceConstraint.ToFullName());
+            }
+            if (p.Length > 2)
+            {
+                sb.Append($" where {parameter.Name} : {p.Remove(0, 2)}");
+            }
+        }
+        return sb.ToString();
+    }
 }

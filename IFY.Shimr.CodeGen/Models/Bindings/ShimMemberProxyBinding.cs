@@ -37,7 +37,7 @@ internal class ShimMemberProxyBinding(ShimMember shimMember, ShimTarget target, 
         code.Append($"            public ")
             .Append($"{ShimMember.ReturnType?.ToDisplayString() ?? "void"} {ShimMember.Name}(")
             .Append(string.Join(", ", methodMember.Parameters.Select(p => p.ToString())))
-            .Append($") => {methodMember.GetMemberCallee(ProxyMember)}(")
+            .Append($") => {methodMember.GetMemberCallee(ProxyMember)}.{ProxyMember.Name}(")
             .Append(string.Join(", ", proxyParams))
             .Append($")")
             .Append(methodMember.GetShimCode(ProxyMember))
@@ -48,7 +48,7 @@ internal class ShimMemberProxyBinding(ShimMember shimMember, ShimTarget target, 
     {
         code.Append($"            public {propertyMember.ReturnType?.ToDisplayString() ?? "void"} {ShimMember.Name} {{");
 
-        var callee = ShimMember.GetMemberCallee(ProxyMember);
+        var callee = $"{ShimMember.GetMemberCallee(ProxyMember)}.{ProxyMember.Name}";
         if (propertyMember.IsGet)
         {
             code.Append($" get => {callee}{propertyMember.GetShimCode(ProxyMember)};");
