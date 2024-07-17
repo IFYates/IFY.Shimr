@@ -11,7 +11,6 @@ internal class ShimFactoryDefinition : IShimDefinition
 
     public string FullTypeName { get; }
     public string Name { get; }
-    public int TargetCount => StaticTarget != null ? 1 : 0;
     public ShimTarget? StaticTarget { get; }
 
     public ShimFactoryDefinition(ITypeSymbol symbol)
@@ -19,11 +18,11 @@ internal class ShimFactoryDefinition : IShimDefinition
         var staticAttr = symbol.GetAttribute<StaticShimAttribute>();
         if (staticAttr != null)
         {
-            StaticTarget = new((ITypeSymbol)staticAttr.ConstructorArguments[0].Value!, this);
+            StaticTarget = new((ITypeSymbol)staticAttr.ConstructorArguments[0].Value!);
         }
 
         FullTypeName = symbol.ToFullName();
-        Name = $"ShimFactory_{FullTypeName.Replace('.', '_').Replace('<', '_').Replace(',', '_').Replace(" ", "").Replace('>', '_')}"; // TODO: better deterministic way to uniquely name class
+        Name = $"ShimFactory__{symbol.ToFullName().Hash()}_{symbol.Name}";
 
         _members = symbol.GetAllMembers()
             .Select(m => ShimMember.Parse(m, this))
@@ -33,7 +32,7 @@ internal class ShimFactoryDefinition : IShimDefinition
     public void SetMemberType(ISymbol symbol, ITypeSymbol target)
     {
         _members.Single(m => m.Symbol.Equals(symbol, SymbolEqualityComparer.Default))
-            .TargetType = new ShimTarget(target, this);
+            .TargetType = new(target);
     }
 
     public void WriteShimClass(ICodeWriter writer, IEnumerable<IBinding> bindings)
@@ -72,17 +71,11 @@ internal class ShimFactoryDefinition : IShimDefinition
                 continue;
             }
 
-            var targets = target.GetMatchingMembers(member);
-            if (!targets.Any())
+            var targetMembers = target.GetMatchingMembers(member, errors);
+            foreach (var targetMember in targetMembers)
             {
-                // TODO: optional, as per 'IgnoreMissingMembers'
-                Diag.WriteOutput($"//// No static match: {target.FullTypeName} {member.Name}");
-                errors.NoMemberError(target.Symbol, member.Symbol);
-                continue;
+                member.ResolveBindings(allBindings, targetMember, errors, shimResolver);
             }
-
-            // If have multiple, will pick highest in hierarchy
-            member.ResolveBinding(allBindings, targets[0], errors, shimResolver);
         }
     }
 }

@@ -14,7 +14,7 @@
             Finds all uses of '<see cref="T:IFY.Shimr.Extensions.ObjectExtensions"/>.Shim&lt;T&gt;(object)' extension method and '<see cref="T:IFY.Shimr.Extensions.ObjectExtensions"/>.Create&lt;T&gt;()'.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.ShimResolver.ResolveAllShims(IFY.Shimr.CodeGen.CodeAnalysis.CodeErrorReporter,IFY.Shimr.CodeGen.CodeAnalysis.ShimResolver)">
+        <member name="M:IFY.Shimr.CodeGen.CodeAnalysis.ShimResolver.ResolveAllShims(IFY.Shimr.CodeGen.CodeAnalysis.CodeErrorReporter)">
             <summary>
             Ensure that all implicit shims in registered shims are resolved.
             </summary>
@@ -67,6 +67,16 @@
             A binding between a <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.ShimMember"/> and <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.TargetMember"/>.
             </summary>
         </member>
+        <member name="T:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberProxyBinding">
+            <summary>
+            A binding between a <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberProxyBinding.ShimMember"/> and a proxy member instead of <paramref name="target"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberProxyBinding.#ctor(IFY.Shimr.CodeGen.Models.Members.ShimMember,IFY.Shimr.CodeGen.Models.ShimTarget,IFY.Shimr.CodeGen.Models.Members.TargetMember)">
+            <summary>
+            A binding between a <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberProxyBinding.ShimMember"/> and a proxy member instead of <paramref name="target"/>.
+            </summary>
+        </member>
         <member name="T:IFY.Shimr.CodeGen.Models.IShimDefinition">
             <summary>
             A model of an instance or static shim definition.
@@ -102,12 +112,12 @@
             A model of a shimmed type.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.ShimTarget.#ctor(Microsoft.CodeAnalysis.ITypeSymbol,IFY.Shimr.CodeGen.Models.IShimDefinition)">
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimTarget.#ctor(Microsoft.CodeAnalysis.ITypeSymbol)">
             <summary>
             A model of a shimmed type.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.ShimTarget.GetMatchingMembers(IFY.Shimr.CodeGen.Models.Members.ShimMember)">
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimTarget.GetMatchingMembers(IFY.Shimr.CodeGen.Models.Members.ShimMember,IFY.Shimr.CodeGen.CodeAnalysis.CodeErrorReporter)">
             <summary>
             Find the <see cref="T:IFY.Shimr.CodeGen.Models.Members.TargetMember"/>s in this <see cref="T:IFY.Shimr.CodeGen.Models.ShimTarget"/> that could be bound to the given <see cref="T:IFY.Shimr.CodeGen.Models.Members.ShimMember"/>.
             </summary>
@@ -125,6 +135,31 @@
         <member name="M:IFY.Shimr.IShim.Unshim">
             <summary>
             Return the original object that has been shimmed.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.ProxyBehaviour">
+            <summary>
+            Specify how the <see cref="T:IFY.Shimr.ShimProxyAttribute"/> member is expected to behave.
+            </summary>
+        </member>
+        <member name="F:IFY.Shimr.ProxyBehaviour.Graceful">
+            <summary>
+            Will override existing members, otherwise adds.
+            </summary>
+        </member>
+        <member name="F:IFY.Shimr.ProxyBehaviour.Default">
+            <summary>
+            Will override existing members, otherwise adds.
+            </summary>
+        </member>
+        <member name="F:IFY.Shimr.ProxyBehaviour.Override">
+            <summary>
+            Shimmed type must provide the member to be overriden.
+            </summary>
+        </member>
+        <member name="F:IFY.Shimr.ProxyBehaviour.Add">
+            <summary>
+            Shim must be defining a member not in the shimmed type.
             </summary>
         </member>
         <member name="T:IFY.Shimr.ShimAttribute">
@@ -160,6 +195,26 @@
             </summary>
             <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
             <param name="name">The name of the member in the target type.</param>
+        </member>
+        <member name="T:IFY.Shimr.ShimProxyAttribute">
+            <summary>
+            Mark a shim member as being a proxy to an implementation elsewhere.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.ShimProxyAttribute.ImplementationType">
+            <summary>
+            The type that implements this member.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.ShimProxyAttribute.ImplementationName">
+            <summary>
+            The name of the implemenation member.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.ShimProxyAttribute.Behaviour">
+            <summary>
+            The behaviour of this proxy member.
+            </summary>
         </member>
         <member name="T:IFY.Shimr.StaticShimAttribute">
             <summary>

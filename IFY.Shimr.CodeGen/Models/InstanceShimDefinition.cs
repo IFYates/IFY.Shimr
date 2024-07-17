@@ -12,7 +12,6 @@ internal class InstanceShimDefinition : IShimDefinition
 
     public string FullTypeName { get; }
     public string Name { get; }
-    public int TargetCount => _targets.Count;
 
     public InstanceShimDefinition(ITypeSymbol symbol)
     {
@@ -21,7 +20,7 @@ internal class InstanceShimDefinition : IShimDefinition
             .OfType<ShimMember>().ToArray();
 
         FullTypeName = symbol.ToFullName();
-        Name = FullTypeName.Replace('.', '_').Replace('<', '_').Replace(',', '_').Replace(" ", "").Replace('>', '_'); // TODO: better deterministic way to uniquely name class
+        Name = $"{symbol.ToFullName().Hash()}_{symbol.Name}";
     }
 
     public ShimTarget AddTarget(ITypeSymbol symbol)
@@ -31,7 +30,7 @@ internal class InstanceShimDefinition : IShimDefinition
             var key = symbol.ToDisplayString();
             if (!_targets.TryGetValue(key, out var target))
             {
-                target = new ShimTarget(symbol, this);
+                target = new(symbol);
                 _targets.Add(key, target);
             }
             return target;
@@ -89,21 +88,29 @@ internal class InstanceShimDefinition : IShimDefinition
         // Map shim members against targets
         foreach (var target in _targets.Values)
         {
-            allBindings.Add(new NullBinding(this, target)); // Ensure shim generated
+            allBindings.Add(new NullBinding(this, target)); // Ensure empty shim generated
 
             foreach (var member in _members)
             {
-                var targets = target.GetMatchingMembers(member);
-                if (!targets.Any())
+                var targetMembers = target.GetMatchingMembers(member, errors);
+
+                if (member.Proxy != null)
                 {
-                    // TODO: optional, as per 'IgnoreMissingMembers'
-                    Diag.WriteOutput($"//// No match: {target.FullTypeName} {member.Name}");
-                    errors.NoMemberError(target.Symbol, member.Symbol);
+                    // We need to complete target.GetMatchingMembers and then locate proxy
+                    targetMembers = new ShimProxyTarget(member.Proxy.Value.ImplementationType, target)
+                        .GetMatchingMembers(member, errors);
+                }
+
+                if (!targetMembers.Any())
+                {
+                    // TODO: register NotImplemented binding
                     continue;
                 }
 
-                // If have multiple, will pick highest in hierarchy
-                member.ResolveBinding(allBindings, targets[0], errors, shimResolver);
+                foreach (var targetMember in targetMembers)
+                {
+                    member.ResolveBindings(allBindings, targetMember, errors, shimResolver);
+                }
             }
         }
     }

@@ -10,7 +10,6 @@ internal interface IShimDefinition
 {
     string FullTypeName { get; }
     string Name { get; }
-    int TargetCount { get; }
 
     void WriteShimClass(ICodeWriter writer, IEnumerable<IBinding> bindings);
 

@@ -1,7 +1,6 @@
 ﻿using IFY.Shimr.CodeGen.Models;
 using IFY.Shimr.CodeGen.Models.Bindings;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 
 namespace IFY.Shimr.CodeGen;
 
@@ -28,13 +27,6 @@ internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
             .Select(s => s.Definition).ToArray();
         if (!factoryDefs.Any())
         {
-                var sb = new StringBuilder();
-            sb.AppendLine("// " + shims.Count());
-            foreach (var def in factoryDefs.Distinct())
-            {
-                sb.AppendLine("////// " + def.FullTypeName);
-            }
-                writer.AddSource($"{SB_CLASSNAME}.g.cs", sb);
             return;
         }
 
@@ -70,7 +62,8 @@ internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
 
     public static void WriteExtensionClass(ICodeWriter writer, IEnumerable<IBinding> allBindings)
     {
-        var targetTypes = allBindings.Where(b => b.Definition is InstanceShimDefinition)
+        var targetTypes = allBindings
+            .Where(b => b is not ShimMemberProxyBinding && b.Definition is InstanceShimDefinition)
             .GroupBy(b => b.Target.FullTypeName).ToArray();
         if (!targetTypes.Any())
         {
@@ -88,6 +81,10 @@ internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
         {
             // ValueType shim wrap, for better IntelliSense
             var targetType = targetBinding.First().Target;
+            if (targetType is ShimProxyTarget)
+            {
+                continue;
+            }
             if (targetType.IsValueType)
             {
                 if (writer.HasNullableAttributes)

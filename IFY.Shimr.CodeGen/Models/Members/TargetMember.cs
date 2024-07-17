@@ -50,8 +50,8 @@ internal abstract class TargetMember : IMember
             IEventSymbol eventSymbol => new TargetEventMember(target, eventSymbol),
             IPropertySymbol property => new TargetPropertyMember(target, property),
             IMethodSymbol { MethodKind: MethodKind.Constructor } method => new TargetConstructorMember(target, method),
-            IMethodSymbol { MethodKind: MethodKind.Ordinary or MethodKind.ExplicitInterfaceImplementation } method => new TargetMethodMember(target, method),
-            IMethodSymbol { MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.Destructor or MethodKind.UserDefinedOperator } => null,
+            IMethodSymbol { MethodKind: MethodKind.ExplicitInterfaceImplementation or MethodKind.Ordinary } method => new TargetMethodMember(target, method),
+            IMethodSymbol { MethodKind: MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.Destructor or MethodKind.StaticConstructor or MethodKind.UserDefinedOperator } => null,
             IMethodSymbol method => throw new NotSupportedException($"Unhandled method kind: {method.MethodKind}"),
             _ => throw new NotSupportedException($"Unhandled symbol type: {symbol.GetType().FullName}"),
         };
@@ -59,19 +59,16 @@ internal abstract class TargetMember : IMember
 
     public ShimTarget Target { get; }
     public ISymbol Symbol { get; }
-    public INamedTypeSymbol ContainingType { get; }
-    public string Name { get; }
-    public string FullName { get; }
     public MemberType Type { get; }
+    public INamedTypeSymbol ContainingType => Symbol.ContainingType;
+    public string Name => Symbol.Name;
+    public bool IsStatic => Symbol.IsStatic;
     public virtual ITypeSymbol? ReturnType { get; }
 
     private TargetMember(ShimTarget target, ISymbol symbol, MemberType type)
     {
         Target = target;
         Symbol = symbol;
-        ContainingType = symbol.ContainingType;
-        Name = symbol.Name;
-        FullName = symbol.ToDisplayString();
         Type = type;
     }
 
@@ -84,11 +81,6 @@ internal abstract class TargetMember : IMember
     {
         targetElement = null;
         shimElement = null;
-
-        if (shimMember.ReturnType!.Name == "IDictionary" && ((INamedTypeSymbol)shimMember.ReturnType).TypeArguments.Length == 2)
-        {
-            Diag.WriteOutput($"//// DICT: {shimMember.ReturnType} {shimMember.Name} -> {ReturnType} {Name} = {ReturnType.IsMatchable(shimMember.ReturnType)} = {ReturnType.ToFullName()} == {shimMember.ReturnType.ToFullName()}");
-        }
 
         if (ReturnType == null || shimMember.ReturnType == null)
         {

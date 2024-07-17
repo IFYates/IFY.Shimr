@@ -5,7 +5,7 @@
 /// </summary>
 internal class NullBinding(IShimDefinition shim, ShimTarget target) : IBinding
 {
-    public string ClassName { get; } = $"Shim_{shim.Name}_{target.Name}";
+    public string ClassName { get; } = $"Shim__{shim.Name}__{target.Name}";
     public IShimDefinition Definition => shim;
     public ShimTarget Target => target;
 

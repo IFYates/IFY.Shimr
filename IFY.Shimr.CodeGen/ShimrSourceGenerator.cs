@@ -1,6 +1,5 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
 using IFY.Shimr.CodeGen.Models;
-using IFY.Shimr.CodeGen.Models.Bindings;
 using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen;
@@ -50,7 +49,7 @@ internal class ShimrSourceGenerator : ISourceGenerator
     private void doExecute(GeneratorExecutionContext context, CodeErrorReporter errors, ShimResolver shimResolver)
     {
         // Resolve all shim bindings
-        var allBindings = shimResolver.ResolveAllShims(errors, shimResolver);
+        var allBindings = shimResolver.ResolveAllShims(errors);
 
         // Meta info
         var code = new StringBuilder();
@@ -58,11 +57,10 @@ internal class ShimrSourceGenerator : ISourceGenerator
         code.AppendLine($"// Shim map ({allBindings.Count}):");
         foreach (var def in allBindings.GroupBy(b => b.Definition))
         {
-            code.Append($"// + {def.Key.FullTypeName}")
-                .AppendLine(def.Key is ShimFactoryDefinition ? " (Factory)" : null);
-            foreach (var shim in def.OfType<ShimMemberBinding>())
+            code.AppendLine($"// + {def.Key.FullTypeName} ({def.Key.GetType().Name})");
+            foreach (var shim in def.Select(d => d.Target).Distinct())
             {
-                code.AppendLine($"//   - {shim.TargetMember.FullName}");
+                code.AppendLine($"//   - {shim.FullTypeName} ({shim.GetType().Name})");
             }
         }
         addSource("_meta.g.cs", code);

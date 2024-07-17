@@ -190,7 +190,7 @@ internal class ShimResolver : ISyntaxContextReceiver
     /// Ensure that all implicit shims in registered shims are resolved.
     /// </summary>
     /// <returns>All current shims.</returns>
-    public IList<IBinding> ResolveAllShims(CodeErrorReporter errors, ShimResolver shimResolver)
+    public IList<IBinding> ResolveAllShims(CodeErrorReporter errors)
     {
         var bindings = new List<IBinding>();
         var shimsDone = new List<IShimDefinition>();
@@ -199,7 +199,7 @@ internal class ShimResolver : ISyntaxContextReceiver
         {
             foreach (var shimType in newShims)
             {
-                shimType.Resolve(bindings, errors, shimResolver);
+                shimType.Resolve(bindings, errors, this);
             }
             shimsDone.AddRange(newShims);
             newShims = _pool.Values.Except(shimsDone).ToArray();

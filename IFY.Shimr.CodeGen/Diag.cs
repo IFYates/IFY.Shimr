@@ -19,6 +19,8 @@ internal static class Diag
             _outputPath = Path.Combine(value, OUTPUT_FILE);
             if (_text.Length > 0)
             {
+                if (_text[_text.Length - 1] == '\n') { _text.Remove(_text.Length - 1, 1); }
+                if (_text[_text.Length - 1] == '\r') { _text.Remove(_text.Length - 1, 1); }
                 WriteOutput(_text.ToString(), false);
                 _text.Clear();
             }

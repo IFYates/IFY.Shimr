@@ -9,7 +9,30 @@ namespace IFY.Shimr.CodeGen.Models.Members;
 /// </summary>
 internal abstract class ShimMember : IMember
 {
-    protected sealed class ShimEventMember(IShimDefinition shim, IEventSymbol symbol)
+    public sealed class ShimConstructorMember(IShimDefinition shim, IMethodSymbol symbol, ITypeSymbol targetType)
+        : ShimMethodMember(shim, symbol, MemberType.Constructor), IParameterisedMember
+    {
+        public override void GenerateCode(StringBuilder code, TargetMember targetMember)
+        {
+            code.Append($"            public {ReturnType?.ToDisplayString() ?? "void"} {Name}(")
+                .Append(string.Join(", ", Parameters.Select(p => p.ToString())))
+                .Append($") => new {targetType}(")
+                .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
+                .Append($")")
+                .Append(GetShimCode(targetMember))
+                .AppendLine(";");
+        }
+
+        public override bool IsMatch(IMember member)
+        {
+            return member is IMethodSymbol method
+                && method.MethodKind == MethodKind.Constructor
+                && method.Parameters.Length == Parameters.Length
+                && method.AllParameterTypesMatch(((IMethodSymbol)Symbol).Parameters);
+        }
+    }
+
+    public sealed class ShimEventMember(IShimDefinition shim, IEventSymbol symbol)
         : ShimMember(shim, symbol, MemberType.Event)
     {
         public override ITypeSymbol? ReturnType { get; } = symbol.Type;
@@ -17,58 +40,15 @@ internal abstract class ShimMember : IMember
         public override void GenerateCode(StringBuilder code, TargetMember targetMember)
         {
             code.Append($"            public event {ReturnType?.ToDisplayString() ?? "void"} {Name} {{")
-                .Append($" add {{ _inst.{OriginalName} += value; }}")
-                .Append($" remove {{ _inst.{OriginalName} -= value; }}")
+                .Append($" add {{ _inst.{TargetName} += value; }}")
+                .Append($" remove {{ _inst.{TargetName} -= value; }}")
                 .AppendLine(" }");
         }
     }
 
-    protected sealed class ShimFieldMember(IShimDefinition shim, IFieldSymbol symbol)
-        : ShimMember(shim, symbol, MemberType.Field)
-    {
-        public override ITypeSymbol? ReturnType { get; } = symbol.Type;
-
-        public override void GenerateCode(StringBuilder code, TargetMember targetMember)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    protected sealed class ShimPropertyMember(IShimDefinition shim, IPropertySymbol symbol)
-        : ShimMember(shim, symbol, MemberType.Property)
-    {
-        public override ITypeSymbol? ReturnType { get; } = symbol.Type;
-
-        public bool IsGet { get; } = symbol.GetMethod?.DeclaredAccessibility == Accessibility.Public;
-        public bool IsSet { get; } = symbol.SetMethod?.DeclaredAccessibility == Accessibility.Public && symbol.SetMethod?.IsInitOnly == false;
-        public bool IsInit { get; } = symbol.GetMethod?.DeclaredAccessibility == Accessibility.Public && symbol.SetMethod?.IsInitOnly == true;
-
-        public override void GenerateCode(StringBuilder code, TargetMember targetMember)
-        {
-            code.Append($"            public {ReturnType?.ToDisplayString() ?? "void"} {Name} {{");
-
-            var callee = GetMemberCallee(targetMember);
-            if (IsGet)
-            {
-                code.Append($" get => {callee}.{OriginalName}{GetShimCode(targetMember)};");
-            }
-            if (IsSet)
-            {
-                code.Append($" set => {callee}.{OriginalName} = value{GetUnshimCode(targetMember)};");
-            }
-            if (IsInit)
-            {
-                code.Append($" init => {callee}.{OriginalName} = value{GetUnshimCode(targetMember)};");
-            }
-
-            code.AppendLine(" }");
-        }
-    }
-
-    protected class ShimMethodMember(IShimDefinition shim, IMethodSymbol symbol, MemberType type = MemberType.Method)
+    public class ShimMethodMember(IShimDefinition shim, IMethodSymbol symbol, MemberType type = MemberType.Method)
         : ShimMember(shim, symbol, type), IParameterisedMember
     {
-        // TODO
         public MemberParameter[] Parameters { get; }
             = symbol.Parameters.Select(p => new MemberParameter(p)).ToArray();
 
@@ -84,25 +64,22 @@ internal abstract class ShimMember : IMember
 
             code.Append($"{ReturnType?.ToDisplayString() ?? "void"} {Name}(")
                 .Append(string.Join(", ", Parameters.Select(p => p.ToString())))
-                .Append(") => ")
-                .Append(GetMemberCallee(targetMember))
-                .Append($".{targetMember.Name}(")
+                .Append($") => {GetMemberCallee(targetMember)}(")
                 .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
                 .Append($")")
                 .Append(GetShimCode(targetMember))
                 .AppendLine(";");
         }
 
-        public override bool IsMatch(ISymbol symbol)
+        public override bool IsMatch(IMember member)
         {
-            return symbol is IMethodSymbol method
+            return member is IMethodSymbol method
                 && method.MethodKind is MethodKind.Ordinary or MethodKind.ExplicitInterfaceImplementation
-                && method.Name == OriginalName
-                && method.Parameters.Length == Parameters.Length
-                && method.AllParameterTypesMatch((IMethodSymbol)Symbol);
+                && method.Name == TargetName
+                && ((IMethodSymbol)Symbol).AllParameterTypesMatch(method.Parameters);
         }
 
-        public override void ResolveBinding(IList<IBinding> bindings, TargetMember target, CodeErrorReporter errors, ShimResolver shimResolver)
+        public override void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, CodeErrorReporter errors, ShimResolver shimResolver)
         {
             // Resolve parameter overrides
             foreach (var param in Parameters)
@@ -110,30 +87,43 @@ internal abstract class ShimMember : IMember
                 param.RegisterOverride(shimResolver);
             }
 
-            base.ResolveBinding(bindings, target, errors, shimResolver);
+            base.ResolveBindings(bindings, targetMember, errors, shimResolver);
         }
     }
 
-    protected sealed class ShimConstructorMember(IShimDefinition shim, IMethodSymbol symbol, ITypeSymbol targetType)
-        : ShimMethodMember(shim, symbol, MemberType.Constructor), IParameterisedMember
+    public sealed class ShimPropertyMember(IShimDefinition shim, IPropertySymbol symbol)
+        : ShimMember(shim, symbol, MemberType.Property)
     {
+        public override ITypeSymbol? ReturnType { get; } = symbol.Type;
+
+        public bool IsGet { get; }
+            = symbol.GetMethod?.DeclaredAccessibility == Accessibility.Public;
+        public bool IsSet { get; }
+            = symbol.SetMethod?.DeclaredAccessibility == Accessibility.Public
+            && symbol.SetMethod?.IsInitOnly == false;
+        public bool IsInit { get; }
+            = symbol.GetMethod?.DeclaredAccessibility == Accessibility.Public
+            && symbol.SetMethod?.IsInitOnly == true;
+
         public override void GenerateCode(StringBuilder code, TargetMember targetMember)
         {
-            code.Append($"            public {ReturnType?.ToDisplayString() ?? "void"} {Name}(")
-                .Append(string.Join(", ", Parameters.Select(p => p.ToString())))
-                .Append($") => new {targetType}(")
-                .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
-                .Append($")")
-                .Append(GetShimCode(targetMember))
-                .AppendLine(";");
-        }
+            code.Append($"            public {ReturnType?.ToDisplayString() ?? "void"} {Name} {{");
 
-        public override bool IsMatch(ISymbol symbol)
-        {
-            return symbol is IMethodSymbol method
-                && method.MethodKind == MethodKind.Constructor
-                && method.Parameters.Length == Parameters.Length
-                && method.AllParameterTypesMatch((IMethodSymbol)Symbol);
+            var callee = GetMemberCallee(targetMember);
+            if (IsGet)
+            {
+                code.Append($" get => {callee}{GetShimCode(targetMember)};");
+            }
+            if (IsSet)
+            {
+                code.Append($" set => {callee} = value{GetUnshimCode(targetMember)};");
+            }
+            if (IsInit)
+            {
+                code.Append($" init => {callee} = value{GetUnshimCode(targetMember)};");
+            }
+
+            code.AppendLine(" }");
         }
     }
 
@@ -156,10 +146,9 @@ internal abstract class ShimMember : IMember
         {
             ISymbol { IsAbstract: false } => null,
             IEventSymbol eventSymbol => new ShimEventMember(shim, eventSymbol),
-            IFieldSymbol field => new ShimFieldMember(shim, field),
             IPropertySymbol property => new ShimPropertyMember(shim, property),
             // TODO: property.ExplicitInterfaceImplementations.Any()?
-            IMethodSymbol { MethodKind: MethodKind.EventAdd or MethodKind.EventRemove or MethodKind.PropertyGet or MethodKind.PropertySet or MethodKind.ExplicitInterfaceImplementation } => null,
+            IMethodSymbol { MethodKind: MethodKind.EventAdd or MethodKind.EventRemove or MethodKind.ExplicitInterfaceImplementation or MethodKind.PropertyGet or MethodKind.PropertySet } => null,
             IMethodSymbol method => constructionType == null
                 ? new ShimMethodMember(shim, method)
                 : new ShimConstructorMember(shim, method, constructionType!),
@@ -174,9 +163,10 @@ internal abstract class ShimMember : IMember
     public string Name { get; }
     public MemberType Type { get; }
     public virtual ITypeSymbol? ReturnType { get; }
-    public string OriginalName { get; }
+    public string TargetName { get; }
 
     public ShimTarget? TargetType { get; set; }
+    public (ITypeSymbol ImplementationType, string? ImplementationName, ProxyBehaviour Behaviour)? Proxy { get; }
 
     private ShimMember(IShimDefinition shim, ISymbol symbol, MemberType type)
     {
@@ -187,9 +177,16 @@ internal abstract class ShimMember : IMember
         Name = symbol.Name;
         Type = type;
 
+        // Check for proxy attribute
+        var proxyAttr = Symbol.GetAttribute<ShimProxyAttribute>();
+        if (proxyAttr != null)
+        {
+            Proxy = ShimProxyAttribute.GetArguments(proxyAttr);
+        }
+
         // Check for rename via attribute
         var attr = symbol.GetAttribute<ShimAttribute>();
-        OriginalName = (attr?.ConstructorArguments.Length) switch // Could be (string), (Type), or (Type, string)
+        TargetName = (attr?.ConstructorArguments.Length) switch // Could be (string), (Type), or (Type, string)
         {
             1 => attr.ConstructorArguments[0].Type!.IsType<string>()
                 ? attr.ConstructorArguments[0].Value?.ToString() : null,
@@ -200,11 +197,12 @@ internal abstract class ShimMember : IMember
 
     public abstract void GenerateCode(StringBuilder code, TargetMember targetMember);
 
-    protected string GetMemberCallee(TargetMember targetMember)
-        => IsFactoryMember
-        ? targetMember.ContainingType.ToFullName()
-        : $"(({targetMember.ContainingType.ToFullName()})_inst)";
-    protected string? GetShimCode(TargetMember target)
+    public string GetMemberCallee(TargetMember targetMember)
+        => IsFactoryMember || targetMember.IsStatic
+        ? $"{targetMember.ContainingType.ToFullName()}.{targetMember.Name}"
+        : $"(({targetMember.ContainingType.ToFullName()})_inst).{targetMember.Name}";
+
+    public string? GetShimCode(TargetMember target)
     {
         string? str = null;// $"/* {target.ReturnType.ToDisplayString()} */";
         if (ReturnType!.IsMatch(target.ReturnType))
@@ -221,20 +219,20 @@ internal abstract class ShimMember : IMember
         // Only shim if it's an interface
         return ReturnType!.TypeKind != TypeKind.Interface ? str : $"{str}.Shim<{ReturnType.ToDisplayString()}>()";
     }
-    protected string GetUnshimCode(TargetMember target)
+    public string GetUnshimCode(TargetMember target)
         => ReturnType?.IsMatch(target.ReturnType) == false
         ? $".Unshim<{target.ReturnType!.ToDisplayString()}>()"
         : string.Empty;
 
-    public virtual bool IsMatch(ISymbol symbol)
+    public virtual bool IsMatch(IMember member)
     {
-        return symbol.Name == OriginalName;
+        return member.Name == TargetName;
     }
 
-    public virtual void ResolveBinding(IList<IBinding> bindings, TargetMember target, CodeErrorReporter errors, ShimResolver shimResolver)
+    public virtual void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, CodeErrorReporter errors, ShimResolver shimResolver)
     {
         // Register return shim, if needed
-        if (target.IsShimmableReturnType(this, out var targetElement, out var shimElement))
+        if (targetMember!.IsShimmableReturnType(this, out var targetElement, out var shimElement))
         {
             if (targetElement != null && shimElement != null)
             {
@@ -244,16 +242,24 @@ internal abstract class ShimMember : IMember
         else if (ReturnType!.TypeKind == TypeKind.Interface)
         {
             // Optimistic
-            safeRegister(ReturnType, target.ReturnType!);
+            safeRegister(ReturnType, targetMember.ReturnType!);
         }
         else
         {
             // Error no matching method
-            errors.NoMemberError(target.ContainingType, Symbol);
+            Diag.WriteOutput($"//// No binding match: {targetMember.Target.FullTypeName}.{TargetName} for {Definition.FullTypeName}.{Name}");
+            errors.NoMemberError(targetMember.ContainingType, Symbol);
             return;
         }
 
-        bindings.Add(new ShimMemberBinding(this, target));
+        if (targetMember.Target is ShimProxyTarget proxyTarget)
+        {
+            bindings.Add(new ShimMemberProxyBinding(this, proxyTarget.ShimTarget, targetMember));
+        }
+        else
+        {
+            bindings.Add(new ShimMemberBinding(this, targetMember));
+        }
 
         void safeRegister(ITypeSymbol shimType, ITypeSymbol targetType)
         {
@@ -265,7 +271,7 @@ internal abstract class ShimMember : IMember
             else
             {
                 // TODO: Error for bad use of factory shim as instance shim
-                errors.NoMemberError(target.ContainingType, Symbol);
+                errors.CodeGenError(new Exception($"Fetching factory shim as instance shim: {targetMember.ContainingType}, {Symbol}"));
             }
         }
     }

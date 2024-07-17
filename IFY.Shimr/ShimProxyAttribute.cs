@@ -48,7 +48,7 @@ public class ShimProxyAttribute : Attribute
     {
         var implementationType = (ITypeSymbol)attribute.ConstructorArguments[0].Value!;
         string? implementationName = null;
-        ProxyBehaviour behaviour = ProxyBehaviour.Default;
+        var behaviour = ProxyBehaviour.Default;
         if (attribute.ConstructorArguments.Length == 3)
         {
             implementationName = (string?)attribute.ConstructorArguments[1].Value;

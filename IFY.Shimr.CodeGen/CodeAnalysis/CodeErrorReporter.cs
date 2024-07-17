@@ -77,6 +77,19 @@ internal class CodeErrorReporter
         isEnabledByDefault: true
     );
 
+    public void CodeGenError(Exception ex)
+    {
+        reportDiagnostic(FailedToGenerateCode, null, ex);
+    }
+    public static readonly DiagnosticDescriptor FailedToGenerateCode = new(
+        id: "SHIMR100",
+        title: "Failed to generate shims",
+        messageFormat: "There was an unexpected error generating shims: {0}",
+        category: "Correctness",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true
+    );
+
     public void NonInterfaceError(SyntaxNode node, ITypeSymbol? argType)
     {
         reportDiagnostic(ShimToNonInterface, node.GetLocation(), argType?.ToDisplayString() ?? "Unknown");

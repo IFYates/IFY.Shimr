@@ -1,24 +1,34 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Security.Cryptography;
 
 namespace IFY.Shimr.CodeGen.CodeAnalysis;
 
 internal static class SyntaxHelpers
 {
-    public static bool AllParameterTypesMatch(this IMethodSymbol method1, IMethodSymbol method2)
+    public static string Hash(this string input)
+    {
+        using var md5 = MD5.Create();
+        var buffer = Encoding.UTF8.GetBytes(input);
+        var hash = md5.ComputeHash(buffer);
+        return string.Concat(hash.Select(b => b.ToString("X2")));
+    }
+
+    public static bool AllParameterTypesMatch(this IMethodSymbol method, IEnumerable<IParameterSymbol> parameters)
     {
         // TODO: out, ref
-        return method1.Parameters.Length == method2.Parameters.Length
-            && method1.Parameters.Select(isParameterMatch).All(v => v);
+        var parameterArray = parameters.ToArray();
+        return method.Parameters.Length == parameterArray.Length
+            && method.Parameters.Select(isParameterMatch).All(v => v);
         bool isParameterMatch(IParameterSymbol param1, int idx)
-            => param1.GetArgumentShimType().IsMatch(method2.Parameters[idx].GetArgumentShimType());
+            => param1.GetArgumentShimType().IsMatch(parameterArray[idx].GetArgumentShimType());
     }
 
     /// <summary>
     /// Get all the members of this symbol, including those from base type.
     /// </summary>
-    public static ISymbol[] GetAllMembers(this ITypeSymbol symbol)
+    public static IEnumerable<ISymbol> GetAllMembers(this ITypeSymbol symbol)
     {
         var members = symbol.GetMembers().ToList();
         if (symbol.BaseType != null)
@@ -112,7 +122,8 @@ internal static class SyntaxHelpers
     /// </summary>
     public static bool IsMatch(this ITypeSymbol type1, ITypeSymbol? type2)
         => (type1 is ITypeParameterSymbol && type2 is ITypeParameterSymbol) // TODO: Is this enough?
-        || type1.Equals(type2, SymbolEqualityComparer.Default);
+        || type1.Equals(type2, SymbolEqualityComparer.Default)
+        || type1.ToFullName() == type2?.ToFullName(); // HACK: System.Collections.Generic.IDictionary<T1, T2> comparison failing
     /// <summary>
     /// Can <paramref name="type1"/> be used to refer to the use of <paramref name="type2"/>.
     /// This includes inheritiance.
