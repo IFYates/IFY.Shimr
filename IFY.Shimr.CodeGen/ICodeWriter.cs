@@ -3,5 +3,5 @@
 internal interface ICodeWriter
 {
     bool HasNullableAttributes { get; }
-    void AddSource(string name, StringBuilder code);
+    void AddSource(string name, string code);
 }

@@ -7,9 +7,6 @@ namespace IFY.Shimr.CodeGen.CodeAnalysis;
 
 internal static class SyntaxHelpers
 {
-    public static StringBuilder AppendLine(this StringBuilder sb, int indent, string value)
-        => sb.Append(' ', indent * 4).AppendLine(value);
-
     public static bool AllParameterTypesMatch(this IMethodSymbol method, IEnumerable<IParameterSymbol> parameters)
     {
         // TODO: out, ref

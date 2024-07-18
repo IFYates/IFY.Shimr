@@ -39,58 +39,62 @@ internal class InstanceShimDefinition : IShimDefinition
         }
     }
 
+    private const string OUTER_CLASS_CS = $@"namespace {GlobalCodeWriter.EXT_NAMESPACE}
+{{{{
+    using System.Linq;
+    public static partial class {GlobalCodeWriter.EXT_CLASSNAME}
+    {{{{
+{{0}}
+    }}}}
+}}}}
+";
+    private const string CLASS_CS = $@"         protected class {{0}}{{1}} : {{2}}, IShim{{3}}
+         {{{{
+            private readonly {{4}} _inst;
+            public {{0}}({{4}} inst) => _inst = inst;
+            object IShim.Unshim() => _inst;
+{{5}}
+         }}}}";
+
     public void WriteShimClass(ICodeWriter writer, IEnumerable<IBinding> bindings)
     {
         var code = new StringBuilder();
-        code.AppendLine($"namespace {GlobalCodeWriter.EXT_NAMESPACE}")
-            .AppendLine("{")
-            .AppendLine($"    using System.Linq;")
-            .AppendLine($"    public static partial class {GlobalCodeWriter.EXT_CLASSNAME}")
-            .AppendLine("    {");
 
         // Each target has a class
         var targetBindings = bindings
             .GroupBy(b => b.Target.FullTypeName).ToArray();
         foreach (var group in targetBindings)
         {
-            var className = group.First().ClassName;
-            var symbol = group.First().Definition.Symbol;
-            var interfaceType = group.First().Definition.FullTypeName;
-            var implType = group.First().Target.FullTypeName;
+            var codeArgs = new string[6];
+            codeArgs[0] = group.First().ClassName;
+            codeArgs[2] = group.First().Definition.FullTypeName; // Interface
+            codeArgs[4] = group.First().Target.FullTypeName; // Implementation
 
-            string? defTypeArgs = null, whereClause = null;
+            var symbol = group.First().Definition.Symbol;
             if (symbol.IsGenericType)
             {
-                defTypeArgs = symbol.TypeParameters.ToTypeParameterList();
-                whereClause = symbol.TypeParameters.ToWhereClause();
+                codeArgs[1] = symbol.TypeParameters.ToTypeParameterList();
+                codeArgs[3] = symbol.TypeParameters.ToWhereClause();
             }
 
-            code.AppendLine($"        protected class {className}{defTypeArgs} : {interfaceType}, IShim{whereClause}")
-                .AppendLine("        {");
-
-            // Constructor and Unshim
-            code.AppendLine($"            private readonly {implType} _inst;")
-                .AppendLine($"            public {className}({implType} inst) => _inst = inst;")
-                .AppendLine("            object IShim.Unshim() => _inst;");
-
             // Add ToString(), if not already
+            var classCode = new StringBuilder();
             if (!_members.OfType<IParameterisedMember>().Any(m => m.Type == MemberType.Method && m.Name == nameof(ToString) && m.Parameters.Length == 0))
             {
-                code.AppendLine("            public override string ToString() => _inst.ToString();");
+                classCode.AppendLine("            public override string ToString() => _inst.ToString();");
             }
 
             // Members
             foreach (var binding in group)
             {
-                binding.GenerateCode(code);
+                binding.GenerateCode(classCode);
             }
 
-            code.AppendLine("        }");
+            codeArgs[5] = classCode.ToString();
+            code.AppendFormat(CLASS_CS, codeArgs);
         }
 
-        code.AppendLine("    }")
-            .AppendLine("}");
-        writer.AddSource($"Shimr.{Name}.g.cs", code);
+        writer.AddSource($"Shimr.{Name}.g.cs", string.Format(OUTER_CLASS_CS, code.ToString()));
     }
 
     public void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimResolver shimResolver)

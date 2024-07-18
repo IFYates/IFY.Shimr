@@ -47,6 +47,11 @@
             Helpers for diagnosing issues.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.CodeGen.GlobalCodeWriter.WriteExtensionClass(IFY.Shimr.CodeGen.ICodeWriter,System.Collections.Generic.IEnumerable{IFY.Shimr.CodeGen.Models.Bindings.IBinding})">
+            <summary>
+            Generate the static class providing the '.Shim&lt;T&gt;(object)' extension method.
+            </summary>
+        </member>
         <member name="T:IFY.Shimr.CodeGen.Models.Bindings.NullBinding">
             <summary>
             An empty binding.

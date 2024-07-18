@@ -37,26 +37,29 @@ internal class ShimFactoryDefinition : IShimDefinition
             .TargetType = new(target);
     }
 
+    private const string OUTER_CLASS_CS = $@"namespace {GlobalCodeWriter.SB_NAMESPACE}
+{{{{
+    using {GlobalCodeWriter.EXT_NAMESPACE};
+    using System.Linq;
+    public static partial class {GlobalCodeWriter.SB_CLASSNAME}
+    {{{{
+        protected class {{0}} : {{1}}
+        {{{{
+{{2}}
+        }}}}
+    }}}}
+}}}}
+";
+
     public void WriteShimClass(ICodeWriter writer, IEnumerable<IBinding> bindings)
     {
-        var code = new StringBuilder();
-        code.AppendLine($"namespace {GlobalCodeWriter.SB_NAMESPACE}")
-            .AppendLine("{")
-            .AppendLine($"    using {GlobalCodeWriter.EXT_NAMESPACE};")
-            .AppendLine($"    using System.Linq;")
-            .AppendLine($"    public static partial class {GlobalCodeWriter.SB_CLASSNAME}")
-            .AppendLine("    {")
-            .AppendLine($"        protected class {Name} : {FullTypeName}")
-            .AppendLine("        {");
-
+        var classCode = new StringBuilder();
         foreach (var binding in bindings)
         {
-            binding.GenerateCode(code);
+            binding.GenerateCode(classCode);
         }
 
-        code.AppendLine("        }")
-            .AppendLine("    }")
-            .AppendLine("}");
+        var code = string.Format(OUTER_CLASS_CS, Name, FullTypeName, classCode.ToString());
         writer.AddSource($"Shimr.{Name}.g.cs", code);
     }
 

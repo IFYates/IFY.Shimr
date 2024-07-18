@@ -15,12 +15,35 @@ internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
 
     public bool HasNullableAttributes { get; } = context.Compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute") != null;
 
-    public void AddSource(string name, StringBuilder code)
+    public void AddSource(string name, string code)
     {
-        code.Insert(0, $"// Generated at {DateTime.Now:O}\r\n");
-        context.AddSource(name, code.ToString());
+        context.AddSource(name, $"// Generated at {DateTime.Now:O}\r\n{code}");
         Diag.WriteOutput($"/** File: {name} **/\r\n{code}");
     }
+
+    private const string SB_CLASS_CS = $@"namespace {SB_NAMESPACE}
+{{{{
+    public static partial class {SB_CLASSNAME}
+    {{{{
+        private static readonly System.Collections.Generic.Dictionary<System.Type, System.Type> _factoryMap = new System.Collections.Generic.Dictionary<System.Type, System.Type>
+        {{{{
+{{0}}        }}}};
+
+        /// <summary>
+        /// Create a factory shim of <typeparamref name=""TInterface""/>
+        /// The type must be decorated with <see cref=""IFY.Shimr.StaticShimAttribute""/>, otherwise <see cref=""System.NotSupportedException""/> will be thrown.
+        /// </summary>
+        public static TInterface Create<TInterface>() where TInterface : class
+        {{{{
+            if (_factoryMap.TryGetValue(typeof(TInterface), out var factoryType))
+            {{{{
+                return (TInterface)System.Activator.CreateInstance(factoryType);
+            }}}}
+            throw new System.NotSupportedException($""Interface '{{{{typeof(TInterface).FullName}}}}' does not have 'StaticShimAttribute' to register as factory."");
+        }}}}
+    }}}}
+}}}}
+";
 
     public static void WriteFactoryClass(ICodeWriter writer, IEnumerable<IBinding> shims)
     {
@@ -31,111 +54,89 @@ internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
             return;
         }
 
-        var code = new StringBuilder();
-        code.AppendLine($"namespace {SB_NAMESPACE}")
-            .AppendLine("{")
-            .AppendLine(1, $"public static partial class {SB_CLASSNAME}")
-            .AppendLine(1, "{")
-
-            .AppendLine("        /// <summary>")
-            .AppendLine("        /// Create a factory shim of <typeparamref name=\"TInterface\"/>.")
-            .AppendLine("        /// The type must be decorated with <see cref=\"IFY.Shimr.StaticShimAttribute\"/>, otherwise <see cref=\"System.NotSupportedException\"/> will be thrown.")
-            .AppendLine("        /// </summary>")
-            .AppendLine("        public static TInterface Create<TInterface>() where TInterface : class")
-            .AppendLine("        {");
-
         // Factory
+        var code = new StringBuilder();
         foreach (var def in factoryDefs.Distinct())
         {
-            code.AppendLine($"            if (typeof(TInterface) == typeof({def.FullTypeName}))")
-                .AppendLine("            {")
-                .AppendLine($"                return (TInterface)(object)new {def.Name}();")
-                .AppendLine("            }");
+            code.AppendLine($"            [typeof({def.FullTypeName})] = typeof({def.Name}),");
         }
 
-        code.AppendLine("            throw new System.NotSupportedException($\"Interface '{typeof(TInterface).FullName}' does not have 'StaticShimAttribute' to register as factory.\");")
-            .AppendLine("        }")
-            .AppendLine("    }")
-            .AppendLine("}");
-
-        writer.AddSource($"{SB_CLASSNAME}.g.cs", code);
+        writer.AddSource($"{SB_CLASSNAME}.g.cs", string.Format(SB_CLASS_CS, code.ToString()));
     }
 
+    private const string EXT_CLASS_CS = $@"#nullable enable
+namespace {EXT_NAMESPACE}
+{{{{
+    using System.Linq;
+    public static partial class {EXT_CLASSNAME}
+    {{{{
+        private static readonly System.Collections.Generic.Dictionary<System.Type, System.Collections.Generic.Dictionary<System.Type, System.Type>> _factoryMap = new System.Collections.Generic.Dictionary<System.Type, System.Collections.Generic.Dictionary<System.Type, System.Type>>
+        {{{{
+{{1}}        }}}};
+
+        /// <summary>
+        /// Shim an instance of an <paramref name=""object""/> to <typeparamref name=""TInterface""/>
+        /// </summary>
+{{0}}        public static TInterface Shim<TInterface>(this object instance) where TInterface : class
+        {{{{
+            if (instance == null) return null;
+            var interfaceType = typeof(TInterface).IsGenericType ? typeof(TInterface).GetGenericTypeDefinition() : typeof(TInterface);
+            if (_factoryMap.TryGetValue(interfaceType, out var typeMap))
+            {{{{
+                var instanceType = instance.GetType();
+                instanceType = instanceType.IsGenericType ? instanceType.GetGenericTypeDefinition() : instanceType;
+                if (!typeMap.TryGetValue(instanceType, out var factoryType))
+                {{{{
+                    factoryType = typeMap.FirstOrDefault(m => m.Key.IsAssignableFrom(instanceType)).Value;
+                    if (factoryType != null)
+                    {{{{
+                        typeMap.Add(instanceType, factoryType);
+                    }}}}
+                }}}}
+
+                if (factoryType != null)
+                {{{{
+                    factoryType = factoryType.IsGenericType ? factoryType.MakeGenericType(typeof(TInterface).GenericTypeArguments) : factoryType;
+                    return (TInterface)System.Activator.CreateInstance(factoryType, instance);
+                }}}}
+            }}}}
+
+            throw new System.NotSupportedException($""Interface '{{{{typeof(TInterface).FullName}}}}' is not registered as a shim of type '{{{{instance.GetType().FullName}}}}'."");
+        }}}}
+    }}}}
+}}}}
+";
+
+    /// <summary>
+    /// Generate the static class providing the '.Shim&lt;T&gt;(object)' extension method.
+    /// </summary>
     public static void WriteExtensionClass(ICodeWriter writer, IEnumerable<IBinding> allBindings)
     {
-        var code = new StringBuilder();
-        code.AppendLine("#nullable enable")
-            .AppendLine($"namespace {EXT_NAMESPACE}") // TODO: option to use namespace of underlying?
-            .AppendLine("{")
-            .AppendLine(1, $"public static partial class {EXT_CLASSNAME}")
-            .AppendLine(1, "{");
+        // TODO: option to use namespace of underlying?
+        var codeArgs = new string?[2];
 
-        // Shim: Underlying -> Interface
-        code.AppendLine(2, "/// <summary>")
-            .AppendLine(2, $"/// Shim an instance of an object to <typeparamref name=\"TInterface\"/>.")
-            .AppendLine(2, "/// </summary>");
+        // If current project supports nullable, add extra info
         if (writer.HasNullableAttributes)
         {
-            code.AppendLine("        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"inst\")]");
+            codeArgs[0] = "        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"inst\")]\r\n";
         }
-        code.AppendLine($"        public static TInterface Shim<TInterface>(this object inst) where TInterface : class")
-            .AppendLine("        {")
-            .AppendLine("            if (inst == null)")
-            .AppendLine("            {")
-            .AppendLine("                return null;")
-            .AppendLine("            }")
-            .AppendLine("            var instType = inst.GetType();");
 
+        var code = new StringBuilder();
         var shimCombos = allBindings
             .Where(b => b is not ShimMemberProxyBinding && b.Definition is InstanceShimDefinition)
-            .Select(b => (b.Definition, b.Target, b.ClassName))
             .Distinct().ToArray();
-        if (shimCombos.Any(s => !s.Target.Symbol.IsGenericType))
+        foreach (var shim in shimCombos.GroupBy(s => s.Definition))
         {
-            code.AppendLine("            if (!typeof(TInterface).IsGenericType && !instType.IsGenericType)")
+            code.AppendLine($"            [typeof({shim.Key.Symbol.ToGenericName()})] = new System.Collections.Generic.Dictionary<System.Type, System.Type>")
                 .AppendLine("            {");
-            foreach (var binding in shimCombos.Where(s => !s.Target.Symbol.IsGenericType).GroupBy(s => s.Definition))
+            foreach (var binding in shim.GroupBy(s => s.Target).Select(g => g.First()))
             {
-                code.AppendLine($"                if (typeof(TInterface) == typeof({binding.Key.FullTypeName}))")
-                    .AppendLine("                {");
-                foreach (var (_, target, className) in binding)
-                {
-                    code.AppendLine($"                    if (instType.IsAssignableFrom(typeof({target.FullTypeName})))")
-                        .AppendLine("                    {")
-                        .AppendLine($"                        return (TInterface)(object)new {className}(({target.FullTypeName})inst);")
-                        .AppendLine("                    }");
-                }
-                code.AppendLine("                }");
+                code.AppendLine($"                [typeof({binding.Target.Symbol.ToGenericName()})] = typeof({binding.ClassName}{(binding.Target.Symbol.IsGenericType ? "<>" : null)}),");
             }
-            code.AppendLine("            }");
+            code.AppendLine("            },");
         }
-        if (shimCombos.Any(s => s.Target.Symbol.IsGenericType))
-        {
-            code.AppendLine("            if (typeof(TInterface).IsGenericType && instType.IsGenericType)")
-                .AppendLine("            {")
-                .AppendLine("                var shimGenType = typeof(TInterface).GetGenericTypeDefinition();")
-                .AppendLine("                var instGenType = instType.GetGenericTypeDefinition();");
-            foreach (var binding in shimCombos.Where(s => s.Target.Symbol.IsGenericType).GroupBy(s => s.Definition))
-            {
-                code.AppendLine($"                if (shimGenType == typeof({binding.Key.Symbol.ToGenericName()}))")
-                    .AppendLine("                {");
-                foreach (var (_, target, className) in binding)
-                {
-                    code.AppendLine($"                    if (instGenType.IsAssignableFrom(typeof({target.Symbol.ToGenericName()})))")
-                        .AppendLine("                    {")
-                        .AppendLine($"                    var classType = typeof({className}<>).MakeGenericType(typeof(TInterface).GetGenericArguments());")
-                        .AppendLine($"                        return (TInterface)System.Activator.CreateInstance(classType, inst);")
-                        .AppendLine("                    }");
-                }
-                code.AppendLine("                }");
-            }
-            code.AppendLine("            }");
-        }
-        code.AppendLine($"            throw new System.NotSupportedException($\"Interface '{{typeof(TInterface).FullName}}' is not registered as a shim of type '{{instType.FullName}}'.\");")
-            .AppendLine("        }")
-            .AppendLine("    }")
-            .AppendLine("}");
+        codeArgs[1] = code.ToString();
 
-        writer.AddSource($"{EXT_CLASSNAME}.g.cs", code);
+        writer.AddSource($"{EXT_CLASSNAME}.g.cs", string.Format(EXT_CLASS_CS, codeArgs));
     }
 }
