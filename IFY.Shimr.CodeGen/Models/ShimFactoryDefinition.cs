@@ -7,12 +7,11 @@ namespace IFY.Shimr.CodeGen.Models;
 
 internal class ShimFactoryDefinition : IShimDefinition
 {
-    private readonly ShimMember[] _members;
-
     public INamedTypeSymbol Symbol { get; }
     public string FullTypeName { get; }
     public string Name { get; }
     public ShimTarget? StaticTarget { get; }
+    public ShimMember[] Members { get; }
 
     public ShimFactoryDefinition(ITypeSymbol symbol)
     {
@@ -24,16 +23,16 @@ internal class ShimFactoryDefinition : IShimDefinition
 
         Symbol = (INamedTypeSymbol)symbol;
         FullTypeName = symbol.ToFullName();
-        Name = $"ShimFactory__{symbol.ToFullName().Hash()}_{symbol.Name}";
+        Name = $"ShimFactory__{symbol.ContainingNamespace.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).Hash()}_{symbol.ToClassName().Replace('.', '_')}";
 
-        _members = symbol.GetAllMembers()
-            .Select(m => ShimMember.Parse(m, this))
+        var members = symbol.GetAllMembers();
+        Members = members.Select(m => ShimMember.Parse(m, this, members))
             .OfType<ShimMember>().ToArray();
     }
 
     public void SetMemberType(ISymbol symbol, ITypeSymbol target)
     {
-        _members.Single(m => m.Symbol.Equals(symbol, SymbolEqualityComparer.Default))
+        Members.Single(m => m.Symbol.Equals(symbol, SymbolEqualityComparer.Default))
             .TargetType = new(target);
     }
 
@@ -66,7 +65,7 @@ internal class ShimFactoryDefinition : IShimDefinition
     public void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimResolver shimResolver)
     {
         // Map shim members against targets
-        foreach (var member in _members)
+        foreach (var member in Members)
         {
             var target = member.TargetType ?? StaticTarget;
             if (target == null)

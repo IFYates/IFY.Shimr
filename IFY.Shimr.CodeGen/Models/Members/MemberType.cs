@@ -1,6 +1,6 @@
 ﻿namespace IFY.Shimr.CodeGen.Models.Members;
 
-public enum MemberType
+internal enum MemberType
 {
     Constructor,
     Event,

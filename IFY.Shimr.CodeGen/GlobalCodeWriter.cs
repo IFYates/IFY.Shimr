@@ -14,6 +14,7 @@ internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
     public const string EXT_CLASSNAMEFULL = $"{EXT_NAMESPACE}.{EXT_CLASSNAME}";
 
     public bool HasNullableAttributes { get; } = context.Compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute") != null;
+    public bool HasStackTraceHiddenAttribute { get; } = context.Compilation.GetTypeByMetadataName("System.Diagnostics.StackTraceHiddenAttribute") != null;
 
     public void AddSource(string name, string code)
     {
@@ -131,7 +132,7 @@ namespace {EXT_NAMESPACE}
                 .AppendLine("            {");
             foreach (var binding in shim.GroupBy(s => s.Target).Select(g => g.First()))
             {
-                code.AppendLine($"                [typeof({binding.Target.Symbol.ToGenericName()})] = typeof({binding.ClassName}{(binding.Target.Symbol.IsGenericType ? "<>" : null)}),");
+                code.AppendLine($"                [typeof({binding.Target.Symbol.ToGenericName()})] = typeof({binding.ClassName}{(binding.Target.Symbol is INamedTypeSymbol { IsGenericType: true } ? "<>" : null)}),");
             }
             code.AppendLine("            },");
         }

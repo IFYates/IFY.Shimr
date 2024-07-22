@@ -1,16 +1,39 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
+using IFY.Shimr.CodeGen.Models.Bindings;
 using IFY.Shimr.CodeGen.Models.Members;
 using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models;
 
-internal class ShimProxyTarget(ITypeSymbol symbol, ShimTarget shimTarget)
+/// <param name="symbol">The type that contains the proxy target.</param>
+/// <param name="shimTarget">The target definition of the shim.</param>
+/// <param name="targetMembers">The list of possible targets of the shim member.</param>
+internal class ShimProxyTarget(ITypeSymbol symbol, ShimTarget shimTarget, TargetMember[] targetMembers)
     : ShimTarget(symbol)
 {
     public ShimTarget ShimTarget { get; } = shimTarget;
 
+    public override IBinding GetBinding(ShimMember shimMember, TargetMember proxyMember)
+    {
+        return new ShimMemberProxyBinding(shimMember, ShimTarget, proxyMember, targetMembers.FirstOrDefault());
+    }
+
     public override TargetMember[] GetMatchingMembers(ShimMember shimMember, CodeErrorReporter errors)
     {
+        var proxyBehaviour = shimMember.Proxy?.Behaviour ?? ProxyBehaviour.Override;
+        if (!targetMembers.Any() && proxyBehaviour == ProxyBehaviour.Override)
+        {
+            Diag.WriteOutput($"//// No member to override: {FullTypeName}.{shimMember.TargetName} for {shimMember.Type} {shimMember.Definition.FullTypeName}.{shimMember.Name}");
+            errors.NoMemberError(Symbol, shimMember.Symbol); // TODO: better error
+            return [];
+        }
+        else if (targetMembers.Any() && proxyBehaviour == ProxyBehaviour.Add)
+        {
+            // TODO: Error that proxy is adding existing method
+            errors.CodeGenError(new Exception($"[ProxyBehaviour.{proxyBehaviour}] {Symbol}, {shimMember.Symbol}"));
+            return [];
+        }
+
         var (proxyType, proxyTargetName, behaviour) = shimMember.Proxy!.Value;
         var members = getMatchingMembers(shimMember);
         if (!members.Any())

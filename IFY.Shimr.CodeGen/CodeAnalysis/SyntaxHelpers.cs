@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 
 namespace IFY.Shimr.CodeGen.CodeAnalysis;
 
+// TODO: Review
 internal static class SyntaxHelpers
 {
     public static bool AllParameterTypesMatch(this IMethodSymbol method, IEnumerable<IParameterSymbol> parameters)
@@ -27,16 +28,45 @@ internal static class SyntaxHelpers
             symbol = typeSymbol.ConstructedFrom;
         }
 
-        var members = symbol.GetMembers().ToList();
-        if (symbol.BaseType != null)
+        var members = symbol.GetMembers().ToDictionary(m => GetMemberUniqueName(m));
+        var baseSymbol = symbol.BaseType;
+        while (baseSymbol != null)
         {
-            members.AddRange(symbol.BaseType.GetAllMembers());
+            foreach (var member in baseSymbol.GetMembers().Where(m => m is not IMethodSymbol { MethodKind: MethodKind.Constructor }))
+            {
+                var key = GetMemberUniqueName(member);
+                if (!members.TryGetValue(key, out var match))
+                {
+                    members.Add(key, member);
+                }
+                else if (!getBaseSymbol(match).Equals(getBaseSymbol(member), SymbolEqualityComparer.Default))
+                {
+                    members.Add($"{key}.{member.ContainingType.ToFullName()}", member);
+                }
+            }
+            baseSymbol = baseSymbol.BaseType;
         }
-        foreach (var iface in symbol.AllInterfaces)
+        foreach (var member in symbol.AllInterfaces.SelectMany(i => i.GetMembers()))
         {
-            members.AddRange(iface.GetMembers());
+            var key = GetMemberUniqueName(member);
+            if (!members.TryGetValue(key, out var match))
+            {
+                members.Add(key, member);
+            }
+            else if (!getBaseSymbol(match).Equals(getBaseSymbol(member), SymbolEqualityComparer.Default))
+            {
+                members.Add($"{key}.{member.ContainingType.ToFullName()}", member);
+            }
         }
-        return members.Distinct(SymbolEqualityComparer.Default).ToArray();
+
+        return members.Values.ToArray();
+
+        static ISymbol getBaseSymbol(ISymbol symbol) => symbol switch
+        {
+            IMethodSymbol { IsOverride: true } method => method.OverriddenMethod!,
+            IPropertySymbol { IsOverride: true } property => property.OverriddenProperty!,
+            _ => symbol
+        };
     }
 
     public static ITypeSymbol GetArgumentShimType(this IParameterSymbol arg, bool nullIfNoOverride = false)
@@ -86,6 +116,27 @@ internal static class SyntaxHelpers
             return null;
         }
         return semanticModel.GetTypeInfo(typeOf.Type).Type;
+    }
+
+    public static string GetMemberUniqueName(this ISymbol member, bool includeContainingType = false)
+    {
+        var containingType = includeContainingType ? getBaseType(member) + "." : null!;
+        return member switch
+        {
+            IEventSymbol => $"E:{containingType}{member.Name}",
+            IFieldSymbol => $"F:{containingType}{member.Name}",
+            IMethodSymbol method => $"M:{containingType}{member.Name}({string.Join(", ", method.Parameters.Select(p => p.Type.ToFullName()))})",
+            IPropertySymbol { IsIndexer: false } => $"P:{containingType}{member.Name}",
+            IPropertySymbol { IsIndexer: true } indexer => $"I:{containingType}{member.Name}[{indexer.Parameters[0].Type.ToFullName()}]",
+            _ => throw new NotSupportedException($"Unhandled member type: {member.GetType().FullName}"),
+        };
+
+        static string? getBaseType(ISymbol member) => member switch
+        {
+            IMethodSymbol { IsOverride: true } method => getBaseType(method.OverriddenMethod!),
+            IPropertySymbol { IsOverride: true } property => getBaseType(property.OverriddenProperty!),
+            _ => member.ContainingType.ToFullName()
+        };
     }
 
     public static SyntaxNode? GetSyntaxNode(this ISymbol symbol)
@@ -146,6 +197,11 @@ internal static class SyntaxHelpers
         genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
         miscellaneousOptions: SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
     );
+    private static readonly SymbolDisplayFormat _displayFormatFullClassname = new(
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
+        genericsOptions: SymbolDisplayGenericsOptions.None,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
+    );
     private static readonly SymbolDisplayFormat _displayFormatGeneric = new(
         typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         genericsOptions: SymbolDisplayGenericsOptions.None,
@@ -153,13 +209,15 @@ internal static class SyntaxHelpers
     );
     public static string ToFullName(this ITypeSymbol type)
         => type.ToDisplayString(_displayFormatFull);
-    public static string ToGenericName(this INamedTypeSymbol type)
-        => type.ToDisplayString(_displayFormatGeneric) + (type.IsGenericType ? "<>" : null);
+    public static string ToClassName(this ITypeSymbol type)
+        => type.ToDisplayString(_displayFormatFullClassname);
+    public static string ToGenericName(this ITypeSymbol type)
+        => type.ToDisplayString(_displayFormatGeneric) + (type is INamedTypeSymbol { IsGenericType: true } ? "<>" : null);
 
     public static string ToTypeParameterList(this IEnumerable<ITypeParameterSymbol> typeParameters, bool withAngles = true)
     {
         var args = string.Join(", ", typeParameters.Select(p => p.Name + (p.NullableAnnotation == NullableAnnotation.Annotated ? "?" : null)));
-        return withAngles ? $"<{args}>" : args;
+        return args.Length > 0 && withAngles ? $"<{args}>" : args;
     }
     public static string ToWhereClause(this IEnumerable<ITypeParameterSymbol> typeParameters)
     {

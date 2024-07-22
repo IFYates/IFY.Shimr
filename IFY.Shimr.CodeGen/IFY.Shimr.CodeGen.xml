@@ -74,13 +74,21 @@
         </member>
         <member name="T:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberProxyBinding">
             <summary>
-            A binding between a <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberProxyBinding.ShimMember"/> and a proxy member instead of <paramref name="target"/>.
+            A binding between a <see cref="T:IFY.Shimr.CodeGen.Models.Members.ShimMember"/> and a proxy member instead of an actual <paramref name="target"/> member.
             </summary>
+            <param name="shimMember">The shim that this proxy is a member of.</param>
+            <param name="target">The shim target.</param>
+            <param name="proxyMember">The proxy implementation to use.</param>
+            <param name="targetMember">The overridden member of the <see cref="T:IFY.Shimr.CodeGen.Models.ShimTarget"/>.</param>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberProxyBinding.#ctor(IFY.Shimr.CodeGen.Models.Members.ShimMember,IFY.Shimr.CodeGen.Models.ShimTarget,IFY.Shimr.CodeGen.Models.Members.TargetMember)">
+        <member name="M:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberProxyBinding.#ctor(IFY.Shimr.CodeGen.Models.Members.ShimMember,IFY.Shimr.CodeGen.Models.ShimTarget,IFY.Shimr.CodeGen.Models.Members.TargetMember,IFY.Shimr.CodeGen.Models.Members.TargetMember)">
             <summary>
-            A binding between a <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberProxyBinding.ShimMember"/> and a proxy member instead of <paramref name="target"/>.
+            A binding between a <see cref="T:IFY.Shimr.CodeGen.Models.Members.ShimMember"/> and a proxy member instead of an actual <paramref name="target"/> member.
             </summary>
+            <param name="shimMember">The shim that this proxy is a member of.</param>
+            <param name="target">The shim target.</param>
+            <param name="proxyMember">The proxy implementation to use.</param>
+            <param name="targetMember">The overridden member of the <see cref="T:IFY.Shimr.CodeGen.Models.ShimTarget"/>.</param>
         </member>
         <member name="T:IFY.Shimr.CodeGen.Models.IShimDefinition">
             <summary>
@@ -107,10 +115,20 @@
             A modelled member of the target type.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.Members.TargetMember.IsShimmableReturnType(IFY.Shimr.CodeGen.Models.Members.ShimMember)">
+        <member name="M:IFY.Shimr.CodeGen.Models.Members.TargetMember.IsShimmableReturnType(IFY.Shimr.CodeGen.Models.Members.IMember)">
             <summary>
-            Returns true if the <see cref="P:IFY.Shimr.CodeGen.Models.Members.ShimMember.ReturnType"/> of <paramref name="shimMember"/> is shimmable from the <see cref="P:IFY.Shimr.CodeGen.Models.Members.TargetMember.ReturnType"/> of this target member.
+            Returns true if the <see cref="P:IFY.Shimr.CodeGen.Models.Members.IMember.ReturnType"/> of <paramref name="otherMember"/> is shimmable from the <see cref="P:IFY.Shimr.CodeGen.Models.Members.TargetMember.ReturnType"/> of this target member.
             </summary>
+        </member>
+        <member name="T:IFY.Shimr.CodeGen.Models.ShimProxyTarget">
+            <param name="symbol">The type that contains the proxy target.</param>
+            <param name="shimTarget">The target definition of the shim.</param>
+            <param name="targetMembers">The list of possible targets of the shim member.</param>
+        </member>
+        <member name="M:IFY.Shimr.CodeGen.Models.ShimProxyTarget.#ctor(Microsoft.CodeAnalysis.ITypeSymbol,IFY.Shimr.CodeGen.Models.ShimTarget,IFY.Shimr.CodeGen.Models.Members.TargetMember[])">
+            <param name="symbol">The type that contains the proxy target.</param>
+            <param name="shimTarget">The target definition of the shim.</param>
+            <param name="targetMembers">The list of possible targets of the shim member.</param>
         </member>
         <member name="T:IFY.Shimr.CodeGen.Models.ShimTarget">
             <summary>

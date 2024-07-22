@@ -71,34 +71,34 @@ internal abstract class TargetMember : IMember
     }
 
     /// <summary>
-    /// Returns true if the <see cref="ShimMember.ReturnType"/> of <paramref name="shimMember"/> is shimmable from the <see cref="ReturnType"/> of this target member.
+    /// Returns true if the <see cref="IMember.ReturnType"/> of <paramref name="otherMember"/> is shimmable from the <see cref="ReturnType"/> of this target member.
     /// </summary>
-    public bool IsShimmableReturnType(ShimMember shimMember)
-        => IsShimmableReturnType(shimMember, out _, out _);
-    public bool IsShimmableReturnType(ShimMember shimMember, out ITypeSymbol? targetElement, out ITypeSymbol? shimElement)
+    public bool IsShimmableReturnType(IMember otherMember)
+        => IsShimmableReturnType(otherMember, out _, out _);
+    public bool IsShimmableReturnType(IMember otherMember, out ITypeSymbol? targetElement, out ITypeSymbol? otherElement)
     {
         targetElement = null;
-        shimElement = null;
+        otherElement = null;
 
-        if (ReturnType == null || shimMember.ReturnType == null)
+        if (ReturnType == null || otherMember.ReturnType == null)
         {
-            return ReturnType == null && shimMember.ReturnType == null;
+            return ReturnType == null && otherMember.ReturnType == null;
         }
-        if (ReturnType.IsMatch(shimMember.ReturnType))
+        if (ReturnType.IsMatch(otherMember.ReturnType))
         {
             return true;
         }
         if (ReturnType.IsEnumerable(out targetElement)
-            && shimMember.ReturnType.IsEnumerable(out shimElement))
+            && otherMember.ReturnType.IsEnumerable(out otherElement))
         {
-            if (targetElement!.IsMatch(shimElement))
+            if (targetElement!.IsMatch(otherElement))
             {
                 targetElement = null;
-                shimElement = null;
+                otherElement = null;
                 return true;
             }
             
-            return shimElement!.TypeKind == TypeKind.Interface;
+            return otherElement!.TypeKind == TypeKind.Interface;
         }
 
         return false;

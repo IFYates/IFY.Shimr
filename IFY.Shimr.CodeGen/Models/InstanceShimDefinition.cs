@@ -8,21 +8,21 @@ namespace IFY.Shimr.CodeGen.Models;
 internal class InstanceShimDefinition : IShimDefinition
 {
     private readonly Dictionary<string, ShimTarget> _targets = [];
-    private readonly ShimMember[] _members;
 
     public INamedTypeSymbol Symbol { get; }
     public string FullTypeName { get; }
     public string Name { get; }
+    public ShimMember[] Members { get; }
 
     public InstanceShimDefinition(ITypeSymbol symbol)
     {
-        _members = symbol.GetAllMembers()
-            .Select(m => ShimMember.Parse(m, this))
+        var members = symbol.GetAllMembers();
+        Members = members.Select(m => ShimMember.Parse(m, this, members))
             .OfType<ShimMember>().ToArray();
 
         Symbol = (INamedTypeSymbol)symbol;
         FullTypeName = symbol.ToFullName();
-        Name = $"{symbol.ToFullName().Hash()}_{symbol.Name}";
+        Name = $"{symbol.ContainingNamespace.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).Hash()}_{symbol.ToClassName().Replace('.', '_')}";
     }
 
     public ShimTarget AddTarget(ITypeSymbol symbol)
@@ -53,8 +53,7 @@ internal class InstanceShimDefinition : IShimDefinition
             private readonly {{4}} _inst;
             public {{0}}({{4}} inst) => _inst = inst;
             object IShim.Unshim() => _inst;
-{{5}}
-         }}}}";
+{{5}}         }}}}";
 
     public void WriteShimClass(ICodeWriter writer, IEnumerable<IBinding> bindings)
     {
@@ -62,24 +61,13 @@ internal class InstanceShimDefinition : IShimDefinition
 
         // Each target has a class
         var targetBindings = bindings
-            .GroupBy(b => b.Target.FullTypeName).ToArray();
+        .GroupBy(b => b.Target.FullTypeName).ToArray();
         foreach (var group in targetBindings)
         {
-            var codeArgs = new string[6];
-            codeArgs[0] = group.First().ClassName;
-            codeArgs[2] = group.First().Definition.FullTypeName; // Interface
-            codeArgs[4] = group.First().Target.FullTypeName; // Implementation
-
-            var symbol = group.First().Definition.Symbol;
-            if (symbol.IsGenericType)
-            {
-                codeArgs[1] = symbol.TypeParameters.ToTypeParameterList();
-                codeArgs[3] = symbol.TypeParameters.ToWhereClause();
-            }
-
             // Add ToString(), if not already
             var classCode = new StringBuilder();
-            if (!_members.OfType<IParameterisedMember>().Any(m => m.Type == MemberType.Method && m.Name == nameof(ToString) && m.Parameters.Length == 0))
+            if (!Members.OfType<ShimMember.ShimMethodMember>()
+                .Any(m => m.Name == nameof(ToString) && m.Parameters.Length == 0))
             {
                 classCode.AppendLine("            public override string ToString() => _inst.ToString();");
             }
@@ -90,7 +78,16 @@ internal class InstanceShimDefinition : IShimDefinition
                 binding.GenerateCode(classCode);
             }
 
-            codeArgs[5] = classCode.ToString();
+            var symbol = group.First().Definition.Symbol;
+            var codeArgs = new[]
+            {
+                group.First().ClassName,
+                symbol.TypeParameters.ToTypeParameterList(),
+                group.First().Definition.FullTypeName, // Interface
+                symbol.TypeParameters.ToWhereClause(),
+                group.First().Target.FullTypeName, // Implementation
+                classCode.ToString()
+            };
             code.AppendFormat(CLASS_CS, codeArgs);
         }
 
@@ -104,20 +101,26 @@ internal class InstanceShimDefinition : IShimDefinition
         {
             allBindings.Add(new NullBinding(this, target)); // Ensure empty shim generated
 
-            foreach (var member in _members)
+            foreach (var member in Members)
             {
                 var targetMembers = target.GetMatchingMembers(member, errors);
 
                 if (member.Proxy != null)
                 {
                     // We need to complete target.GetMatchingMembers and then locate proxy
-                    targetMembers = new ShimProxyTarget(member.Proxy.Value.ImplementationType, target)
+                    targetMembers = new ShimProxyTarget(member.Proxy.Value.ImplementationType, target, targetMembers)
                         .GetMatchingMembers(member, errors);
                 }
 
                 if (!targetMembers.Any())
                 {
-                    // TODO: register NotImplemented binding
+                    if (member.Proxy == null)
+                    {
+                        // TODO: optional, as per 'IgnoreMissingMembers'
+                        // TODO: register NotImplemented binding
+                        Diag.WriteOutput($"//// No match: {FullTypeName}.{member.TargetName} for {member.Type} {member.Definition.FullTypeName}.{member.Name}");
+                        errors.NoMemberError(Symbol, member.Symbol);
+                    }
                     continue;
                 }
 

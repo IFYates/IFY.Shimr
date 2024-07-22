@@ -36,7 +36,6 @@
 		<Compile Include="..\IFY.Shimr.Tests\IndexerShimTests.cs" Link="Shared\IndexerShimTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\InheritanceTests.cs" Link="Shared\InheritanceTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="Shared\MethodShimTests.cs" />
-		<Compile Include="..\IFY.Shimr.Tests\MissingMemberTests.cs" Link="Shared\MissingMemberTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="Shared\MultiLevelInheritanceTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\PerformanceTests.cs" Link="Shared\PerformanceTests.cs" />
 		<Compile Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="Shared\PropertyShimTests.cs" />
