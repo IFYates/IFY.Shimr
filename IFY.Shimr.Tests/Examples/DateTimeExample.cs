@@ -35,11 +35,7 @@ public class DateTimeExample
         string exp = dt.ToString("o");
 
         // Act
-#if SHIMR_CG
         IDateTime shim = dt.Shim<IDateTime>()!;
-#else
-        IDateTime shim = ShimBuilder.Shim<IDateTime>(dt)!;
-#endif
 
         // Assert
         Assert.IsInstanceOfType<IDateTime>(shim);
@@ -52,11 +48,7 @@ public class DateTimeExample
     public void DateTime_shim_can_return_ITimeSpan()
     {
         DateTime dt = DateTime.UtcNow;
-#if SHIMR_CG
         IDateTime shim = dt.Shim<IDateTime>()!;
-#else
-        IDateTime shim = ShimBuilder.Shim<IDateTime>(dt)!;
-#endif
 
         var res = shim.Subtract(DateTime.Today.Shim<IDateTime>()!);
         Assert.AreEqual(shim.TimeOfDay.TotalSeconds, res.TotalSeconds);

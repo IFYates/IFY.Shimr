@@ -10,10 +10,17 @@ namespace IFY.Shimr;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public class ConstructorShimAttribute : StaticShimAttribute
 {
+    /// <summary>
+    /// Mark a method as being a shim of a constructor.
+    /// </summary>
     public ConstructorShimAttribute()
+        : this(null!)
     {
         IsConstructor = true;
     }
+    /// <summary>
+    /// Mark a method as being a shim of a constructor.
+    /// </summary>
     public ConstructorShimAttribute(Type targetType)
         : base(targetType)
     {
@@ -21,7 +28,7 @@ public class ConstructorShimAttribute : StaticShimAttribute
     }
 
 #if SHIMR_CG
-    public static ITypeSymbol? GetArgument(AttributeData attribute)
+    internal static new ITypeSymbol? GetArgument(AttributeData attribute)
     {
         return attribute.ConstructorArguments.Length == 1
             ? (ITypeSymbol)attribute.ConstructorArguments[0].Value!

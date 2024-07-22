@@ -8,17 +8,15 @@ namespace IFY.Shimr;
 /// Mark signature type as being automatically shimmed from real implementation type
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
-public class TypeShimAttribute : Attribute
+public class TypeShimAttribute(Type realType) : Attribute
 {
-    public Type RealType { get; }
-
-    public TypeShimAttribute(Type realType)
-    {
-        RealType = realType;
-    }
+    /// <summary>
+    /// The underlying type of the parameter.
+    /// </summary>
+    public Type RealType { get; } = realType;
 
 #if SHIMR_CG
-    public static ITypeSymbol? GetArgument(AttributeData attribute)
+    internal static ITypeSymbol? GetArgument(AttributeData attribute)
     {
         return attribute.ConstructorArguments.Length == 1
             ? (ITypeSymbol)attribute.ConstructorArguments[0].Value!

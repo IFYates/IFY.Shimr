@@ -9,6 +9,16 @@
             Mark a method as being a shim of a constructor.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.ConstructorShimAttribute.#ctor">
+            <summary>
+            Mark a method as being a shim of a constructor.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ConstructorShimAttribute.#ctor(System.Type)">
+            <summary>
+            Mark a method as being a shim of a constructor.
+            </summary>
+        </member>
         <member name="T:IFY.Shimr.Extensions.ObjectExtensions">
             <summary>
             Useful extension methods, in separate namespace to reduce pollution.
@@ -238,6 +248,11 @@
             Mark a shim member as being a proxy to an implementation elsewhere.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type,System.String,IFY.Shimr.ProxyBehaviour)">
+            <summary>
+            Mark a shim member as being a proxy to an implementation elsewhere.
+            </summary>
+        </member>
         <member name="P:IFY.Shimr.ShimProxyAttribute.ImplementationType">
             <summary>
             The type that implements this member.
@@ -253,7 +268,27 @@
             The behaviour of this proxy member.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type)">
+            <summary>
+            Mark a shim member as being a proxy to an implementation elsewhere, using default behaviour.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type,IFY.Shimr.ProxyBehaviour)">
+            <summary>
+            Mark a shim member as being a proxy to an implementation elsewhere.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type,System.String)">
+            <summary>
+            Mark a shim member as being an aliased proxy to an implementation elsewhere, using default behaviour.
+            </summary>
+        </member>
         <member name="T:IFY.Shimr.StaticShimAttribute">
+            <summary>
+            Mark individual properties/fields or methods as being static within another type, or the entire interface.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.StaticShimAttribute.#ctor(System.Type)">
             <summary>
             Mark individual properties/fields or methods as being static within another type, or the entire interface.
             </summary>
@@ -271,6 +306,16 @@
         <member name="T:IFY.Shimr.TypeShimAttribute">
             <summary>
             Mark signature type as being automatically shimmed from real implementation type
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.TypeShimAttribute.#ctor(System.Type)">
+            <summary>
+            Mark signature type as being automatically shimmed from real implementation type
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.TypeShimAttribute.RealType">
+            <summary>
+            The underlying type of the parameter.
             </summary>
         </member>
     </members>

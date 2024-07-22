@@ -91,7 +91,7 @@ public class IndexerShimTests
         Assert.AreEqual("test0", obj[0]);
     }
 
-#if SHIMR_CG
+#if !XSHIMR_CG
     // TODO: IFY.Shimr doesn't support this
     public interface IMultipleIndexerTest
     {

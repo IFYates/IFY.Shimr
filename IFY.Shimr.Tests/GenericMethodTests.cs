@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 
+#pragma warning disable IDE1006 // Naming Styles
 namespace IFY.Shimr.Tests;
 
 // https://github.com/IFYates/Shimterface/issues/5
@@ -40,12 +41,13 @@ public class GenericMethodTests
 
 
         public IDictionary<T1, T2> ComplexTest<T1, T2>(T1 key)
+            where T1 : notnull
             where T2 : IEnumerable<T1>
         {
             WasCalled = true;
             return new Dictionary<T1, T2>
             {
-                [key] = default
+                [key] = default!
             };
         }
     }

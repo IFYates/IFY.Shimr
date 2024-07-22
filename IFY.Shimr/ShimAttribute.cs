@@ -49,7 +49,7 @@ public class ShimAttribute : Attribute
     }
 
 #if SHIMR_CG
-    public static (ITypeSymbol? DefinitionType, string? ImplementationName) GetArguments(AttributeData attribute)
+    internal static (ITypeSymbol? DefinitionType, string? ImplementationName) GetArguments(AttributeData attribute)
     {
         ITypeSymbol? definitionType = null;
         string? implementationName = null;
