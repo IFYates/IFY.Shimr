@@ -34,8 +34,14 @@ internal static class TypeHelpers
              && (mi.Attributes & MethodAttributes.SpecialName) > 0
              && (mi.Name.StartsWith("get_") || mi.Name.StartsWith("set_")))
         {
-            var propInfo = memberInfo.ReflectedType.GetProperty(memberInfo.Name[4..]);
-            attr = propInfo?.GetCustomAttribute<TAttribute>(false);
+            var propInfos = mi.DeclaringType.GetProperties()
+                .Where(p => p.Name == mi.Name[4..]).ToArray();
+            if (propInfos.Length > 1 && mi.GetParameters().Any())
+            {
+                propInfos = propInfos.Where(p => p.GetIndexParameters().LastOrDefault()?.ParameterType == mi.GetParameters().Last().ParameterType).ToArray();
+            }
+
+            attr = propInfos.Single().GetCustomAttribute<TAttribute>(false);
         }
 
         return attr;
@@ -213,7 +219,7 @@ internal static class TypeHelpers
         return false;
     }
 
-    public static bool IsArrayType(this Type type, out Type? elementType)
+    public static bool IsArrayType(this Type type, [NotNullWhen(true)] out Type? elementType)
     {
         if (type.IsArray)
         {

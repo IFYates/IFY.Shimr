@@ -2,17 +2,12 @@
 
 namespace IFY.Shimr.Internal;
 
-internal class ShimBinding
+internal class ShimBinding(MethodInfo interfaceMethod)
 {
-    public MethodInfo InterfaceMethod { get; }
+    public MethodInfo InterfaceMethod { get; } = interfaceMethod;
     public MemberInfo? ImplementedMember { get; private set; }
     public MemberInfo? ProxyImplementationMember { get; internal set; }
     public bool IsProperty { get; private set; }
-
-    public ShimBinding(MethodInfo interfaceMethod)
-    {
-        InterfaceMethod = interfaceMethod;
-    }
 
     public bool Resolve(Type implType, bool isConstructor)
     {
@@ -74,11 +69,18 @@ internal class ShimBinding
         var propertyType = InterfaceMethod.ReturnType;
         if (IsProperty)
         {
-            reflectMember = InterfaceMethod.DeclaringType.GetProperty(InterfaceMethod.Name[4..]);
+            var propInfos = InterfaceMethod.DeclaringType.GetProperties()
+                .Where(p => p.Name == InterfaceMethod.Name[4..]).ToArray();
+            if (propInfos.Length > 1 && InterfaceMethod.GetParameters().Any())
+            {
+                propInfos = propInfos
+                    .Where(p => p.GetIndexParameters().FirstOrDefault()?.ParameterType == InterfaceMethod.GetParameters().First().ParameterType).ToArray();
+            }
+            reflectMember = propInfos.Single();
         }
         if (isPropertySetShim)
         {
-            propertyType = InterfaceMethod.GetParameters().First().ParameterType;
+            propertyType = InterfaceMethod.GetParameters().Last().ParameterType;
         }
 
         // Decide if proxy
