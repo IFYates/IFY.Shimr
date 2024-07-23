@@ -1,5 +1,4 @@
-﻿
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen.Models.Bindings;
 
@@ -12,5 +11,5 @@ internal interface IBinding
     ITypeSymbol? ReturnOverride { get; set; }
     bool IsEnumerableReturnOverride { get; set; }
 
-    void GenerateCode(StringBuilder code);
+    void GenerateCode(ICodeWriter writer);
 }

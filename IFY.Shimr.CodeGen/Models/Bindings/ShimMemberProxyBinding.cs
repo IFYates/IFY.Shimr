@@ -33,8 +33,9 @@ internal class ShimMemberProxyBinding(ShimMember shimMember, ShimTarget target, 
             }}";
     private const string PROXY_MEMBER_CS = @"            public {0} {1}({2}) => {3}.{4}({5}{6}{7}){8};";
 
-    public override void GenerateCode(StringBuilder code)
+    public override void GenerateCode(ICodeWriter writer)
     {
+        var code = new StringBuilder();
         switch (ShimMember)
         {
             case ShimMember.ShimMethodMember methodMember:
@@ -47,6 +48,7 @@ internal class ShimMemberProxyBinding(ShimMember shimMember, ShimTarget target, 
                 code.AppendLine("// TODO: ShimMemberProxyBinding.GenerateCode " + ShimMember.Type);
                 break;
         }
+        writer.Append(code.ToString());
     }
 
     private void writeMethod(StringBuilder code, ShimMember.ShimMethodMember methodMember)

@@ -36,7 +36,7 @@ internal class ShimFactoryDefinition : IShimDefinition
             .TargetType = new(target);
     }
 
-    private const string OUTER_CLASS_CS = $@"namespace {GlobalCodeWriter.SB_NAMESPACE}
+    private const string OUTER_CLASS_PRE_CS = $@"namespace {GlobalCodeWriter.SB_NAMESPACE}
 {{{{
     using {GlobalCodeWriter.EXT_NAMESPACE};
     using System.Linq;
@@ -44,22 +44,23 @@ internal class ShimFactoryDefinition : IShimDefinition
     {{{{
         protected class {{0}} : {{1}}
         {{{{
-{{2}}
-        }}}}
-    }}}}
-}}}}
+";
+    private const string OUTER_CLASS_POST_CS = @"        }
+    }
+}
 ";
 
     public void WriteShimClass(ICodeWriter writer, IEnumerable<IBinding> bindings)
     {
-        var classCode = new StringBuilder();
+        writer.AppendFormat(OUTER_CLASS_PRE_CS, Name, FullTypeName);
+
         foreach (var binding in bindings)
         {
-            binding.GenerateCode(classCode);
+            binding.GenerateCode(writer);
         }
 
-        var code = string.Format(OUTER_CLASS_CS, Name, FullTypeName, classCode.ToString());
-        writer.AddSource($"Shimr.{Name}.g.cs", code);
+        writer.Append(OUTER_CLASS_POST_CS);
+        writer.WriteSource($"Shimr.{Name}.g.cs");
     }
 
     public void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimResolver shimResolver)

@@ -52,6 +52,12 @@
             Generate the static class providing the '.Shim&lt;T&gt;(object)' extension method.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.CodeGen.ICodeWriter.WriteSource(System.String)">
+            <summary>
+            Write the current code buffer to a source file.
+            </summary>
+            <param name="name">The 'hintName' of the source file.</param>
+        </member>
         <member name="T:IFY.Shimr.CodeGen.Models.Bindings.NullBinding">
             <summary>
             An empty binding.

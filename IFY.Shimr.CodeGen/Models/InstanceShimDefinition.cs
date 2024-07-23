@@ -39,44 +39,32 @@ internal class InstanceShimDefinition : IShimDefinition
         }
     }
 
-    private const string OUTER_CLASS_CS = $@"namespace {GlobalCodeWriter.EXT_NAMESPACE}
-{{{{
+    private const string OUTER_CLASS_PRE_CS = $@"namespace {GlobalCodeWriter.EXT_NAMESPACE}
+{{
     using System.Linq;
     public static partial class {GlobalCodeWriter.EXT_CLASSNAME}
-    {{{{
-{{0}}
-    }}}}
-}}}}
+    {{
 ";
-    private const string CLASS_CS = $@"         protected class {{0}}{{1}} : {{2}}, IShim{{3}}
-         {{{{
-            private readonly {{4}} _inst;
-            public {{0}}({{4}} inst) => _inst = inst;
+    private const string OUTER_CLASS_POST_CS = @"
+    }
+}
+";
+    private const string CLASS_PRE_CS = @"         protected class {0}{1} : {2}, IShim{3}
+         {{
+            private readonly {4} _inst;
+            public {0}({4} inst) => _inst = inst;
             object IShim.Unshim() => _inst;
-{{5}}         }}}}";
+";
+    private const string CLASS_POST_CS = @"         }";
 
     public void WriteShimClass(ICodeWriter writer, IEnumerable<IBinding> bindings)
     {
-        var code = new StringBuilder();
+        writer.Append(OUTER_CLASS_PRE_CS);
 
         // Each target has a class
         var targetBindings = bindings.GroupBy(b => b.Target.FullTypeName).ToArray();
         foreach (var group in targetBindings)
         {
-            // Add ToString(), if not already
-            var classCode = new StringBuilder();
-            if (!Members.OfType<ShimMember.ShimMethodMember>()
-                .Any(m => m.Name == nameof(ToString) && m.Parameters.Length == 0))
-            {
-                classCode.AppendLine("            public override string ToString() => _inst.ToString();");
-            }
-
-            // Members
-            foreach (var binding in group)
-            {
-                binding.GenerateCode(classCode);
-            }
-
             var symbol = group.First().Definition.Symbol;
             var codeArgs = new[]
             {
@@ -84,13 +72,28 @@ internal class InstanceShimDefinition : IShimDefinition
                 symbol.TypeParameters.ToTypeParameterList(),
                 group.First().Definition.FullTypeName, // Interface
                 symbol.TypeParameters.ToWhereClause(),
-                group.First().Target.FullTypeName, // Implementation
-                classCode.ToString()
+                group.First().Target.FullTypeName // Implementation
             };
-            code.AppendFormat(CLASS_CS, codeArgs);
+            writer.AppendFormat(CLASS_PRE_CS, codeArgs);
+
+            // Add ToString(), if not already
+            if (!Members.OfType<ShimMember.ShimMethodMember>()
+                .Any(m => m.Name == nameof(ToString) && m.Parameters.Length == 0))
+            {
+                writer.AppendLine("            public override string ToString() => _inst.ToString();");
+            }
+
+            // Members
+            foreach (var binding in group)
+            {
+                binding.GenerateCode(writer);
+            }
+
+            writer.Append(CLASS_POST_CS);
         }
 
-        writer.AddSource($"Shimr.{Name}.g.cs", string.Format(OUTER_CLASS_CS, code.ToString()));
+        writer.Append(OUTER_CLASS_POST_CS);
+        writer.WriteSource($"Shimr.{Name}.g.cs");
     }
 
     public void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimResolver shimResolver)

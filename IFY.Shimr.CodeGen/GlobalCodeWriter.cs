@@ -13,15 +13,6 @@ internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
     public const string EXT_CLASSNAME = "ObjectExtensions";
     public const string EXT_CLASSNAMEFULL = $"{EXT_NAMESPACE}.{EXT_CLASSNAME}";
 
-    public bool HasNullableAttributes { get; } = context.Compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute") != null;
-    public bool HasStackTraceHiddenAttribute { get; } = context.Compilation.GetTypeByMetadataName("System.Diagnostics.StackTraceHiddenAttribute") != null;
-
-    public void AddSource(string name, string code)
-    {
-        context.AddSource(name, $"// Generated at {DateTime.Now:O}\r\n{code}");
-        Diag.WriteOutput($"/** File: {name} **/\r\n{code}");
-    }
-
     private const string SB_CLASS_CS = $@"namespace {SB_NAMESPACE}
 {{{{
     public static partial class {SB_CLASSNAME}
@@ -62,7 +53,8 @@ internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
             code.AppendLine($"            [typeof({def.FullTypeName})] = typeof({def.Name}),");
         }
 
-        writer.AddSource($"{SB_CLASSNAME}.g.cs", string.Format(SB_CLASS_CS, code.ToString()));
+        writer.AppendFormat(SB_CLASS_CS, code);
+        writer.WriteSource($"{SB_CLASSNAME}.g.cs");
     }
 
     private const string EXT_CLASS_CS = $@"#nullable enable
@@ -147,6 +139,27 @@ namespace {EXT_NAMESPACE}
         }
         codeArgs[1] = code.ToString();
 
-        writer.AddSource($"{EXT_CLASSNAME}.g.cs", string.Format(EXT_CLASS_CS, codeArgs));
+        writer.AppendFormat(EXT_CLASS_CS, codeArgs);
+        writer.WriteSource($"{EXT_CLASSNAME}.g.cs");
+    }
+
+    private readonly StringBuilder _code = new();
+
+    public bool HasNullableAttributes { get; } = context.Compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute") != null;
+    public bool HasStackTraceHiddenAttribute { get; } = context.Compilation.GetTypeByMetadataName("System.Diagnostics.StackTraceHiddenAttribute") != null;
+
+    public void Append(string value)
+        => _code.Append(value);
+    public void AppendLine(string value)
+        => _code.AppendLine(value);
+    public void AppendFormat(string format, params object?[] args)
+        => _code.AppendFormat(format, args);
+
+    public void WriteSource(string name)
+    {
+        var code = _code.ToString();
+        _code.Clear();
+        context.AddSource(name, $"// Generated at {DateTime.Now:O}\r\n{code}");
+        Diag.WriteOutput($"/** File: {name} **/\r\n{code}");
     }
 }

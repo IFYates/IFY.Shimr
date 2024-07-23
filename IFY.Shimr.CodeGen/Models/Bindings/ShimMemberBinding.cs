@@ -11,8 +11,10 @@ internal class ShimMemberBinding(ShimMember shimMember, TargetMember targetMembe
     public ShimMember ShimMember { get; } = shimMember;
     public TargetMember TargetMember { get; } = targetMember;
 
-    public override void GenerateCode(StringBuilder code)
+    public override void GenerateCode(ICodeWriter writer)
     {
+        var code = new StringBuilder();
         ShimMember.GenerateCode(code, TargetMember);
+        writer.Append(code.ToString());
     }
 }

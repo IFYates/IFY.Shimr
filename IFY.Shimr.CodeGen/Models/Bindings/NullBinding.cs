@@ -14,7 +14,7 @@ internal class NullBinding(IShimDefinition shim, ShimTarget target) : IBinding
     public ITypeSymbol? ReturnOverride { get; set; }
     public bool IsEnumerableReturnOverride { get; set; }
 
-    public virtual void GenerateCode(StringBuilder code)
+    public virtual void GenerateCode(ICodeWriter writer)
     {
     }
 }

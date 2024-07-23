@@ -28,14 +28,16 @@ internal abstract class ShimMember : IMember
     public sealed class ShimEventMember(IShimDefinition shim, IEventSymbol symbol)
         : ShimMember(shim, symbol, MemberType.Event)
     {
+        private const string EVENT_CS = "            public event {0} {1} {{"
+            + " add {{ _inst.{2} += value; }}"
+            + " remove {{ _inst.{2} -= value; }}"
+            + " }}";
+
         public override ITypeSymbol? ReturnType { get; } = symbol.Type;
 
         public override void GenerateCode(StringBuilder code, TargetMember targetMember)
         {
-            code.Append($"            public event {ReturnType?.ToDisplayString() ?? "void"} {Name} {{")
-                .Append($" add {{ _inst.{TargetName} += value; }}")
-                .Append($" remove {{ _inst.{TargetName} -= value; }}")
-                .AppendLine(" }");
+            code.AppendFormat(EVENT_CS, ReturnType?.ToDisplayString() ?? "void", Name, TargetName);
         }
     }
 
@@ -47,22 +49,29 @@ internal abstract class ShimMember : IMember
 
         public override void GenerateCode(StringBuilder code, TargetMember targetMember)
         {
-            code.Append($"            public {ReturnType?.ToDisplayString() ?? "void"} this[{IndexerArgType} {IndexerArgName}] {{");
-
-            var callee = $"{GetMemberCallee(targetMember)}[{IndexerArgName}]";
+            var codeArgs = new[]
+            {
+                !IsExplicit ? "public " : null,
+                ReturnType?.ToDisplayString() ?? "void",
+                IsExplicit ? Symbol.ContainingType.ToFullName() + "." : null,
+                $"this[{IndexerArgType} {IndexerArgName}]",
+                $"{GetMemberCallee(targetMember)}[{IndexerArgName}]",
+                GetShimCode(targetMember),
+                GetUnshimCode("value", targetMember),
+            };
+            code.AppendFormat(PROP_CS, codeArgs);
             if (IsGet)
             {
-                code.Append($" get => {callee}{GetShimCode(targetMember)};");
+                code.AppendFormat(PROP_GET_CS, codeArgs);
             }
             if (IsSet)
             {
-                code.Append($" set => {callee} = {GetUnshimCode("value", targetMember)};");
+                code.AppendFormat(PROP_SET_CS, codeArgs);
             }
             if (IsInit)
             {
-                code.Append($" init => {callee} = {GetUnshimCode("value", targetMember)};");
+                code.AppendFormat(PROP_INIT_CS, codeArgs);
             }
-
             code.AppendLine(" }");
         }
     }
@@ -153,10 +162,10 @@ internal abstract class ShimMember : IMember
             = symbol.GetMethod?.DeclaredAccessibility == Accessibility.Public
             && symbol.SetMethod?.IsInitOnly == true;
 
-        private const string PROP_CS = "            {0}{1} {2}{3} {{";
-        private const string PROP_GET_CS = " get => {4}{5};";
-        private const string PROP_SET_CS = " set => {4} = {6};";
-        private const string PROP_INIT_CS = " init => {4} = {6};";
+        protected const string PROP_CS = "            {0}{1} {2}{3} {{";
+        protected const string PROP_GET_CS = " get => {4}{5};";
+        protected const string PROP_SET_CS = " set => {4} = {6};";
+        protected const string PROP_INIT_CS = " init => {4} = {6};";
 
         public override void GenerateCode(StringBuilder code, TargetMember targetMember)
         {
