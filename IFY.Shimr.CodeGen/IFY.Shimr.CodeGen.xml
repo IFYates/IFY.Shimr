@@ -67,7 +67,7 @@
             A binding between a <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.ShimMember"/> and <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.TargetMember"/>.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.#ctor(IFY.Shimr.CodeGen.Models.Members.ShimMember,IFY.Shimr.CodeGen.Models.Members.TargetMember)">
+        <member name="M:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.#ctor(IFY.Shimr.CodeGen.Models.Members.ShimMember,IFY.Shimr.CodeGen.Models.Members.TargetMember,IFY.Shimr.CodeGen.Models.ShimTarget)">
             <summary>
             A binding between a <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.ShimMember"/> and <see cref="P:IFY.Shimr.CodeGen.Models.Bindings.ShimMemberBinding.TargetMember"/>.
             </summary>

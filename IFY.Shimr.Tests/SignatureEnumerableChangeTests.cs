@@ -42,7 +42,6 @@ public class SignatureEnumerableChangeTests
         Assert.AreSame(obj, shim.Unshim());
     }
 
-#if !SHIMR_CG // TODO: Unshim(IEnumerable<T>)
     [TestMethod]
     public void Can_get_enum_result_as_shims()
     {
@@ -55,10 +54,7 @@ public class SignatureEnumerableChangeTests
         var arr = res.Unshim<string>().ToArray();
         CollectionAssert.AreEqual(obj.GetEnum().ToArray(), arr);
     }
-#endif
 
-#if !SHIMR_CG // TODO: Shim(IEnumerable<T>)
-    // TODO: can shim, cannot set
     [TestMethod]
     public void Can_set_enum_parameter_as_appropriate_shims()
     {
@@ -66,11 +62,10 @@ public class SignatureEnumerableChangeTests
         var data = (IEnumerable<string>)["1", "2", "3"];
 
         var shim = obj.Shim<ICoveredEnumSetMethodTest>()!;
-        var arr = data.Shim<IToString>()!;
+        var arr = data.Select(d => d.Shim<IToString>()!).ToArray();
         shim.SetEnum(arr);
 
         var res = obj.GetEnum();
         CollectionAssert.AreEqual(data.ToArray(), res.ToArray());
     }
-#endif
 }

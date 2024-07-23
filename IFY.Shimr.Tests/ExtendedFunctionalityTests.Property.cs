@@ -181,71 +181,73 @@ public class ExtendedFunctionalityTests_Property
         Assert.AreEqual("test", ProxyImpl_OverridePropertyAlias.PropertyProxy);
     }
 
-    // TODO
-    //public interface ITestShim_PropertyMethods
-    //{
-    //    [ShimProxy(typeof(ProxyImpl_PropertyMethods))]
-    //    string Property { get; set; }
-    //}
-    //[ExcludeFromCodeCoverage]
-    //[SuppressMessage("Style", "IDE1006:Naming Styles")]
-    //public class ProxyImpl_PropertyMethods
-    //{
-    //    private static bool _inProxy;
-    //    public static string PropertyValue { get; private set; } = null!;
+    // TODO: CG can support this
+#if !SHIMR_CG
+    public interface ITestShim_PropertyMethods
+    {
+        [ShimProxy(typeof(ProxyImpl_PropertyMethods))]
+        string Property { get; set; }
+    }
+    [ExcludeFromCodeCoverage]
+    [SuppressMessage("Style", "IDE1006:Naming Styles")]
+    public class ProxyImpl_PropertyMethods
+    {
+        private static bool _inProxy;
+        public static string PropertyValue { get; private set; } = null!;
 
-    //    public static string get_Property(ITestShim_PropertyMethods inst)
-    //    {
-    //        if (_inProxy) { return PropertyValue; }
-    //        try
-    //        {
-    //            _inProxy = true;
-    //            return inst.Property;
-    //        }
-    //        finally
-    //        {
-    //            _inProxy = false;
-    //        }
-    //    }
-    //    public static void set_Property(ITestShim_PropertyMethods inst, string value)
-    //    {
-    //        if (_inProxy) { PropertyValue = value; return; }
-    //        try
-    //        {
-    //            _inProxy = true;
-    //            inst.Property = value;
-    //        }
-    //        finally
-    //        {
-    //            _inProxy = false;
-    //        }
-    //    }
-    //}
-    //[TestMethod]
-    //public void Can_override_property_using_methods()
-    //{
-    //    // Arrange
-    //    var obj = new TestClass_HasProperty();
-    //    var shim = obj.Shim<ITestShim_PropertyMethods>();
+        public static string get_Property(ITestShim_PropertyMethods inst)
+        {
+            if (_inProxy) { return PropertyValue; }
+            try
+            {
+                _inProxy = true;
+                return inst.Property;
+            }
+            finally
+            {
+                _inProxy = false;
+            }
+        }
+        public static void set_Property(ITestShim_PropertyMethods inst, string value)
+        {
+            if (_inProxy) { PropertyValue = value; return; }
+            try
+            {
+                _inProxy = true;
+                inst.Property = value;
+            }
+            finally
+            {
+                _inProxy = false;
+            }
+        }
+    }
+    [TestMethod]
+    public void Can_override_property_using_methods()
+    {
+        // Arrange
+        var obj = new TestClass_HasProperty();
+        var shim = obj.Shim<ITestShim_PropertyMethods>();
 
-    //    // Act
-    //    shim.Property = "test";
+        // Act
+        shim.Property = "test";
 
-    //    // Assert
-    //    Assert.AreEqual("test", obj.Property);
-    //}
+        // Assert
+        Assert.AreEqual("test", obj.Property);
+    }
 
-    //[TestMethod]
-    //public void Can_add_property_using_methods()
-    //{
-    //    // Arrange
-    //    var obj = new TestClass_NoProperty();
-    //    var shim = obj.Shim<ITestShim_PropertyMethods>();
+    [TestMethod]
+    public void Can_add_property_using_methods()
+    {
+        // Arrange
+        var obj = new TestClass_NoProperty();
+        var shim = obj.Shim<ITestShim_PropertyMethods>();
 
-    //    // Act
-    //    shim.Property = "test";
+        // Act
+        shim.Property = "test";
 
-    //    // Assert
-    //    Assert.AreEqual("test", ProxyImpl_PropertyMethods.PropertyValue);
-    //}
+        // Assert
+        Assert.AreEqual("test", ProxyImpl_PropertyMethods.PropertyValue);
+    }
+#endif
 }

@@ -5,8 +5,8 @@ namespace IFY.Shimr.CodeGen.Models.Bindings;
 /// <summary>
 /// A binding between a <see cref="ShimMember"/> and <see cref="TargetMember"/>.
 /// </summary>
-internal class ShimMemberBinding(ShimMember shimMember, TargetMember targetMember)
-    : NullBinding(shimMember.Definition, targetMember.Target)
+internal class ShimMemberBinding(ShimMember shimMember, TargetMember targetMember, ShimTarget? target = null)
+    : NullBinding(shimMember.Definition, target ?? targetMember.Target)
 {
     public ShimMember ShimMember { get; } = shimMember;
     public TargetMember TargetMember { get; } = targetMember;

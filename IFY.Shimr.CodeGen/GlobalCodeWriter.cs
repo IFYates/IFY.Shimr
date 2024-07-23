@@ -76,7 +76,7 @@ namespace {EXT_NAMESPACE}
 {{1}}        }}}};
 
         /// <summary>
-        /// Shim an instance of an <paramref name=""object""/> to <typeparamref name=""TInterface""/>
+        /// Shim an instance of an <paramref name=""object""/> to <typeparamref name=""TInterface""/>.
         /// </summary>
 {{0}}        public static TInterface Shim<TInterface>(this object instance) where TInterface : class
         {{{{
@@ -103,6 +103,15 @@ namespace {EXT_NAMESPACE}
             }}}}
 
             throw new System.NotSupportedException($""Interface '{{{{typeof(TInterface).FullName}}}}' is not registered as a shim of type '{{{{instance.GetType().FullName}}}}'."");
+        }}}}
+
+        /// <summary>
+        /// Recast shims to original type.
+        /// No type-safety checks. Must already be <typeparamref name=""T""/> or be <see cref=""IShim""/> of <typeparamref name=""T""/>.
+        /// </summary>
+{{0}}        public static System.Collections.Generic.IEnumerable<T> Unshim<T>(this System.Collections.Generic.IEnumerable<object> shims)
+        {{{{
+            return shims.Select(s => s is T obj ? obj : (T)((IShim)s).Unshim());
         }}}}
     }}}}
 }}}}

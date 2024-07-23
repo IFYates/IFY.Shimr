@@ -1,5 +1,7 @@
 ﻿using IFY.Shimr.Extensions;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 #pragma warning disable CA1822 // Mark members as static
 #pragma warning disable IDE1006 // Naming Styles
@@ -98,49 +100,50 @@ public class PropertyShimTests
         Assert.AreEqual("test_getset", shim.GetSetProperty);
     }
 
-    // TODO
-    //#region Tricky method name
+    #region Tricky method name
 
-    //public class TrickyMethodClass
-    //{
-    //    private string _value = null!;
-    //    public string get_Method() => _value;
-    //    public void set_Method(string value) { _value = value; }
-    //}
-    //public interface ITrickyMethodShim
-    //{
-    //    string get_Method();
-    //    void set_Method(string value);
-    //}
-    //public interface ITrickyPropertyShim
-    //{
-    //    string Method { get; set; }
-    //}
+    public class TrickyMethodClass
+    {
+        private string _value = null!;
+        public string get_Method() => _value;
+        public void set_Method(string value) { _value = value; }
+    }
+    public interface ITrickyMethodShim
+    {
+        string get_Method();
+        void set_Method(string value);
+    }
+    public interface ITrickyPropertyShim
+    {
+        string Method { get; set; }
+    }
 
-    //[TestMethod]
-    //public void Not_tricked_by_method_naming()
-    //{
-    //    var obj = new TrickyMethodClass();
+    [TestMethod]
+    public void Not_tricked_by_method_naming()
+    {
+        var obj = new TrickyMethodClass();
 
-    //    var shim = obj.Shim<ITrickyMethodShim>();
+        var shim = obj.Shim<ITrickyMethodShim>();
 
-    //    Assert.IsNull(obj.get_Method());
-    //    shim.set_Method("test");
-    //    Assert.AreEqual("test", shim.get_Method());
-    //}
+        Assert.IsNull(obj.get_Method());
+        shim.set_Method("test");
+        Assert.AreEqual("test", shim.get_Method());
+    }
 
-    //[TestMethod]
-    //public void Cannot_force_property_over_methods()
-    //{
-    //    var obj = new TrickyMethodClass();
+#if !SHIMR_CG
+    [TestMethod]
+    public void Cannot_force_property_over_methods()
+    {
+        var obj = new TrickyMethodClass();
 
-    //    Assert.ThrowsException<MissingMemberException>(() =>
-    //    {
-    //        obj.Shim<ITrickyPropertyShim>();
-    //    });
-    //}
+        Assert.ThrowsException<System.MissingMemberException>(() =>
+        {
+            obj.Shim<ITrickyPropertyShim>();
+        });
+    }
+#endif
 
-    //#endregion Tricky method name
+    #endregion Tricky method name
 
     #region Issue 12 - Hidden property causes ambiguous exception
 
@@ -171,34 +174,33 @@ public class PropertyShimTests
 
     #endregion Issue 12
 
-    // TODO
-    //#region Issue 28 - Cannot auto-shim IEnumerable return type
+    #region Issue 28 - Cannot auto-shim IEnumerable return type
 
-    //public sealed class ClassWithCollectionProperty
-    //{
-    //    public List<string> Values { get; } = [];
-    //}
+    public sealed class ClassWithCollectionProperty
+    {
+        public List<string> Values { get; } = [];
+    }
 
-    //public interface IShimWithICollectionAutoshim
-    //{
-    //    ICollection<string> Values { get; }
-    //}
+    public interface IShimWithICollectionAutoshim
+    {
+        ICollection<string> Values { get; }
+    }
 
-    //[TestMethod]
-    //public void Can_autoshim_using_IEnumerable_return_type()
-    //{
-    //    // Arrange
-    //    var obj = new ClassWithCollectionProperty();
-    //    var shim = obj.Shim<IShimWithICollectionAutoshim>();
+    [TestMethod]
+    public void Can_autoshim_using_IEnumerable_return_type()
+    {
+        // Arrange
+        var obj = new ClassWithCollectionProperty();
+        var shim = obj.Shim<IShimWithICollectionAutoshim>();
 
-    //    // Act
-    //    obj.Values.Add("A");
-    //    shim.Values.Add("B");
+        // Act
+        obj.Values.Add("A");
+        shim.Values.Add("B");
 
-    //    // Assert
-    //    CollectionAssert.AreEqual(new[] { "A", "B" }, shim.Values.ToArray());
-    //    Assert.AreSame(shim.Values, obj.Values);
-    //}
+        // Assert
+        CollectionAssert.AreEqual(new[] { "A", "B" }, shim.Values.ToArray());
+        Assert.AreSame(shim.Values, obj.Values);
+    }
 
-    //#endregion
+    #endregion
 }

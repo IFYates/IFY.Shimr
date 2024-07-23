@@ -60,8 +60,7 @@ internal class InstanceShimDefinition : IShimDefinition
         var code = new StringBuilder();
 
         // Each target has a class
-        var targetBindings = bindings
-        .GroupBy(b => b.Target.FullTypeName).ToArray();
+        var targetBindings = bindings.GroupBy(b => b.Target.FullTypeName).ToArray();
         foreach (var group in targetBindings)
         {
             // Add ToString(), if not already

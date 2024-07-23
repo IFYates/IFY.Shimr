@@ -28,11 +28,11 @@ internal static class SyntaxHelpers
             symbol = typeSymbol.ConstructedFrom;
         }
 
-        var members = symbol.GetMembers().ToDictionary(m => GetMemberUniqueName(m));
+        var members = symbol.GetMembers().Where(isMember).ToDictionary(m => GetMemberUniqueName(m));
         var baseSymbol = symbol.BaseType;
         while (baseSymbol != null)
         {
-            foreach (var member in baseSymbol.GetMembers().Where(m => m is not IMethodSymbol { MethodKind: MethodKind.Constructor }))
+            foreach (var member in baseSymbol.GetMembers().Where(m => isMember(m) && m is not IMethodSymbol { MethodKind: MethodKind.Constructor }))
             {
                 var key = GetMemberUniqueName(member);
                 if (!members.TryGetValue(key, out var match))
@@ -46,7 +46,7 @@ internal static class SyntaxHelpers
             }
             baseSymbol = baseSymbol.BaseType;
         }
-        foreach (var member in symbol.AllInterfaces.SelectMany(i => i.GetMembers()))
+        foreach (var member in symbol.AllInterfaces.SelectMany(i => i.GetMembers().Where(isMember)))
         {
             var key = GetMemberUniqueName(member);
             if (!members.TryGetValue(key, out var match))
@@ -61,6 +61,8 @@ internal static class SyntaxHelpers
 
         return members.Values.ToArray();
 
+        static bool isMember(ISymbol symbol)
+            => symbol.Kind is SymbolKind.Event or SymbolKind.Field or SymbolKind.Property or SymbolKind.Method;
         static ISymbol getBaseSymbol(ISymbol symbol) => symbol switch
         {
             IMethodSymbol { IsOverride: true } method => method.OverriddenMethod!,
@@ -144,6 +146,13 @@ internal static class SyntaxHelpers
 
     public static bool IsEnumerable(this ITypeSymbol type, out ITypeSymbol? elementType)
     {
+        // Ignore string
+        if (type.ToFullName() == "System.String")
+        {
+            elementType = null;
+            return false;
+        }
+
         // Array shim
         if (type is IArrayTypeSymbol arrayType)
         {
@@ -154,7 +163,7 @@ internal static class SyntaxHelpers
         // IEnumerable<> shim
         var ienum = type.AllInterfaces.Add((INamedTypeSymbol)type)
             .Where(i => i.TypeKind == TypeKind.Interface && i.IsGenericType && i.TypeArguments.Length == 1)
-            .FirstOrDefault(i => i.Name == nameof(System.Collections.IEnumerable));
+            .FirstOrDefault(i => i.ToGenericName() == IENUM_TYPE);
         if (ienum != null)
         {
             elementType = ienum.TypeArguments[0];
@@ -164,6 +173,7 @@ internal static class SyntaxHelpers
         elementType = null;
         return false;
     }
+    private static readonly string IENUM_TYPE = $"{typeof(IEnumerable<>).Namespace}.{nameof(IEnumerable<int>)}<>";
 
     public static string Hash(this string input)
     {

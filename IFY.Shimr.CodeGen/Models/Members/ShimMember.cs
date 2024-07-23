@@ -106,7 +106,7 @@ internal abstract class ShimMember : IMember
                 .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
                 .Append($")")
                 .Append(GetShimCode(targetMember))
-                .AppendLine("; // " + IsExplicit);
+                .AppendLine(";");
         }
         protected virtual void AddInvocationCode(StringBuilder code, TargetMember targetMember, string? defTypeArgs)
         {
@@ -153,32 +153,36 @@ internal abstract class ShimMember : IMember
             = symbol.GetMethod?.DeclaredAccessibility == Accessibility.Public
             && symbol.SetMethod?.IsInitOnly == true;
 
+        private const string PROP_CS = "            {0}{1} {2}{3} {{";
+        private const string PROP_GET_CS = " get => {4}{5};";
+        private const string PROP_SET_CS = " set => {4} = {6};";
+        private const string PROP_INIT_CS = " init => {4} = {6};";
+
         public override void GenerateCode(StringBuilder code, TargetMember targetMember)
         {
-            // Check if explicit
-            if (IsExplicit)
+            var codeArgs = new[]
             {
-                code.Append($"            {ReturnType?.ToDisplayString() ?? "void"} {Symbol.ContainingType.ToFullName()}.{Name} {{");
-            }
-            else
-            {
-                code.Append($"            public {ReturnType?.ToDisplayString() ?? "void"} {Name} {{");
-            }
-
-            var callee = $"{GetMemberCallee(targetMember)}.{targetMember.Name}";
+                !IsExplicit ? "public " : null,
+                ReturnType?.ToDisplayString() ?? "void",
+                IsExplicit ? Symbol.ContainingType.ToFullName() + "." : null,
+                Name,
+                $"{GetMemberCallee(targetMember)}.{targetMember.Name}",
+                GetShimCode(targetMember),
+                GetUnshimCode("value", targetMember),
+            };
+            code.AppendFormat(PROP_CS, codeArgs);
             if (IsGet)
             {
-                code.Append($" get => {callee}{GetShimCode(targetMember)};");
+                code.AppendFormat(PROP_GET_CS, codeArgs);
             }
             if (IsSet)
             {
-                code.Append($" set => {callee} = {GetUnshimCode("value", targetMember)};");
+                code.AppendFormat(PROP_SET_CS, codeArgs);
             }
             if (IsInit)
             {
-                code.Append($" init => {callee} = {GetUnshimCode("value", targetMember)};");
+                code.AppendFormat(PROP_INIT_CS, codeArgs);
             }
-
             code.AppendLine(" }");
         }
     }
@@ -263,16 +267,18 @@ internal abstract class ShimMember : IMember
         ? targetMember.ContainingType.ToFullName()
         : $"(({targetMember.ContainingType.ToFullName()})_inst)";
 
-    public string? GetShimCode(TargetMember target)
+    public string? GetShimCode(TargetMember targetMember)
     {
         string? str = null;// $"/* {target.ReturnType.ToDisplayString()} */";
-        if (ReturnType!.IsMatch(target.ReturnType))
+        if (ReturnType!.IsMatchable(targetMember.ReturnType))
         {
             return str;
         }
 
         // Array shim
-        if (ReturnType!.IsEnumerable(out var returnElementType))
+        if (ReturnType!.IsEnumerable(out var returnElementType)
+            && targetMember.ReturnType!.IsEnumerable(out var targetElementType)
+            && !returnElementType!.IsMatchable(targetElementType))
         {
             return $"{str}.Select(e => e.Shim<{returnElementType!.ToDisplayString()}>()).ToArray()";
         }
@@ -281,9 +287,18 @@ internal abstract class ShimMember : IMember
         return ReturnType!.TypeKind != TypeKind.Interface ? str : $"{str}.Shim<{ReturnType.ToDisplayString()}>()";
     }
     public string GetUnshimCode(string name, TargetMember target)
-        => ReturnType?.IsMatch(target.ReturnType) == false
-        ? $"({target.ReturnType!.ToDisplayString()})((IShim){name}).Unshim()"
-        : name;
+    {
+        if (ReturnType?.IsMatchable(target.ReturnType) != false)
+        {
+            return name;
+        }
+
+        if (target.ReturnType!.IsEnumerable(out _))
+        {
+            return $"({target.ReturnType!.ToDisplayString()})((System.Collections.Generic.IEnumerable<IShim>){name}).Unshim()";
+        }
+        return $"({target.ReturnType!.ToDisplayString()})((IShim){name}).Unshim()";
+    }
 
     public virtual bool IsMatch(IMember member)
     {
@@ -292,15 +307,19 @@ internal abstract class ShimMember : IMember
 
     public virtual void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, CodeErrorReporter errors, ShimResolver shimResolver)
     {
+        var binding = targetMember.Target.GetBinding(this, targetMember);
+        bindings.Add(binding);
+
         // Register return shim, if needed
         if (targetMember!.IsShimmableReturnType(this, out var targetElement, out var shimElement))
         {
             if (targetElement != null && shimElement != null)
             {
+                binding.IsEnumerableReturnOverride = true;
                 safeRegister(shimElement, targetElement);
             }
         }
-        else if (ReturnType?.TypeKind == TypeKind.Interface)
+        else if (ReturnType?.TypeKind == TypeKind.Interface && (targetElement == null || shimElement == null))
         {
             // Optimistic
             safeRegister(ReturnType, targetMember.ReturnType!);
@@ -312,8 +331,6 @@ internal abstract class ShimMember : IMember
             errors.NoMemberError(targetMember.ContainingType, Symbol);
             return;
         }
-
-        bindings.Add(targetMember.Target.GetBinding(this, targetMember));
 
         void safeRegister(ITypeSymbol shimType, ITypeSymbol targetType)
         {
