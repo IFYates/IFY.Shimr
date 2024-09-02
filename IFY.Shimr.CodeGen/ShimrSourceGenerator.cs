@@ -1,5 +1,4 @@
 ﻿using IFY.Shimr.CodeGen.CodeAnalysis;
-using IFY.Shimr.CodeGen.Models;
 using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.CodeGen;

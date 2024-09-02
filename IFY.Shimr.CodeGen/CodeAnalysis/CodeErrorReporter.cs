@@ -56,7 +56,7 @@ internal class CodeErrorReporter
     //    context.ReportDiagnostic(Diagnostic.Create(ShimToUnknownInterface, node.GetLocation(), shimdType?.ToDisplayString() ?? "Unknown"));
     //}
     //public static readonly DiagnosticDescriptor ShimToUnknownInterface = new(
-    //    id: "SHIMR001",
+    //    id: "SHIMR101",
     //    title: "Unknown Shim type",
     //    messageFormat: "'{0}' has not been registered as a shim type",
     //    category: "Correctness",
@@ -69,7 +69,7 @@ internal class CodeErrorReporter
         reportDiagnostic(ShimToUnknownInterface, node.GetLocation(), shimdType?.ToDisplayString() ?? "Unknown");
     }
     public static readonly DiagnosticDescriptor ShimToUnknownInterface = new(
-        id: "SHIMR002",
+        id: "SHIMR102",
         title: "Undetermined Shim type",
         messageFormat: "'{0}' is not a determinable type and won't be registered as a shimmable type",
         category: "Correctness",
@@ -82,7 +82,7 @@ internal class CodeErrorReporter
         reportDiagnostic(FailedToGenerateCode, null, ex);
     }
     public static readonly DiagnosticDescriptor FailedToGenerateCode = new(
-        id: "SHIMR100",
+        id: "SHIMR200",
         title: "Failed to generate shims",
         messageFormat: "There was an unexpected error generating shims: {0}",
         category: "Correctness",
@@ -95,7 +95,7 @@ internal class CodeErrorReporter
         reportDiagnostic(ShimToNonInterface, node.GetLocation(), argType?.ToDisplayString() ?? "Unknown");
     }
     public static readonly DiagnosticDescriptor ShimToNonInterface = new(
-        id: "SHIMR101",
+        id: "SHIMR201",
         title: "Invalid Shim type",
         messageFormat: "'{0}' is not an interface and invalid as a shim type",
         category: "Correctness",
@@ -108,7 +108,7 @@ internal class CodeErrorReporter
         reportDiagnostic(NeedNonInterface, node.GetLocation(), argType?.ToDisplayString() ?? "Unknown");
     }
     public static readonly DiagnosticDescriptor NeedNonInterface = new(
-        id: "SHIMR102",
+        id: "SHIMR202",
         title: "Interface type not allowed",
         messageFormat: "'{0}' is an interface and invalid for use here",
         category: "Correctness",
@@ -121,7 +121,7 @@ internal class CodeErrorReporter
         reportDiagnostic(ShimOfUnknownMember, targetType.GetSyntaxNode()?.GetLocation(), targetType.ToFullName(), $"{shimMember.ContainingType.ToFullName()}.{shimMember.Name}");
     }
     public static readonly DiagnosticDescriptor ShimOfUnknownMember = new(
-        id: "SHIMR103",
+        id: "SHIMR203",
         title: "Unable to resolve target member",
         messageFormat: "Shim target '{0}' does not contain member '{1}' and missing members are currently fatal",
         category: "Correctness",
@@ -134,7 +134,7 @@ internal class CodeErrorReporter
         reportDiagnostic(InvalidShimReturnType, node?.GetLocation(), shimMember, returnType);
     }
     public static readonly DiagnosticDescriptor InvalidShimReturnType = new(
-        id: "SHIMR104",
+        id: "SHIMR204",
         title: "Invalid return type",
         messageFormat: "Shim target '{0}' has invalid return type '{1}'",
         category: "Correctness",

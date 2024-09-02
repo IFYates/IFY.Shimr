@@ -151,6 +151,11 @@
             Find the <see cref="T:IFY.Shimr.CodeGen.Models.Members.TargetMember"/>s in this <see cref="T:IFY.Shimr.CodeGen.Models.ShimTarget"/> that could be bound to the given <see cref="T:IFY.Shimr.CodeGen.Models.Members.ShimMember"/>.
             </summary>
         </member>
+        <member name="T:IFY.Shimr.Extensions.Shimr">
+            <summary>
+            Exists only to stub the namespace prior to source generation.
+            </summary>
+        </member>
         <member name="T:IFY.Shimr.ConstructorShimAttribute">
             <summary>
             Mark a method as being a shim of a constructor.

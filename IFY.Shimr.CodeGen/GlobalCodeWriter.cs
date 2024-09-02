@@ -70,7 +70,7 @@ namespace {EXT_NAMESPACE}
         /// <summary>
         /// Shim an instance of an <paramref name=""object""/> to <typeparamref name=""TInterface""/>.
         /// </summary>
-{{0}}        public static TInterface Shim<TInterface>(this object instance) where TInterface : class
+{{0}}        public static TInterface{{2}} Shim<TInterface>(this object instance) where TInterface : class
         {{{{
             if (instance == null) return null;
             var interfaceType = typeof(TInterface).IsGenericType ? typeof(TInterface).GetGenericTypeDefinition() : typeof(TInterface);
@@ -115,12 +115,13 @@ namespace {EXT_NAMESPACE}
     public static void WriteExtensionClass(ICodeWriter writer, IEnumerable<IBinding> allBindings)
     {
         // TODO: option to use namespace of underlying?
-        var codeArgs = new string?[2];
+        var codeArgs = new string?[3];
 
         // If current project supports nullable, add extra info
         if (writer.HasNullableAttributes)
         {
             codeArgs[0] = "        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"inst\")]\r\n";
+            codeArgs[2] = "?";
         }
 
         var code = new StringBuilder();
