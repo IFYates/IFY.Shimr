@@ -8,7 +8,7 @@ internal static class Diag
     private static readonly StringBuilder _text = new();
     private const string OUTPUT_FILE = "obj\\Diag.Output.cs";
 
-    public static bool IsEnabled { get; set; } = true;
+    public static bool IsOutputEnabled { get; set; } = true;
 
     private static string? _outputPath;
     public static string? OutputPath
@@ -45,7 +45,7 @@ internal static class Diag
     public static void WriteOutput(string text, bool append = true)
     {
 #if DEBUG
-        if (IsEnabled)
+        if (IsOutputEnabled)
         {
             if (OutputPath == null)
             {

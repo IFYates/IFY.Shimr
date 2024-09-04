@@ -120,8 +120,8 @@ internal class InstanceShimDefinition : IShimDefinition
                     {
                         // TODO: optional, as per 'IgnoreMissingMembers'
                         // TODO: register NotImplemented binding
-                        Diag.WriteOutput($"//// No match: {FullTypeName}.{member.TargetName} for {member.Type} {member.Definition.FullTypeName}.{member.Name}");
-                        errors.NoMemberError(Symbol, member.Symbol);
+                        Diag.WriteOutput($"//// No match: {target.FullTypeName}.{member.TargetName} for {member.Type} {member.Definition.FullTypeName}.{member.Name}");
+                        errors.NoMemberError(target.Symbol, member.Symbol);
                     }
                     continue;
                 }

@@ -10,7 +10,8 @@ internal class ShimrSourceGenerator : ISourceGenerator
     // Only called after a rebuild
     public void Initialize(GeneratorInitializationContext context)
     {
-        Diag.IsEnabled = true;// !Assembly.GetExecutingAssembly().Location.Contains("\\Temp\\");
+        //Diag.Debug();
+        Diag.IsOutputEnabled = true;// !Assembly.GetExecutingAssembly().Location.Contains("\\Temp\\");
         Diag.WriteOutput($"// Start code generation: {DateTime.Now:o}\r\n", false); // TODO: wrong place to reset file
         //Diag.WriteOutput($"// {Assembly.GetExecutingAssembly().Location}");
 
