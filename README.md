@@ -6,16 +6,16 @@ Utility for creating a dynamic object facade/proxy to allow for using an object 
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2FIFYates%2FIFY.Shimr%2Fmaster)](https://dashboard.stryker-mutator.io/reports/github.com/IFYates/IFY.Shimr/master)
 [![Codacy Grade](https://app.codacy.com/project/badge/Grade/8f5585dd2c4f402893420e0ff7edf5f6)](https://app.codacy.com/gh/IFYates/IFY.Shimr/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
-There are two packages options:
+There are [two packages options](https://github.com/IFYates/IFY.Shimr/wiki/Runtime-or-SourceGen.md):
 1. "Runtime" - The original implementation using runtime-compiled types. Very little design-time assistance.
-1. "CodeGen" - Source Generator implementation, providing improved design-time information.
+1. "SourceGen" - Source Generator implementation, providing design-time protection that the shim is valid.
 
 Both packages should have feature parity.
 
 Package|Latest Version|
 -|-|-
 Runtime | [![NuGet Version](https://img.shields.io/nuget/v/IFY.Shimr)](https://www.nuget.org/packages/IFY.Shimr/) [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Shimr)](https://www.nuget.org/packages/IFY.Shimr/)
-CodeGen | [![NuGet Version](https://img.shields.io/nuget/v/IFY.Shimr.CodeGen)](https://www.nuget.org/packages/IFY.Shimr.CodeGen/) [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Shimr.CodeGen)](https://www.nuget.org/packages/IFY.Shimr.CodeGen/)
+SourceGen | [![NuGet Version](https://img.shields.io/nuget/v/IFY.Shimr.SourceGen)](https://www.nuget.org/packages/IFY.Shimr.SourceGen/) [![NuGet Downloads](https://img.shields.io/nuget/dt/IFY.Shimr.SourceGen)](https://www.nuget.org/packages/IFY.Shimr.SourceGen/)
 
 Formerly known as Shimterface:
 [![NuGet Version](https://img.shields.io/nuget/v/Shimterface.Standard)](https://www.nuget.org/packages/Shimterface.Standard/)

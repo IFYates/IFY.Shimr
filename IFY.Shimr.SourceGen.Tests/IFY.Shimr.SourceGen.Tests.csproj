@@ -1,0 +1,67 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!--<TargetFrameworks>netcoreapp3.1;net6.0;net8.0</TargetFrameworks>-->
+		<!--<TargetFrameworks>netcoreapp3.1</TargetFrameworks>-->
+		<TargetFrameworks>net8.0</TargetFrameworks>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<!-- Don't enable implicit usings as we want to ensure the generated code is complete -->
+		
+		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<DefineConstants>SHIMR_CG</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\IFY.Shimr.Tests\Examples\DateTimeExample.cs" Link="Shared\Examples\DateTimeExample.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\Examples\FileSystemExample.cs" Link="Shared\Examples\FileSystemExample.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\Examples\ThreadExample.cs" Link="Shared\Examples\ThreadExample.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\Issues\Issue19.cs" Link="Shared\Issues\Issue19.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\ConstructorTests.cs" Link="Shared\ConstructorTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\EventShimTests.cs" Link="Shared\EventShimTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Field.cs" Link="Shared\ExtendedFunctionalityTests.Field.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Method.cs" Link="Shared\ExtendedFunctionalityTests.Method.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\ExtendedFunctionalityTests.Property.cs" Link="Shared\ExtendedFunctionalityTests.Property.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\FieldShimTests.cs" Link="Shared\FieldShimTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\GenericConstructorTests.cs" Link="Shared\GenericConstructorTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\GenericMethodTests.cs" Link="Shared\GenericMethodTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\IndexerShimTests.cs" Link="Shared\IndexerShimTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\InheritanceTests.cs" Link="Shared\InheritanceTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\MethodShimTests.cs" Link="Shared\MethodShimTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\MultiLevelInheritanceTests.cs" Link="Shared\MultiLevelInheritanceTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\PerformanceTests.cs" Link="Shared\PerformanceTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\PropertyShimTests.cs" Link="Shared\PropertyShimTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\RenameMemberTests.cs" Link="Shared\RenameMemberTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\SignatureArrayChangeTests.cs" Link="Shared\SignatureArrayChangeTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\SignatureChangeTests.cs" Link="Shared\SignatureChangeTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\SignatureEnumerableChangeTests.cs" Link="Shared\SignatureEnumerableChangeTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\StaticFieldShimTests.cs" Link="Shared\StaticFieldShimTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\StaticInterfaceTests.cs" Link="Shared\StaticInterfaceTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\StaticMemberTests.cs" Link="Shared\StaticMemberTests.cs" />
+		<Compile Include="..\IFY.Shimr.Tests\StructTests.cs" Link="Shared\StructTests.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
+		<PackageReference Include="MSTest.TestAdapter" Version="3.5.2" />
+		<PackageReference Include="MSTest.TestFramework" Version="3.5.2" />
+		<PackageReference Include="Moq" Version="4.20.70" />
+		<PackageReference Include="coverlet.collector" Version="6.0.2">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\IFY.Shimr.SourceGen\IFY.Shimr.SourceGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+	</ItemGroup>
+
+</Project>

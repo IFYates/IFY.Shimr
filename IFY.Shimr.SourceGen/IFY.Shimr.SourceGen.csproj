@@ -1,0 +1,66 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<IsRoslynComponent>true</IsRoslynComponent>
+		<LangVersion>latest</LangVersion>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<DefineConstants>SHIMR_CG</DefineConstants>
+		<ProjectDir>$(MSBuildProjectDirectory)</ProjectDir>
+
+		<Authors>IFYates</Authors>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>3.0.0-beta2</Version>
+		<AssemblyVersion>3.0.0</AssemblyVersion>
+		<FileVersion>3.0.0-beta2</FileVersion>
+		<PackageProjectUrl>https://github.com/IFYates/Shimterface</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/IFYates/Shimterface</RepositoryUrl>
+		<RepositoryType>GitHub</RepositoryType>
+		<PackageReleaseNotes>[v3.0.0] Full re-implementation using dotnet sourcegen (#26)
+		</PackageReleaseNotes>
+		<Copyright>(c) IFYates</Copyright>
+		<Description>Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<DocumentationFile>IFY.Shimr.SourceGen.xml</DocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="IFY.Shimr.SourceGen.xml" />
+		<CompilerVisibleProperty Include="ProjectDir" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="..\IFY.Shimr\ConstructorShimAttribute.cs" Link="_Api\ConstructorShimAttribute.cs" />
+		<Compile Include="..\IFY.Shimr\GlobalUsings.cs" Link="GlobalUsings.cs" />
+		<Compile Include="..\IFY.Shimr\IShim.cs" Link="_Api\IShim.cs" />
+		<Compile Include="..\IFY.Shimr\ProxyBehaviour.cs" Link="_Api\ProxyBehaviour.cs" />
+		<Compile Include="..\IFY.Shimr\ShimAttribute.cs" Link="_Api\ShimAttribute.cs" />
+		<Compile Include="..\IFY.Shimr\ShimProxyAttribute.cs" Link="_Api\ShimProxyAttribute.cs" />
+		<Compile Include="..\IFY.Shimr\StaticShimAttribute.cs" Link="_Api\StaticShimAttribute.cs" />
+		<Compile Include="..\IFY.Shimr\TypeShimAttribute.cs" Link="_Api\TypeShimAttribute.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.10.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="..\README.md" Link="README.md">
+			<PackagePath>\</PackagePath>
+			<Pack>true</Pack>
+		</None>
+	</ItemGroup>
+
+</Project>

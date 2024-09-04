@@ -15,9 +15,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr", "IFY.Shimr\IFY.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr.Tests", "IFY.Shimr.Tests\IFY.Shimr.Tests.csproj", "{A0C6A6F5-57FC-4825-890A-DD1D062B9EAB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr.CodeGen", "IFY.Shimr.CodeGen\IFY.Shimr.CodeGen.csproj", "{AF73D189-52FF-4D3C-B1AD-5D0496C364DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr.SourceGen", "IFY.Shimr.SourceGen\IFY.Shimr.SourceGen.csproj", "{AF73D189-52FF-4D3C-B1AD-5D0496C364DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IFY.Shimr.CodeGen.Tests", "IFY.Shimr.CodeGen.Tests\IFY.Shimr.CodeGen.Tests.csproj", "{5308C4B5-7FAA-4199-8A4A-F5CCC8D2C549}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IFY.Shimr.SourceGen.Tests", "IFY.Shimr.SourceGen.Tests\IFY.Shimr.SourceGen.Tests.csproj", "{5308C4B5-7FAA-4199-8A4A-F5CCC8D2C549}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

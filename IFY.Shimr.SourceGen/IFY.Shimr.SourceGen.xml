@@ -1,0 +1,319 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>IFY.Shimr.SourceGen</name>
+    </assembly>
+    <members>
+        <member name="T:IFY.Shimr.SourceGen.CodeAnalysis.CodeErrorReporter">
+            <summary>
+            Handles raising build errors.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.CodeAnalysis.ShimResolver">
+            <summary>
+            Finds all uses of 'ObjectExtensions.Shim&lt;T&gt;(object)' extension method and 'ObjectExtensions.Create&lt;T&gt;()'.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.CodeAnalysis.ShimResolver.ResolveAllShims(IFY.Shimr.SourceGen.CodeAnalysis.CodeErrorReporter)">
+            <summary>
+            Ensure that all implicit shims in registered shims are resolved.
+            </summary>
+            <returns>All current shims.</returns>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.CodeAnalysis.SyntaxHelpers.GetAllMembers(Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Get all the members of this symbol, including those from base type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.CodeAnalysis.SyntaxHelpers.GetAttributeTypeParameter(Microsoft.CodeAnalysis.CSharp.Syntax.AttributeSyntax,Microsoft.CodeAnalysis.SemanticModel)">
+            <summary>
+            Get the 'Type' that is represented by a 'typeof()' constant on the only constructor argument of <param name="attr"/>.
+            </summary>
+            <Example>[Attribute(typeof(T))]</Example>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.CodeAnalysis.SyntaxHelpers.IsMatch(Microsoft.CodeAnalysis.ITypeSymbol,Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Are <paramref name="type1"/> and <paramref name="type2"/> referring to the same type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.CodeAnalysis.SyntaxHelpers.IsMatchable(Microsoft.CodeAnalysis.ITypeSymbol,Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            Can <paramref name="type1"/> be used to refer to the use of <paramref name="type2"/>.
+            This includes inheritiance.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Diag">
+            <summary>
+            Helpers for diagnosing issues.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.GlobalCodeWriter.WriteExtensionClass(IFY.Shimr.SourceGen.ICodeWriter,System.Collections.Generic.IEnumerable{IFY.Shimr.SourceGen.Models.Bindings.IBinding})">
+            <summary>
+            Generate the static class providing the '.Shim&lt;T&gt;(object)' extension method.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.ICodeWriter.WriteSource(System.String)">
+            <summary>
+            Write the current code buffer to a source file.
+            </summary>
+            <param name="name">The 'hintName' of the source file.</param>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Models.Bindings.NullBinding">
+            <summary>
+            An empty binding.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.Models.Bindings.NullBinding.#ctor(IFY.Shimr.SourceGen.Models.IShimDefinition,IFY.Shimr.SourceGen.Models.ShimTarget)">
+            <summary>
+            An empty binding.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Models.Bindings.ShimMemberBinding">
+            <summary>
+            A binding between a <see cref="P:IFY.Shimr.SourceGen.Models.Bindings.ShimMemberBinding.ShimMember"/> and <see cref="P:IFY.Shimr.SourceGen.Models.Bindings.ShimMemberBinding.TargetMember"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.Models.Bindings.ShimMemberBinding.#ctor(IFY.Shimr.SourceGen.Models.Members.ShimMember,IFY.Shimr.SourceGen.Models.Members.TargetMember,IFY.Shimr.SourceGen.Models.ShimTarget)">
+            <summary>
+            A binding between a <see cref="P:IFY.Shimr.SourceGen.Models.Bindings.ShimMemberBinding.ShimMember"/> and <see cref="P:IFY.Shimr.SourceGen.Models.Bindings.ShimMemberBinding.TargetMember"/>.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Models.Bindings.ShimMemberProxyBinding">
+            <summary>
+            A binding between a <see cref="T:IFY.Shimr.SourceGen.Models.Members.ShimMember"/> and a proxy member instead of an actual <paramref name="target"/> member.
+            </summary>
+            <param name="shimMember">The shim that this proxy is a member of.</param>
+            <param name="target">The shim target.</param>
+            <param name="proxyMember">The proxy implementation to use.</param>
+            <param name="targetMember">The overridden member of the <see cref="T:IFY.Shimr.SourceGen.Models.ShimTarget"/>.</param>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.Models.Bindings.ShimMemberProxyBinding.#ctor(IFY.Shimr.SourceGen.Models.Members.ShimMember,IFY.Shimr.SourceGen.Models.ShimTarget,IFY.Shimr.SourceGen.Models.Members.TargetMember,IFY.Shimr.SourceGen.Models.Members.TargetMember)">
+            <summary>
+            A binding between a <see cref="T:IFY.Shimr.SourceGen.Models.Members.ShimMember"/> and a proxy member instead of an actual <paramref name="target"/> member.
+            </summary>
+            <param name="shimMember">The shim that this proxy is a member of.</param>
+            <param name="target">The shim target.</param>
+            <param name="proxyMember">The proxy implementation to use.</param>
+            <param name="targetMember">The overridden member of the <see cref="T:IFY.Shimr.SourceGen.Models.ShimTarget"/>.</param>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Models.IShimDefinition">
+            <summary>
+            A model of an instance or static shim definition.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Models.Members.IMember">
+            <summary>
+            A code member.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Models.Members.IParameterisedMember">
+            <summary>
+            A type member with parameters.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Models.Members.ShimMember">
+            <summary>
+            A shim member.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Models.Members.TargetMember">
+            <summary>
+            A modelled member of the target type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.Models.Members.TargetMember.IsShimmableReturnType(IFY.Shimr.SourceGen.Models.Members.IMember)">
+            <summary>
+            Returns true if the <see cref="P:IFY.Shimr.SourceGen.Models.Members.IMember.ReturnType"/> of <paramref name="otherMember"/> is shimmable from the <see cref="P:IFY.Shimr.SourceGen.Models.Members.TargetMember.ReturnType"/> of this target member.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Models.ShimProxyTarget">
+            <param name="symbol">The type that contains the proxy target.</param>
+            <param name="shimTarget">The target definition of the shim.</param>
+            <param name="targetMembers">The list of possible targets of the shim member.</param>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.Models.ShimProxyTarget.#ctor(Microsoft.CodeAnalysis.ITypeSymbol,IFY.Shimr.SourceGen.Models.ShimTarget,IFY.Shimr.SourceGen.Models.Members.TargetMember[])">
+            <param name="symbol">The type that contains the proxy target.</param>
+            <param name="shimTarget">The target definition of the shim.</param>
+            <param name="targetMembers">The list of possible targets of the shim member.</param>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen.Models.ShimTarget">
+            <summary>
+            A model of a shimmed type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.Models.ShimTarget.#ctor(Microsoft.CodeAnalysis.ITypeSymbol)">
+            <summary>
+            A model of a shimmed type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.SourceGen.Models.ShimTarget.GetMatchingMembers(IFY.Shimr.SourceGen.Models.Members.ShimMember,IFY.Shimr.SourceGen.CodeAnalysis.CodeErrorReporter)">
+            <summary>
+            Find the <see cref="T:IFY.Shimr.SourceGen.Models.Members.TargetMember"/>s in this <see cref="T:IFY.Shimr.SourceGen.Models.ShimTarget"/> that could be bound to the given <see cref="T:IFY.Shimr.SourceGen.Models.Members.ShimMember"/>.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.SourceGen._Api.Shimr">
+            <summary>
+            Exists only to stub the namespace prior to source generation.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.ConstructorShimAttribute">
+            <summary>
+            Mark a method as being a shim of a constructor.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ConstructorShimAttribute.#ctor">
+            <summary>
+            Mark a method as being a shim of a constructor.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ConstructorShimAttribute.#ctor(System.Type)">
+            <summary>
+            Mark a method as being a shim of a constructor.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.IShim">
+            <summary>
+            Interface for all shimmed types
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.IShim.Unshim">
+            <summary>
+            Return the original object that has been shimmed.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.ProxyBehaviour">
+            <summary>
+            Specify how the <see cref="T:IFY.Shimr.ShimProxyAttribute"/> member is expected to behave.
+            </summary>
+        </member>
+        <member name="F:IFY.Shimr.ProxyBehaviour.Graceful">
+            <summary>
+            Will override existing members, otherwise adds.
+            </summary>
+        </member>
+        <member name="F:IFY.Shimr.ProxyBehaviour.Default">
+            <summary>
+            Will override existing members, otherwise adds.
+            </summary>
+        </member>
+        <member name="F:IFY.Shimr.ProxyBehaviour.Override">
+            <summary>
+            Shimmed type must provide the member to be overriden.
+            </summary>
+        </member>
+        <member name="F:IFY.Shimr.ProxyBehaviour.Add">
+            <summary>
+            Shim must be defining a member not in the shimmed type.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.ShimAttribute">
+            <summary>
+            Mark a member type as explicitly shimming an item with a different name.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.ShimAttribute.DefinitionType">
+            <summary>
+            The type that defines the member, for when there's a conflict.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.ShimAttribute.ImplementationName">
+            <summary>
+            The name of the member in the target type.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ShimAttribute.#ctor(System.Type)">
+            <summary>
+            
+            </summary>
+            <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
+        </member>
+        <member name="M:IFY.Shimr.ShimAttribute.#ctor(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="name">The name of the member in the target type.</param>
+        </member>
+        <member name="M:IFY.Shimr.ShimAttribute.#ctor(System.Type,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
+            <param name="name">The name of the member in the target type.</param>
+        </member>
+        <member name="T:IFY.Shimr.ShimProxyAttribute">
+            <summary>
+            Mark a shim member as being a proxy to an implementation elsewhere.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type,System.String,IFY.Shimr.ProxyBehaviour)">
+            <summary>
+            Mark a shim member as being a proxy to an implementation elsewhere.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.ShimProxyAttribute.ImplementationType">
+            <summary>
+            The type that implements this member.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.ShimProxyAttribute.ImplementationName">
+            <summary>
+            The name of the implemenation member.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.ShimProxyAttribute.Behaviour">
+            <summary>
+            The behaviour of this proxy member.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type)">
+            <summary>
+            Mark a shim member as being a proxy to an implementation elsewhere, using default behaviour.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type,IFY.Shimr.ProxyBehaviour)">
+            <summary>
+            Mark a shim member as being a proxy to an implementation elsewhere.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type,System.String)">
+            <summary>
+            Mark a shim member as being an aliased proxy to an implementation elsewhere, using default behaviour.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.StaticShimAttribute">
+            <summary>
+            Mark individual properties/fields or methods as being static within another type, or the entire interface.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.StaticShimAttribute.#ctor(System.Type)">
+            <summary>
+            Mark individual properties/fields or methods as being static within another type, or the entire interface.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.StaticShimAttribute.TargetType">
+            <summary>
+            The type that implements this member.
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.StaticShimAttribute.IsConstructor">
+            <summary>
+            True if this member calls a constructor on the target type.
+            </summary>
+        </member>
+        <member name="T:IFY.Shimr.TypeShimAttribute">
+            <summary>
+            Mark signature type as being automatically shimmed from real implementation type
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.TypeShimAttribute.#ctor(System.Type)">
+            <summary>
+            Mark signature type as being automatically shimmed from real implementation type
+            </summary>
+        </member>
+        <member name="P:IFY.Shimr.TypeShimAttribute.RealType">
+            <summary>
+            The underlying type of the parameter.
+            </summary>
+        </member>
+    </members>
+</doc>

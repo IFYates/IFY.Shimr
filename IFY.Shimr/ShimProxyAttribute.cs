@@ -1,5 +1,5 @@
 ﻿#if SHIMR_CG
-using IFY.Shimr.CodeGen.CodeAnalysis;
+using IFY.Shimr.SourceGen.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 #endif
 
