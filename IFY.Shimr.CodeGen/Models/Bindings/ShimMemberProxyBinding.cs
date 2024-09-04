@@ -42,7 +42,7 @@ internal class ShimMemberProxyBinding(ShimMember shimMember, ShimTarget target, 
                 writeMethod(code, methodMember);
                 break;
             case ShimMember.ShimPropertyMember:
-                ShimMember.GenerateCode(code, TargetMember);
+                ShimMember.GenerateCode(code, this);
                 break;
             default:
                 code.AppendLine("// TODO: ShimMemberProxyBinding.GenerateCode " + ShimMember.Type);
@@ -63,7 +63,7 @@ internal class ShimMemberProxyBinding(ShimMember shimMember, ShimTarget target, 
             !isVoid ? ShimMember.ReturnType?.ToDisplayString() : "void",
             ShimMember.Name,
             string.Join(", ", methodMember.Parameters.Select(p => p.ToString())),
-            methodMember.GetMemberCallee(TargetMember),
+            GetMemberCallee(methodMember),
             TargetMember.Name,
             hasThisParam ? "this" : null,
             hasThisParam && proxyParams.Any() ? ", " : null,

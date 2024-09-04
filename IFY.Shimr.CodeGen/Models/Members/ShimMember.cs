@@ -12,9 +12,9 @@ internal abstract class ShimMember : IMember
     public sealed class ShimConstructorMember(IShimDefinition shim, IMethodSymbol symbol)
         : ShimMethodMember(shim, symbol, MemberType.Constructor), IParameterisedMember
     {
-        protected override void AddInvocationCode(StringBuilder code, TargetMember targetMember, string? defTypeArgs)
+        protected override void AddInvocationCode(StringBuilder code, ShimMemberBinding binding, string? defTypeArgs)
         {
-            code.Append($"new {GetMemberCallee(targetMember)}");
+            code.Append($"new {binding.GetMemberCallee(this)}");
         }
 
         public override bool IsMatch(IMember member)
@@ -35,7 +35,7 @@ internal abstract class ShimMember : IMember
 
         public override ITypeSymbol? ReturnType { get; } = symbol.Type;
 
-        public override void GenerateCode(StringBuilder code, TargetMember targetMember)
+        public override void GenerateCode(StringBuilder code, ShimMemberBinding binding)
         {
             code.AppendFormat(EVENT_CS, ReturnType?.ToDisplayString() ?? "void", Name, TargetName);
         }
@@ -47,7 +47,7 @@ internal abstract class ShimMember : IMember
         public string IndexerArgType { get; } = symbol.Parameters[0].Type.ToString();
         public string IndexerArgName { get; } = symbol.Parameters[0].Name;
 
-        public override void GenerateCode(StringBuilder code, TargetMember targetMember)
+        public override void GenerateCode(StringBuilder code, ShimMemberBinding binding)
         {
             var codeArgs = new[]
             {
@@ -55,9 +55,9 @@ internal abstract class ShimMember : IMember
                 ReturnType?.ToDisplayString() ?? "void",
                 IsExplicit ? Symbol.ContainingType.ToFullName() + "." : null,
                 $"this[{IndexerArgType} {IndexerArgName}]",
-                $"{GetMemberCallee(targetMember)}[{IndexerArgName}]",
-                GetShimCode(targetMember),
-                GetUnshimCode("value", targetMember),
+                $"{binding.GetMemberCallee(this)}[{IndexerArgName}]",
+                GetShimCode(binding.TargetMember),
+                GetUnshimCode("value", binding.TargetMember),
             };
             code.AppendFormat(PROP_CS, codeArgs);
             if (IsGet)
@@ -84,7 +84,7 @@ internal abstract class ShimMember : IMember
 
         public override ITypeSymbol? ReturnType { get; } = symbol.ReturnType;
 
-        public override void GenerateCode(StringBuilder code, TargetMember targetMember)
+        public override void GenerateCode(StringBuilder code, ShimMemberBinding binding)
         {
             // Check if explicit implementation
             var name = IsExplicit ? $"{ContainingType.ToFullName()}.{Name}" : Name;
@@ -94,7 +94,7 @@ internal abstract class ShimMember : IMember
                 code.Append("public ");
             }
 
-            if (((IParameterisedMember)targetMember).Parameters.Length == 0
+            if (((IParameterisedMember)binding.TargetMember).Parameters.Length == 0
                 && Name is nameof(ToString) or nameof(GetHashCode))
             {
                 code.Append("override ");
@@ -110,16 +110,16 @@ internal abstract class ShimMember : IMember
             code.Append($"{ReturnType?.ToDisplayString() ?? "void"} {name}{defTypeArgs}(")
                 .Append(string.Join(", ", Parameters.Select(p => p.ToString())))
                 .Append($"){whereClause} => ");
-            AddInvocationCode(code, targetMember, defTypeArgs);
+            AddInvocationCode(code, binding, defTypeArgs);
             code.Append("(")
                 .Append(string.Join(", ", Parameters.Select(p => p.GetTargetArgumentCode())))
                 .Append($")")
-                .Append(GetShimCode(targetMember))
+                .Append(GetShimCode(binding.TargetMember))
                 .AppendLine(";");
         }
-        protected virtual void AddInvocationCode(StringBuilder code, TargetMember targetMember, string? defTypeArgs)
+        protected virtual void AddInvocationCode(StringBuilder code, ShimMemberBinding binding, string? defTypeArgs)
         {
-            code.Append($"{GetMemberCallee(targetMember)}.{targetMember.Name}{defTypeArgs}");
+            code.Append($"{binding.GetMemberCallee(this)}.{binding.TargetMember.Name}{defTypeArgs}");
         }
 
         public bool FirstParameterIsInstance(IParameterisedMember targetMethod)
@@ -167,7 +167,7 @@ internal abstract class ShimMember : IMember
         protected const string PROP_SET_CS = " set => {4} = {6};";
         protected const string PROP_INIT_CS = " init => {4} = {6};";
 
-        public override void GenerateCode(StringBuilder code, TargetMember targetMember)
+        public override void GenerateCode(StringBuilder code, ShimMemberBinding binding)
         {
             var codeArgs = new[]
             {
@@ -175,9 +175,9 @@ internal abstract class ShimMember : IMember
                 ReturnType?.ToDisplayString() ?? "void",
                 IsExplicit ? Symbol.ContainingType.ToFullName() + "." : null,
                 Name,
-                $"{GetMemberCallee(targetMember)}.{targetMember.Name}",
-                GetShimCode(targetMember),
-                GetUnshimCode("value", targetMember),
+                $"{binding.GetMemberCallee(this)}.{binding.TargetMember.Name}",
+                GetShimCode(binding.TargetMember),
+                GetUnshimCode("value", binding.TargetMember),
             };
             code.AppendFormat(PROP_CS, codeArgs);
             if (IsGet)
@@ -269,12 +269,7 @@ internal abstract class ShimMember : IMember
         } ?? Name;
     }
 
-    public abstract void GenerateCode(StringBuilder code, TargetMember targetMember);
-
-    public string GetMemberCallee(TargetMember targetMember)
-        => IsFactoryMember || targetMember.IsStatic
-        ? targetMember.ContainingType.ToFullName()
-        : $"(({targetMember.ContainingType.ToFullName()})_inst)";
+    public abstract void GenerateCode(StringBuilder code, ShimMemberBinding binding);
 
     public string? GetShimCode(TargetMember targetMember)
     {

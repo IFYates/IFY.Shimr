@@ -1,4 +1,5 @@
-﻿using IFY.Shimr.CodeGen.Models.Members;
+﻿using IFY.Shimr.CodeGen.CodeAnalysis;
+using IFY.Shimr.CodeGen.Models.Members;
 
 namespace IFY.Shimr.CodeGen.Models.Bindings;
 
@@ -14,7 +15,17 @@ internal class ShimMemberBinding(ShimMember shimMember, TargetMember targetMembe
     public override void GenerateCode(ICodeWriter writer)
     {
         var code = new StringBuilder();
-        ShimMember.GenerateCode(code, TargetMember);
+        ShimMember.GenerateCode(code, this);
         writer.Append(code.ToString());
+    }
+
+    public string GetMemberCallee(ShimMember member)
+    {
+        var targetType = TargetMember.ContainingType.ToFullName();
+        return member.IsFactoryMember || TargetMember.IsStatic
+            ? targetType
+            : targetType == Target.FullTypeName
+            ? $"_inst"
+            : $"(({targetType})_inst)";
     }
 }
