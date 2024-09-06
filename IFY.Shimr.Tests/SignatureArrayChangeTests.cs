@@ -41,7 +41,7 @@ public class SignatureArrayChangeTests
         Assert.AreSame(obj, shim.Unshim());
     }
 
-#if !SHIMR_CG // TODO: Unshim(IEnumerable<T>)
+#if !SHIMR_SG // TODO: Unshim(IEnumerable<T>)
     [TestMethod]
     public void Can_get_array_result_as_shims()
     {
@@ -56,7 +56,7 @@ public class SignatureArrayChangeTests
     }
 #endif
 
-#if !SHIMR_CG // TODO: Shim(IEnumerable<T>)
+#if !SHIMR_SG // TODO: Shim(IEnumerable<T>)
     // TODO: can shim, cannot set
     [TestMethod]
     public void Can_set_array_parameter_as_appropriate_shims()

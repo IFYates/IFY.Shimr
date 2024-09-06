@@ -72,7 +72,7 @@ public class ExtendedFunctionalityTests_Field
         Assert.AreEqual("test", ProxyImpl_AddFieldDefault.Field);
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Cannot_add_existing_field()
     {
@@ -141,7 +141,7 @@ public class ExtendedFunctionalityTests_Field
         Assert.AreEqual("test", ProxyImpl_OverrideFieldDefault.Field);
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Cannot_override_missing_field()
     {

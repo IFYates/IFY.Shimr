@@ -1,4 +1,4 @@
-﻿#if !SHIMR_CG
+﻿#if !SHIMR_SG
 using IFY.Shimr.Extensions;
 using System;
 using System.Diagnostics.CodeAnalysis;

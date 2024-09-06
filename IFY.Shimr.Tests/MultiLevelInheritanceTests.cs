@@ -10,7 +10,7 @@ namespace IFY.Shimr.Tests;
 [TestClass]
 public class MultiLevelInheritanceTests
 {
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestInitialize]
     public void Reset()
     {

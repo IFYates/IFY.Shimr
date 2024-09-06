@@ -103,7 +103,7 @@ public class FieldShimTests
         Assert.AreEqual(shim.RValue, obj.RValue);
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Can_shim_a_readonly_field_as_a_getset_property()
     {

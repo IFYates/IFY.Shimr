@@ -1,5 +1,4 @@
-﻿#if SHIMR_CG
-using IFY.Shimr.SourceGen.CodeAnalysis;
+﻿#if SHIMR_SG
 using Microsoft.CodeAnalysis;
 #endif
 
@@ -48,26 +47,27 @@ public class ShimAttribute : Attribute
         ImplementationName = name;
     }
 
-#if SHIMR_CG
+#if SHIMR_SG
     internal static (ITypeSymbol? DefinitionType, string? ImplementationName) GetArguments(AttributeData attribute)
     {
         ITypeSymbol? definitionType = null;
         string? implementationName = null;
-        if (attribute.ConstructorArguments.Length == 1)
+        var args = attribute.ConstructorArguments;
+        if (args.Length == 1)
         {
-            if (attribute.ConstructorArguments[0].Type!.IsType<ITypeSymbol>())
+            if (args[0].Kind == TypedConstantKind.Type)
             {
-                definitionType = (ITypeSymbol)attribute.ConstructorArguments[0].Value!;
+                definitionType = (ITypeSymbol)args[0].Value!;
             }
             else
             {
-                implementationName = (string)attribute.ConstructorArguments[0].Value!;
+                implementationName = (string)args[0].Value!;
             }
         }
-        else if (attribute.ConstructorArguments.Length == 2)
+        else if (args.Length == 2)
         {
-            definitionType = (ITypeSymbol)attribute.ConstructorArguments[0].Value!;
-            implementationName = (string)attribute.ConstructorArguments[1].Value!;
+            definitionType = (ITypeSymbol)args[0].Value!;
+            implementationName = (string)args[1].Value!;
         }
         return (definitionType, implementationName);
     }

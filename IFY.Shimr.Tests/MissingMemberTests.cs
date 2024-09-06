@@ -1,4 +1,4 @@
-﻿#if !SHIMR_CG
+﻿#if !SHIMR_SG
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -22,7 +22,7 @@ public class MissingMemberTests
         public string PropertyWithoutSet => null;
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestInitialize]
     public void ResetState()
     {

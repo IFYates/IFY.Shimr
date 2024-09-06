@@ -11,7 +11,7 @@ namespace IFY.Shimr.Tests;
 [TestClass]
 public class ExtendedFunctionalityTests_Method
 {
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestInitialize]
     public void ResetState()
     {
@@ -315,7 +315,7 @@ public class ExtendedFunctionalityTests_Method
         }
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Override_member_must_exist_in_shimmed_type()
     {
@@ -343,7 +343,7 @@ public class ExtendedFunctionalityTests_Method
             // Test
         }
     }
-#if !SHIMR_CG
+#if !SHIMR_SG
 
     [TestMethod]
     public void Override_implementation_must_take_compatible_first_param()
@@ -405,7 +405,7 @@ public class ExtendedFunctionalityTests_Method
         }
     }
 
-#if SHIMR_CG // TODO: not supported by RT
+#if SHIMR_SG // TODO: not supported by RT
     [TestMethod]
     public void Can_change_shim_return_type_in_hierarchy()
     {
@@ -423,7 +423,7 @@ public class ExtendedFunctionalityTests_Method
     }
 #endif
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     public interface ITestShim_Constructor
     {
         [ConstructorShim(typeof(TestClass_OnlyMethodA))]
@@ -535,7 +535,7 @@ public class ExtendedFunctionalityTests_Method
         Assert.AreSame(shim, ProxyImpl_MethodAddAlias.MethodBCalledObj);
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Added_member_must_not_exist_in_shimmed_type()
     {
@@ -550,7 +550,7 @@ public class ExtendedFunctionalityTests_Method
     }
 #endif
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Added_implementation_must_take_compatible_first_param()
     {
@@ -569,7 +569,7 @@ public class ExtendedFunctionalityTests_Method
 
     #endregion Add
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     public interface ITestShim_MissingImpl : ITestShim
     {
         [ShimProxy(typeof(ProxyImpl_DefaultOverride))]

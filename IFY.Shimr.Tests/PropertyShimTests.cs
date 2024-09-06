@@ -130,7 +130,7 @@ public class PropertyShimTests
         Assert.AreEqual("test", shim.get_Method());
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Cannot_force_property_over_methods()
     {

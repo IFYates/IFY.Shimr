@@ -13,7 +13,7 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
-		<DefineConstants>SHIMR_CG</DefineConstants>
+		<DefineConstants>SHIMR_SG</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

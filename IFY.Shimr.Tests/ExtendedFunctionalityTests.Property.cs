@@ -72,7 +72,7 @@ public class ExtendedFunctionalityTests_Property
         Assert.AreEqual("test", ProxyImpl_AddPropertyDefault.Property);
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Cannot_add_existing_property()
     {
@@ -139,7 +139,7 @@ public class ExtendedFunctionalityTests_Property
         Assert.AreEqual("test", ProxyImpl_OverridePropertyDefault.Property);
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Cannot_override_missing_property()
     {
@@ -182,7 +182,7 @@ public class ExtendedFunctionalityTests_Property
     }
 
     // TODO: CG can support this
-#if !SHIMR_CG
+#if !SHIMR_SG
     public interface ITestShim_PropertyMethods
     {
         [ShimProxy(typeof(ProxyImpl_PropertyMethods))]

@@ -45,7 +45,7 @@ public class StaticMemberTests
     [TestInitialize]
     public void ResetState()
     {
-#if !SHIMR_CG
+#if !SHIMR_SG
         ShimBuilder.ResetState();
 #endif
         StaticMemberClass._HasCalled = false;
@@ -84,7 +84,7 @@ public class StaticMemberTests
         Assert.AreEqual("two", StaticMemberClass.Value);
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Works_from_type_extension()
     {
@@ -96,7 +96,7 @@ public class StaticMemberTests
     }
 #endif
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Must_only_define_static_methods()
     {
@@ -109,7 +109,7 @@ public class StaticMemberTests
     }
 #endif
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Normal_shims_cannot_use_StaticShimAttribute()
     {

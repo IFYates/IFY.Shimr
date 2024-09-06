@@ -47,7 +47,7 @@ public class SignatureChangeTests
         void SetValue([TypeShim(typeof(string))] string str);
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestInitialize]
     public void ResetState()
     {
@@ -85,7 +85,7 @@ public class SignatureChangeTests
         Assert.AreSame(obj, shim.Unshim());
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Covered_return_type_must_be_interface()
     {
@@ -126,7 +126,7 @@ public class SignatureChangeTests
         Assert.AreEqual("abc123", obj.GetValue());
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Covered_parameter_type_must_be_interface()
     {

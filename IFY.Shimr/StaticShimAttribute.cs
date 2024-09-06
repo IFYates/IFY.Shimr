@@ -1,4 +1,4 @@
-﻿#if SHIMR_CG
+﻿#if SHIMR_SG
 using Microsoft.CodeAnalysis;
 #endif
 
@@ -19,7 +19,7 @@ public class StaticShimAttribute(Type targetType) : Attribute
     /// </summary>
     public bool IsConstructor { get; internal set; }
 
-#if SHIMR_CG
+#if SHIMR_SG
     internal static ITypeSymbol? GetArgument(AttributeData attribute)
     {
         return attribute.ConstructorArguments.Length == 1

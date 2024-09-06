@@ -14,7 +14,7 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-		<DefineConstants>SHIMR_CG</DefineConstants>
+		<DefineConstants>SHIMR_SG</DefineConstants>
 		<ProjectDir>$(MSBuildProjectDirectory)</ProjectDir>
 
 		<Authors>IFYates</Authors>

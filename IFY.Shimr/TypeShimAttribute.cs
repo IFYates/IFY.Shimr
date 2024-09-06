@@ -1,4 +1,4 @@
-﻿#if SHIMR_CG
+﻿#if SHIMR_SG
 using Microsoft.CodeAnalysis;
 #endif
 
@@ -15,7 +15,7 @@ public class TypeShimAttribute(Type realType) : Attribute
     /// </summary>
     public Type RealType { get; } = realType;
 
-#if SHIMR_CG
+#if SHIMR_SG
     internal static ITypeSymbol? GetArgument(AttributeData attribute)
     {
         return attribute.ConstructorArguments.Length == 1

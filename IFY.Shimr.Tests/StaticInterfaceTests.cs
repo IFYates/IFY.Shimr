@@ -31,7 +31,7 @@ public class StaticInterfaceTests
         }
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestInitialize]
     public void ResetState()
     {

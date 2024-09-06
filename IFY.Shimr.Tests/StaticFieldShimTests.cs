@@ -29,7 +29,7 @@ public class StaticFieldShimTests
         [StaticShim(typeof(TestClass))]
         string RValue { get; set; }
     }
-#if !SHIMR_CG
+#if !SHIMR_SG
     public interface IReadonlyFieldTest
     {
         [StaticShim(typeof(TestClass))]
@@ -37,7 +37,7 @@ public class StaticFieldShimTests
     }
 #endif
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     public interface IStaticOverrideFieldTest
     {
         [StaticShim(typeof(TestClass))]
@@ -126,7 +126,7 @@ public class StaticFieldShimTests
         Assert.AreEqual(shim.RValue, TestClass.RValue);
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Can_shim_a_static_readonly_field_as_a_getset_property()
     {
@@ -136,7 +136,7 @@ public class StaticFieldShimTests
     }
 #endif
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Cannot_set_a_static_readonly_field_shimmed_as_a_set_property()
     {
@@ -151,7 +151,7 @@ public class StaticFieldShimTests
     }
 #endif
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Shim_static_field_cannot_shim_return_as_static()
     {

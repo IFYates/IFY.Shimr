@@ -1,4 +1,4 @@
-﻿#if SHIMR_CG
+﻿#if SHIMR_SG
 using IFY.Shimr.SourceGen.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 #endif
@@ -46,7 +46,7 @@ public class ShimProxyAttribute(Type implementationType, string implementationNa
     {
     }
 
-#if SHIMR_CG
+#if SHIMR_SG
     internal static (ITypeSymbol ImplementationType, string? ImplementationName, ProxyBehaviour Behaviour) GetArguments(AttributeData attribute)
     {
         var implementationType = (ITypeSymbol)attribute.ConstructorArguments[0].Value!;

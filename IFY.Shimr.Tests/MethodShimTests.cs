@@ -127,7 +127,7 @@ public class MethodShimTests
         Assert.AreEqual("arg1-2", res);
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     [TestMethod]
     public void Method_signatures_must_match()
     {

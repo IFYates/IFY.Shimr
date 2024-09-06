@@ -76,11 +76,9 @@ internal static class SyntaxHelpers
     {
         // Look for TypeShimAttribute(Type) and return constructor arg
         var attr = arg.GetAttributes().SingleOrDefault(a => a.AttributeClass?.IsType<TypeShimAttribute>() == true);
-        if (attr != null)
-        {
-            return (ITypeSymbol)attr.ConstructorArguments.Single().Value!;
-        }
-        return nullIfNoOverride ? null! : arg.Type;
+        return attr != null
+            ? TypeShimAttribute.GetArgument(attr)!
+            : nullIfNoOverride ? null! : arg.Type;
     }
 
     public static AttributeData? GetAttribute<T>(this ISymbol symbol)
@@ -188,7 +186,7 @@ internal static class SyntaxHelpers
     /// Are <paramref name="type1"/> and <paramref name="type2"/> referring to the same type.
     /// </summary>
     public static bool IsMatch(this ITypeSymbol type1, ITypeSymbol? type2)
-        => type1 is ITypeParameterSymbol && type2 is ITypeParameterSymbol // TODO: Is this enough?
+        => (type1 is ITypeParameterSymbol && type2 is ITypeParameterSymbol) // TODO: Is this enough?
         || type1.Equals(type2, SymbolEqualityComparer.Default)
         || type1.ToFullName() == type2?.ToFullName(); // HACK: System.Collections.Generic.IDictionary<T1, T2> comparison failing
     /// <summary>
@@ -197,8 +195,8 @@ internal static class SyntaxHelpers
     /// </summary>
     public static bool IsMatchable(this ITypeSymbol type1, ITypeSymbol? type2)
         => type1.IsMatch(type2)
-        || type1.TypeKind == TypeKind.Interface && type2?.AllInterfaces.Any(type1.IsMatch) == true
-        || type2?.BaseType != null && type1.IsMatch(type2.BaseType);
+        || (type1.TypeKind == TypeKind.Interface && type2?.AllInterfaces.Any(type1.IsMatch) == true)
+        || (type2?.BaseType != null && type1.IsMatch(type2.BaseType));
 
     public static bool IsType<T>(this ITypeSymbol symbol)
         => symbol.ToFullName() == typeof(T).FullName;

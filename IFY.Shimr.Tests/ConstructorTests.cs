@@ -58,7 +58,7 @@ public class ConstructorTests
         Assert.IsInstanceOfType(((IShim)instC).Unshim(), typeof(TestClass));
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     public interface IFactoryInterface2
     {
         [ConstructorShim(typeof(TestClass))]
@@ -76,7 +76,7 @@ public class ConstructorTests
     }
 #endif
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     public interface IFactoryInterface3
     {
         [ConstructorShim(typeof(TestClass))]
@@ -110,7 +110,7 @@ public class ConstructorTests
         Assert.IsInstanceOfType(((IShim)inst).Unshim(), typeof(TestClass));
     }
 
-#if !SHIMR_CG
+#if !SHIMR_SG
     public interface IFactoryInterface5
     {
         [ConstructorShim(typeof(TestClass))]

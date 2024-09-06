@@ -1,5 +1,4 @@
-﻿using IFY.Shimr.SourceGen;
-using IFY.Shimr.SourceGen.CodeAnalysis;
+﻿using IFY.Shimr.SourceGen.CodeAnalysis;
 using IFY.Shimr.SourceGen.Models.Bindings;
 using IFY.Shimr.SourceGen.Models.Members;
 using Microsoft.CodeAnalysis;
@@ -19,7 +18,7 @@ internal class ShimFactoryDefinition : IShimDefinition
         var staticAttr = symbol.GetAttribute<StaticShimAttribute>();
         if (staticAttr != null)
         {
-            StaticTarget = new((ITypeSymbol)staticAttr.ConstructorArguments[0].Value!);
+            StaticTarget = new(StaticShimAttribute.GetArgument(staticAttr)!);
         }
 
         Symbol = (INamedTypeSymbol)symbol;
