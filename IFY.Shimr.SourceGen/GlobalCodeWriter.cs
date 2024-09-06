@@ -15,7 +15,7 @@ internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
 
     private const string SB_CLASS_CS = $@"namespace {SB_NAMESPACE}
 {{{{
-    public static partial class {SB_CLASSNAME}
+    internal static partial class {SB_CLASSNAME}
     {{{{
         private static readonly System.Collections.Generic.Dictionary<System.Type, System.Type> _factoryMap = new System.Collections.Generic.Dictionary<System.Type, System.Type>
         {{{{
@@ -61,7 +61,7 @@ internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
 namespace {EXT_NAMESPACE}
 {{{{
     using System.Linq;
-    public static partial class {EXT_CLASSNAME}
+    internal static partial class {EXT_CLASSNAME}
     {{{{
         private static readonly System.Collections.Generic.Dictionary<System.Type, System.Collections.Generic.Dictionary<System.Type, System.Type>> _factoryMap = new System.Collections.Generic.Dictionary<System.Type, System.Collections.Generic.Dictionary<System.Type, System.Type>>
         {{{{

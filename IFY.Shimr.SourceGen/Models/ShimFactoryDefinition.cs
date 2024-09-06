@@ -40,7 +40,7 @@ internal class ShimFactoryDefinition : IShimDefinition
 {{{{
     using {GlobalCodeWriter.EXT_NAMESPACE};
     using System.Linq;
-    public static partial class {GlobalCodeWriter.SB_CLASSNAME}
+    internal static partial class {GlobalCodeWriter.SB_CLASSNAME}
     {{{{
         protected class {{0}} : {{1}}
         {{{{

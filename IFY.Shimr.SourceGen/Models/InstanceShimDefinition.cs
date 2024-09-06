@@ -42,7 +42,7 @@ internal class InstanceShimDefinition : IShimDefinition
     private const string OUTER_CLASS_PRE_CS = $@"namespace {GlobalCodeWriter.EXT_NAMESPACE}
 {{
     using System.Linq;
-    public static partial class {GlobalCodeWriter.EXT_CLASSNAME}
+    internal static partial class {GlobalCodeWriter.EXT_CLASSNAME}
     {{
 ";
     private const string OUTER_CLASS_POST_CS = @"
