@@ -105,7 +105,8 @@ internal class InstanceShimDefinition : IShimDefinition
 
             foreach (var member in Members)
             {
-                var targetMembers = target.GetMatchingMembers(member, errors);
+                var memberTarget = member.TargetType ?? target;
+                var targetMembers = memberTarget.GetMatchingMembers(member, errors);
 
                 if (member.Proxy != null)
                 {
@@ -128,7 +129,7 @@ internal class InstanceShimDefinition : IShimDefinition
 
                 foreach (var targetMember in targetMembers)
                 {
-                    member.ResolveBindings(allBindings, targetMember, errors, shimResolver);
+                    member.ResolveBindings(allBindings, targetMember, errors, shimResolver, target);
                 }
             }
         }

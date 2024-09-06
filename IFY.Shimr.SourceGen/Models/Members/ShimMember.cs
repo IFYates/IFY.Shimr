@@ -137,7 +137,7 @@ internal abstract class ShimMember : IMember
                 && ((IMethodSymbol)Symbol).AllParameterTypesMatch(method.Parameters);
         }
 
-        public override void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, CodeErrorReporter errors, ShimResolver shimResolver)
+        public override void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, CodeErrorReporter errors, ShimResolver shimResolver, ShimTarget? target = null)
         {
             // Resolve parameter overrides
             foreach (var param in Parameters)
@@ -145,7 +145,7 @@ internal abstract class ShimMember : IMember
                 param.RegisterOverride(shimResolver);
             }
 
-            base.ResolveBindings(bindings, targetMember, errors, shimResolver);
+            base.ResolveBindings(bindings, targetMember, errors, shimResolver, target);
         }
     }
 
@@ -261,13 +261,16 @@ internal abstract class ShimMember : IMember
 
         // Check for rename via attribute
         var attr = symbol.GetAttribute<ShimAttribute>();
-        TargetName = (attr?.ConstructorArguments.Length) switch // Could be (string), (Type), or (Type, string)
+        if (attr != null)
         {
-            1 => attr.ConstructorArguments[0].Type!.IsType<string>()
-                ? attr.ConstructorArguments[0].Value?.ToString() : null,
-            2 => attr.ConstructorArguments[1].Value?.ToString(),
-            _ => null
-        } ?? Name;
+            var (DefinitionType, ImplementationName) = ShimAttribute.GetArguments(attr);
+            TargetName = ImplementationName!;
+            if (DefinitionType != null)
+            {
+                TargetType = new(DefinitionType);
+            }
+        }
+        TargetName ??= Name;
     }
 
     public abstract void GenerateCode(StringBuilder code, ShimMemberBinding binding);
@@ -310,9 +313,9 @@ internal abstract class ShimMember : IMember
         return member.Name == TargetName;
     }
 
-    public virtual void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, CodeErrorReporter errors, ShimResolver shimResolver)
+    public virtual void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, CodeErrorReporter errors, ShimResolver shimResolver, ShimTarget? target = null)
     {
-        var binding = targetMember.Target.GetBinding(this, targetMember);
+        var binding = targetMember.Target.GetBinding(this, targetMember, target);
         bindings.Add(binding);
 
         // Register return shim, if needed

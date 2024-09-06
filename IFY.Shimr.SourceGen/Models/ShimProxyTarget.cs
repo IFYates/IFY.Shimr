@@ -13,7 +13,7 @@ internal class ShimProxyTarget(ITypeSymbol symbol, ShimTarget shimTarget, Target
 {
     public ShimTarget ShimTarget { get; } = shimTarget;
 
-    public override IBinding GetBinding(ShimMember shimMember, TargetMember proxyMember)
+    public override IBinding GetBinding(ShimMember shimMember, TargetMember proxyMember, ShimTarget? target = null)
     {
         return new ShimMemberProxyBinding(shimMember, ShimTarget, proxyMember, targetMembers.FirstOrDefault());
     }

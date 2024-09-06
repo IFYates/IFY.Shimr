@@ -15,9 +15,9 @@ internal class ShimTarget(ITypeSymbol symbol)
     public string Name { get; } = $"{symbol.ContainingNamespace?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).Hash()}_{symbol.ToClassName().Replace('.', '_')}";
     public bool IsValueType { get; } = symbol.IsValueType;
 
-    public virtual IBinding GetBinding(ShimMember shimMember, TargetMember targetMember)
+    public virtual IBinding GetBinding(ShimMember shimMember, TargetMember targetMember, ShimTarget? target = null)
     {
-        return new ShimMemberBinding(shimMember, targetMember);
+        return new ShimMemberBinding(shimMember, targetMember, target);
     }
 
     /// <summary>
