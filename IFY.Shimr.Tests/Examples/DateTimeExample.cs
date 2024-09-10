@@ -10,10 +10,6 @@ public class DateTimeExample
     {
         double TotalSeconds { get; }
     }
-    public interface ITimeSpan2
-    {
-        double TotalSeconds { get; }
-    }
     public interface IDateTime
     {
         ITimeSpan Subtract([TypeShim(typeof(DateTime))] IDateTime value);

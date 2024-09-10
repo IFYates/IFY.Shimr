@@ -120,7 +120,7 @@ namespace {EXT_NAMESPACE}
         // If current project supports nullable, add extra info
         if (writer.HasNullableAttributes)
         {
-            codeArgs[0] = "        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(\"inst\")]\r\n";
+            codeArgs[0] = "        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(nameof(instance))]\r\n";
             codeArgs[2] = "?";
         }
 
