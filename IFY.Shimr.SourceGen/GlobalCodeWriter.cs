@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.SourceGen;
 
-internal class GlobalCodeWriter(GeneratorExecutionContext context) : ICodeWriter
+internal class GlobalCodeWriter(SourceProductionContext context) : ICodeWriter
 {
     public const string SB_NAMESPACE = "IFY.Shimr";
     public const string SB_CLASSNAME = "ShimBuilder";
@@ -70,7 +70,8 @@ namespace {EXT_NAMESPACE}
         /// <summary>
         /// Shim an instance of an <cref name=""object""/> to <typeparamref name=""TInterface""/>.
         /// </summary>
-{{0}}        public static TInterface{{2}} Shim<TInterface>(this object instance) where TInterface : class
+        {{0}}[return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(nameof(instance))]
+        public static TInterface{{2}} Shim<TInterface>(this object instance) where TInterface : class
         {{{{
             if (instance == null) return null;
             var interfaceType = typeof(TInterface).IsGenericType ? typeof(TInterface).GetGenericTypeDefinition() : typeof(TInterface);
@@ -101,7 +102,8 @@ namespace {EXT_NAMESPACE}
         /// Recast shims to original type.
         /// No type-safety checks. Must already be <typeparamref name=""T""/> or be <see cref=""IShim""/> of <typeparamref name=""T""/>.
         /// </summary>
-{{0}}        public static System.Collections.Generic.IEnumerable<T> Unshim<T>(this System.Collections.Generic.IEnumerable<object> shims)
+        {{0}}[return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(nameof(shims))]
+        public static System.Collections.Generic.IEnumerable<T> Unshim<T>(this System.Collections.Generic.IEnumerable<object> shims)
         {{{{
             return shims.Select(s => s is T obj ? obj : (T)((IShim)s).Unshim());
         }}}}
@@ -120,8 +122,11 @@ namespace {EXT_NAMESPACE}
         // If current project supports nullable, add extra info
         if (writer.HasNullableAttributes)
         {
-            codeArgs[0] = "        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull(nameof(instance))]\r\n";
             codeArgs[2] = "?";
+        }
+        else
+        {
+            codeArgs[0] = "//";
         }
 
         var code = new StringBuilder();
@@ -146,8 +151,8 @@ namespace {EXT_NAMESPACE}
 
     private readonly StringBuilder _code = new();
 
-    public bool HasNullableAttributes { get; } = context.Compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute") != null;
-    public bool HasStackTraceHiddenAttribute { get; } = context.Compilation.GetTypeByMetadataName("System.Diagnostics.StackTraceHiddenAttribute") != null;
+    public bool HasNullableAttributes { get; } = true; // TODO: context.Compilation.GetTypeByMetadataName("System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute") != null;
+    public bool HasStackTraceHiddenAttribute { get; } = true; // TODO: context.Compilation.GetTypeByMetadataName("System.Diagnostics.StackTraceHiddenAttribute") != null;
 
     public void Append(string value)
         => _code.Append(value);

@@ -63,7 +63,7 @@ internal class ShimFactoryDefinition : IShimDefinition
         writer.WriteSource($"Shimr.{Name}.g.cs");
     }
 
-    public void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimResolver shimResolver)
+    public void Resolve(IList<IBinding> allBindings, ShimResolver shimResolver)
     {
         // Map shim members against targets
         foreach (var member in Members)
@@ -76,10 +76,10 @@ internal class ShimFactoryDefinition : IShimDefinition
                 continue;
             }
 
-            var targetMembers = target.GetMatchingMembers(member, errors);
+            var targetMembers = target.GetMatchingMembers(member);
             foreach (var targetMember in targetMembers)
             {
-                member.ResolveBindings(allBindings, targetMember, errors, shimResolver);
+                member.ResolveBindings(allBindings, targetMember, shimResolver);
             }
         }
     }

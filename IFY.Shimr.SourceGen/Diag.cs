@@ -3,6 +3,7 @@
 /// <summary>
 /// Helpers for diagnosing issues.
 /// </summary>
+[Obsolete("No longer required with IIncrementalGenerator?")]
 internal static class Diag
 {
     private static readonly StringBuilder _text = new();

@@ -1,5 +1,4 @@
-﻿using IFY.Shimr.SourceGen;
-using IFY.Shimr.SourceGen.CodeAnalysis;
+﻿using IFY.Shimr.SourceGen.CodeAnalysis;
 using IFY.Shimr.SourceGen.Models.Bindings;
 using Microsoft.CodeAnalysis;
 
@@ -137,7 +136,7 @@ internal abstract class ShimMember : IMember
                 && ((IMethodSymbol)Symbol).AllParameterTypesMatch(method.Parameters);
         }
 
-        public override void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, CodeErrorReporter errors, ShimResolver shimResolver, ShimTarget? target = null)
+        public override void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, ShimResolver shimResolver, ShimTarget? target = null)
         {
             // Resolve parameter overrides
             foreach (var param in Parameters)
@@ -145,7 +144,7 @@ internal abstract class ShimMember : IMember
                 param.RegisterOverride(shimResolver);
             }
 
-            base.ResolveBindings(bindings, targetMember, errors, shimResolver, target);
+            base.ResolveBindings(bindings, targetMember, shimResolver, target);
         }
     }
 
@@ -313,7 +312,7 @@ internal abstract class ShimMember : IMember
         return member.Name == TargetName;
     }
 
-    public virtual void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, CodeErrorReporter errors, ShimResolver shimResolver, ShimTarget? target = null)
+    public virtual void ResolveBindings(IList<IBinding> bindings, TargetMember targetMember, ShimResolver shimResolver, ShimTarget? target = null)
     {
         var binding = targetMember.Target.GetBinding(this, targetMember, target);
         bindings.Add(binding);
@@ -336,7 +335,7 @@ internal abstract class ShimMember : IMember
         {
             // Error no matching method
             Diag.WriteOutput($"//// No binding match: {targetMember.Target.FullTypeName}.{TargetName} for {Definition.FullTypeName}.{Name}");
-            errors.NoMemberError(targetMember.ContainingType, Symbol);
+            // TODO: errors.NoMemberError(targetMember.ContainingType, Symbol);
             return;
         }
 
@@ -350,7 +349,7 @@ internal abstract class ShimMember : IMember
             else
             {
                 // TODO: Error for bad use of factory shim as instance shim
-                errors.CodeGenError(new Exception($"Fetching factory shim as instance shim: {targetMember.ContainingType}, {Symbol}"));
+                // TODO: errors.CodeGenError(new Exception($"Fetching factory shim as instance shim: {targetMember.ContainingType}, {Symbol}"));
             }
         }
     }

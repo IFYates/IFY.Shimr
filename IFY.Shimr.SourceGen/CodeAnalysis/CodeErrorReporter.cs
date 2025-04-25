@@ -1,58 +1,26 @@
-﻿using IFY.Shimr.SourceGen;
-using Microsoft.CodeAnalysis;
-using System.Collections.Frozen;
+﻿using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.SourceGen.CodeAnalysis;
 
 /// <summary>
 /// Handles raising build errors.
 /// </summary>
-internal class CodeErrorReporter
+internal static class CodeErrorReporter
 {
-    private readonly Queue<Diagnostic> _diagnostics = new();
-    private void reportDiagnostic(DiagnosticDescriptor descriptor, Location? location, params object?[]? messageArgs)
+    public static void NoTypeWarning(this SourceProductionContext context)
     {
-        var diagnostic = Diagnostic.Create(descriptor, location, messageArgs);
-        lock (_diagnostics)
-        {
-            if (_context.HasValue)
-            {
-                reportDiagnostic(diagnostic);
-            }
-            else
-            {
-                _diagnostics.Enqueue(diagnostic);
-            }
-        }
+        context.ReportDiagnostic(Diagnostic.Create(ShimrNotUsed, null));
     }
-    private void reportDiagnostic(Diagnostic diagnostic)
-    {
-        try
-        {
-            _context!.Value.ReportDiagnostic(diagnostic);
-        }
-        catch (Exception ex)
-        {
-            var err = $"{ex.GetType().FullName}: {ex.Message}\r\n{ex.StackTrace}";
-            _context!.Value.AddSource("ERROR.log.cs", $"// {err}");
-            Diag.WriteOutput($"// ERROR: {err}");
-        }
-    }
+    public static readonly DiagnosticDescriptor ShimrNotUsed = new(
+        id: "SHIMR000",
+        title: "No uses of Shimr found",
+        messageFormat: "No uses of Shimr were found in the code",
+        category: "Correctness",
+        defaultSeverity: DiagnosticSeverity.Info,
+        isEnabledByDefault: true
+    );
 
-    private GeneratorExecutionContext? _context;
-    public void SetContext(GeneratorExecutionContext context)
-    {
-        lock (_diagnostics)
-        {
-            _context = context;
-            while (_diagnostics.Count > 0)
-            {
-                reportDiagnostic(_diagnostics.Dequeue());
-            }
-        }
-    }
-
-    //public void UnknownShimWarning(SyntaxNode node, ITypeSymbol? shimdType)
+    //public static void UnknownShimWarning(this SourceProductionContext context, SyntaxNode node, ITypeSymbol? shimdType)
     //{
     //    context.ReportDiagnostic(Diagnostic.Create(ShimToUnknownInterface, node.GetLocation(), shimdType?.ToDisplayString() ?? "Unknown"));
     //}
@@ -65,9 +33,9 @@ internal class CodeErrorReporter
     //    isEnabledByDefault: true
     //);
 
-    public void NoTypeWarning(SyntaxNode node, ITypeSymbol? shimdType)
+    public static void NoTypeWarning(this SourceProductionContext context, SyntaxNode node, ITypeSymbol? shimdType)
     {
-        reportDiagnostic(ShimToUnknownInterface, node.GetLocation(), shimdType?.ToDisplayString() ?? "Unknown");
+        context.ReportDiagnostic(Diagnostic.Create(ShimToUnknownInterface, node.GetLocation(), shimdType?.ToDisplayString() ?? "Unknown"));
     }
     public static readonly DiagnosticDescriptor ShimToUnknownInterface = new(
         id: "SHIMR102",
@@ -78,9 +46,9 @@ internal class CodeErrorReporter
         isEnabledByDefault: true
     );
 
-    public void CodeGenError(Exception ex)
+    public static void CodeGenError(this SourceProductionContext context, Exception ex)
     {
-        reportDiagnostic(FailedToGenerateCode, null, ex);
+        context.ReportDiagnostic(Diagnostic.Create(FailedToGenerateCode, null, ex));
     }
     public static readonly DiagnosticDescriptor FailedToGenerateCode = new(
         id: "SHIMR200",
@@ -91,9 +59,9 @@ internal class CodeErrorReporter
         isEnabledByDefault: true
     );
 
-    public void NonInterfaceError(SyntaxNode node, ITypeSymbol? argType)
+    public static void NonInterfaceError(this SourceProductionContext context, SyntaxNode node, ITypeSymbol? argType)
     {
-        reportDiagnostic(ShimToNonInterface, node.GetLocation(), argType?.ToDisplayString() ?? "Unknown");
+        context.ReportDiagnostic(Diagnostic.Create(ShimToNonInterface, node.GetLocation(), argType?.ToDisplayString() ?? "Unknown"));
     }
     public static readonly DiagnosticDescriptor ShimToNonInterface = new(
         id: "SHIMR201",
@@ -104,9 +72,9 @@ internal class CodeErrorReporter
         isEnabledByDefault: true
     );
 
-    public void InterfaceUseError(SyntaxNode node, ITypeSymbol? argType)
+    public static void InterfaceUseError(this SourceProductionContext context, SyntaxNode node, ITypeSymbol? argType)
     {
-        reportDiagnostic(NeedNonInterface, node.GetLocation(), argType?.ToDisplayString() ?? "Unknown");
+        context.ReportDiagnostic(Diagnostic.Create(NeedNonInterface, node.GetLocation(), argType?.ToDisplayString() ?? "Unknown"));
     }
     public static readonly DiagnosticDescriptor NeedNonInterface = new(
         id: "SHIMR202",
@@ -117,9 +85,9 @@ internal class CodeErrorReporter
         isEnabledByDefault: true
     );
 
-    public void NoMemberError(ITypeSymbol targetType, ISymbol shimMember)
+    public static void NoMemberError(this SourceProductionContext context, ITypeSymbol targetType, ISymbol shimMember)
     {
-        reportDiagnostic(ShimOfUnknownMember, targetType.GetSyntaxNode()?.GetLocation(), targetType.ToFullName(), $"{shimMember.ContainingType.ToFullName()}.{shimMember.Name}");
+        context.ReportDiagnostic(Diagnostic.Create(ShimOfUnknownMember, targetType.GetSyntaxNode()?.GetLocation(), targetType.ToFullName(), $"{shimMember.ContainingType.ToFullName()}.{shimMember.Name}"));
     }
     public static readonly DiagnosticDescriptor ShimOfUnknownMember = new(
         id: "SHIMR203",
@@ -130,9 +98,9 @@ internal class CodeErrorReporter
         isEnabledByDefault: true
     );
 
-    public void InvalidReturnTypeError(SyntaxNode? node, string shimMember, string returnType)
+    public static void InvalidReturnTypeError(this SourceProductionContext context, SyntaxNode? node, string shimMember, string returnType)
     {
-        reportDiagnostic(InvalidShimReturnType, node?.GetLocation(), shimMember, returnType);
+        context.ReportDiagnostic(Diagnostic.Create(InvalidShimReturnType, node?.GetLocation(), shimMember, returnType));
     }
     public static readonly DiagnosticDescriptor InvalidShimReturnType = new(
         id: "SHIMR204",

@@ -23,7 +23,7 @@ internal class ShimTarget(ITypeSymbol symbol)
     /// <summary>
     /// Find the <see cref="TargetMember"/>s in this <see cref="ShimTarget"/> that could be bound to the given <see cref="ShimMember"/>.
     /// </summary>
-    public virtual TargetMember[] GetMatchingMembers(ShimMember shimMember, CodeErrorReporter errors)
+    public virtual TargetMember[] GetMatchingMembers(ShimMember shimMember)
     {
         return getMatchingMembers(shimMember);
     }

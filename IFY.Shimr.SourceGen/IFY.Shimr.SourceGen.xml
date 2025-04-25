@@ -14,7 +14,7 @@
             Finds all uses of 'ObjectExtensions.Shim&lt;T&gt;(object)' extension method and 'ObjectExtensions.Create&lt;T&gt;()'.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.SourceGen.CodeAnalysis.ShimResolver.ResolveAllShims(IFY.Shimr.SourceGen.CodeAnalysis.CodeErrorReporter)">
+        <member name="M:IFY.Shimr.SourceGen.CodeAnalysis.ShimResolver.ResolveAllShims">
             <summary>
             Ensure that all implicit shims in registered shims are resolved.
             </summary>
@@ -146,7 +146,7 @@
             A model of a shimmed type.
             </summary>
         </member>
-        <member name="M:IFY.Shimr.SourceGen.Models.ShimTarget.GetMatchingMembers(IFY.Shimr.SourceGen.Models.Members.ShimMember,IFY.Shimr.SourceGen.CodeAnalysis.CodeErrorReporter)">
+        <member name="M:IFY.Shimr.SourceGen.Models.ShimTarget.GetMatchingMembers(IFY.Shimr.SourceGen.Models.Members.ShimMember)">
             <summary>
             Find the <see cref="T:IFY.Shimr.SourceGen.Models.Members.TargetMember"/>s in this <see cref="T:IFY.Shimr.SourceGen.Models.ShimTarget"/> that could be bound to the given <see cref="T:IFY.Shimr.SourceGen.Models.Members.ShimMember"/>.
             </summary>

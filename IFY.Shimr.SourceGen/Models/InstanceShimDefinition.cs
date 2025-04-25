@@ -96,7 +96,7 @@ internal class InstanceShimDefinition : IShimDefinition
         writer.WriteSource($"Shimr.{Name}.g.cs");
     }
 
-    public void Resolve(IList<IBinding> allBindings, CodeErrorReporter errors, ShimResolver shimResolver)
+    public void Resolve(IList<IBinding> allBindings, ShimResolver shimResolver)
     {
         // Map shim members against targets
         foreach (var target in _targets.Values)
@@ -106,13 +106,13 @@ internal class InstanceShimDefinition : IShimDefinition
             foreach (var member in Members)
             {
                 var memberTarget = member.TargetType ?? target;
-                var targetMembers = memberTarget.GetMatchingMembers(member, errors);
+                var targetMembers = memberTarget.GetMatchingMembers(member);
 
                 if (member.Proxy != null)
                 {
                     // We need to complete target.GetMatchingMembers and then locate proxy
                     targetMembers = new ShimProxyTarget(member.Proxy.Value.ImplementationType, target, targetMembers)
-                        .GetMatchingMembers(member, errors);
+                        .GetMatchingMembers(member);
                 }
 
                 if (!targetMembers.Any())
@@ -122,14 +122,14 @@ internal class InstanceShimDefinition : IShimDefinition
                         // TODO: optional, as per 'IgnoreMissingMembers'
                         // TODO: register NotImplemented binding
                         Diag.WriteOutput($"//// No match: {target.FullTypeName}.{member.TargetName} for {member.Type} {member.Definition.FullTypeName}.{member.Name}");
-                        errors.NoMemberError(target.Symbol, member.Symbol);
+                        // TODO: errors.NoMemberError(target.Symbol, member.Symbol);
                     }
                     continue;
                 }
 
                 foreach (var targetMember in targetMembers)
                 {
-                    member.ResolveBindings(allBindings, targetMember, errors, shimResolver, target);
+                    member.ResolveBindings(allBindings, targetMember, shimResolver, target);
                 }
             }
         }

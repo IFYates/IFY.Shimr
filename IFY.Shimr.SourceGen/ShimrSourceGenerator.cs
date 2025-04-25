@@ -1,95 +1,46 @@
 ﻿using IFY.Shimr.SourceGen.CodeAnalysis;
+using IFY.Shimr.SourceGen.Models.Bindings;
 using Microsoft.CodeAnalysis;
 
 namespace IFY.Shimr.SourceGen;
 
-// TODO: https://github.com/dotnet/roslyn/blob/main/docs/features/source-generators.md#progressive-complexity-opt-in
 [Generator]
-internal class ShimrSourceGenerator : ISourceGenerator
+internal class ShimrSourceGenerator : IIncrementalGenerator
 {
-    // Only called after a rebuild
-    public void Initialize(GeneratorInitializationContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        //Diag.Debug();
-        Diag.IsOutputEnabled = true;// !Assembly.GetExecutingAssembly().Location.Contains("\\Temp\\");
-        Diag.WriteOutput($"// Start code generation: {DateTime.Now:o}\r\n", false); // TODO: wrong place to reset file
-        //Diag.WriteOutput($"// {Assembly.GetExecutingAssembly().Location}");
+        Diag.Debug(); // NOTE: Comment out and re-build before closing VS
+        //Diag.IsOutputEnabled = true;
+        //Diag.WriteOutput($"// Start code generation: {DateTime.Now:o}\r\n", false); // TODO: wrong place to reset file
 
-        // TODO: This approach does not support multiple target frameworks
-        context.RegisterForSyntaxNotifications(() => new ShimResolver());
+        var resolver = new ShimResolver();
+        var provider = context.SyntaxProvider.CreateSyntaxProvider(resolver.ShouldProcess, resolver.Process);
+        context.RegisterSourceOutput(provider, generateShimClass);
     }
 
-    // Called on each code change
-    public void Execute(GeneratorExecutionContext context)
+    private void generateShimClass(SourceProductionContext context, IBinding binding)
     {
-        if (context.AnalyzerConfigOptions.GlobalOptions.TryGetValue("build_property.ProjectDir", out var projectDir))
-        {
-            Diag.OutputPath = projectDir;
-        }
-
-        if (context.SyntaxContextReceiver is not ShimResolver resolver)
+        if (context.CancellationToken.IsCancellationRequested)
         {
             return;
         }
 
         try
         {
-            resolver.Errors.SetContext(context);
-            doExecute(context, resolver.Errors, resolver);
+            doExecute(context, binding);
         }
         catch (Exception ex)
         {
-            var err = $"{ex.GetType().FullName}: {ex.Message}\r\n{ex.StackTrace}";
-            context.AddSource("ERROR.log.cs", $"// {err}");
-            Diag.WriteOutput($"// ERROR: {err}");
-            resolver.Errors.CodeGenError(ex);
+            context.CodeGenError(ex);
             throw;
         }
     }
-    private void doExecute(GeneratorExecutionContext context, CodeErrorReporter errors, ShimResolver shimResolver)
+    private void doExecute(SourceProductionContext context, IBinding binding)
     {
-        // Resolve all shim bindings
-        var allBindings = shimResolver.ResolveAllShims(errors);
-
-        // Meta info
-        var code = new StringBuilder();
-        code.AppendLine($"// Project: {context.Compilation.AssemblyName}");
-        code.AppendLine($"// Shim map ({allBindings.Count}):");
-        foreach (var def in allBindings.GroupBy(b => b.Definition))
-        {
-            code.AppendLine($"// + {def.Key.FullTypeName} ({def.Key.GetType().Name})");
-            foreach (var shim in def.Select(d => d.Target).Distinct())
-            {
-                code.AppendLine($"//   - {shim.FullTypeName} ({shim.GetType().Name})");
-            }
-        }
-        addSource("_meta.g.cs", code);
-
         var writer = new GlobalCodeWriter(context);
-        GlobalCodeWriter.WriteExtensionClass(writer, allBindings);
+        //GlobalCodeWriter.WriteExtensionClass(writer, allBindings);
+        //GlobalCodeWriter.WriteFactoryClass(writer, allBindings);
 
-        if (!allBindings.Any())
-        {
-            Diag.WriteOutput($"// Did not find any uses of Shimr");
-            return;
-        }
-
-        GlobalCodeWriter.WriteFactoryClass(writer, allBindings);
-
-        var bindingsByDefinition = allBindings.GroupBy(b => b.Definition).ToArray();
-        foreach (var group in bindingsByDefinition)
-        {
-            group.Key.WriteShimClass(writer, group);
-        }
-
-        Diag.WriteOutput($"// Code generation complete: {DateTime.Now:o}");
-
-        void addSource(string name, StringBuilder code)
-        {
-            code.Insert(0, $"// Generated at {DateTime.Now:O}\r\n");
-            context.AddSource(name, code.ToString());
-            Diag.WriteOutput($"/** File: {name} **/\r\n{code}");
-            code.Clear();
-        }
+        //context.AddSource(binding.Name + ".g.cs", writer.ToClass(binding));
     }
 }

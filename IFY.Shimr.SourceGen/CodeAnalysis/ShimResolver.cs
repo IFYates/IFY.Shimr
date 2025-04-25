@@ -11,10 +11,29 @@ namespace IFY.Shimr.SourceGen.CodeAnalysis;
 /// </summary>
 internal class ShimResolver : ISyntaxContextReceiver
 {
+    // TODO: only generate each shim once
+
+    // Identify which syntax nodes require code generation
+    public bool ShouldProcess(SyntaxNode node, CancellationToken cancellationToken)
+    {
+        return node is MemberAccessExpressionSyntax;
+    }
+
+    // Convert syntax nodes to generatable data
+    public IBinding Process(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+    {
+        var n = (Delegate)((MemberAccessExpressionSyntax)context.Node).Kind;
+        var y = ((GenericNameSyntax)((MemberAccessExpressionSyntax)n.Target).Name).Identifier.Value;
+        return null;
+    }
+
+
+
+
     private readonly Dictionary<string, IShimDefinition> _pool = [];
     public IEnumerable<IShimDefinition> Definitions => _pool.Values;
 
-    public CodeErrorReporter Errors { get; } = new();
+    // TODO: public CodeErrorReporter Errors { get; } = new();
 
     public IShimDefinition GetOrCreate(ITypeSymbol interfaceType, bool asFactory)
     {
@@ -51,7 +70,7 @@ internal class ShimResolver : ISyntaxContextReceiver
         {
             var err = $"{ex.GetType().FullName}: {ex.Message}\r\n{ex.StackTrace}";
             Diag.WriteOutput($"// ERROR: {err}");
-            // TODO: _errors.CodeGenFailed(ex);
+            // TODO: Errors.CodeGenError(ex);
         }
     }
 
@@ -82,7 +101,7 @@ internal class ShimResolver : ISyntaxContextReceiver
         var argTypeInfo = context.SemanticModel.GetTypeInfo(argType).Type;
         if (argTypeInfo?.TypeKind != TypeKind.Interface)
         {
-            Errors.NonInterfaceError(context.Node, argTypeInfo);
+            // TODO: Errors.NonInterfaceError(context.Node, argTypeInfo);
             return true;
         }
 
@@ -90,7 +109,7 @@ internal class ShimResolver : ISyntaxContextReceiver
         var targetType = context.SemanticModel.GetTypeInfo(membAccessExpr.Expression).Type;
         if (targetType?.ToDisplayString() is null or "object")
         {
-            Errors.NoTypeWarning(context.Node, targetType);
+            // TODO: Errors.NoTypeWarning(context.Node, targetType);
             return true;
         }
 
@@ -129,12 +148,12 @@ internal class ShimResolver : ISyntaxContextReceiver
                 var typeArg = memberAttr.GetAttributeTypeParameter(context.SemanticModel);
                 if (typeArg?.ToDisplayString() is null or "object")
                 {
-                    Errors.NoTypeWarning(context.Node, typeArg);
+                    // TODO: Errors.NoTypeWarning(context.Node, typeArg);
                     continue;
                 }
                 if (typeArg.TypeKind == TypeKind.Interface)
                 {
-                    Errors.InterfaceUseError(context.Node, typeArg);
+                    // TODO: Errors.InterfaceUseError(context.Node, typeArg);
                     continue;
                 }
 
@@ -155,26 +174,24 @@ internal class ShimResolver : ISyntaxContextReceiver
                     ?? interfaceAttr?.GetAttributeTypeParameter(context.SemanticModel);
                 if (typeArg?.ToDisplayString() is null or "object")
                 {
-                    Errors.NoTypeWarning(context.Node, typeArg);
+                    // TODO: Errors.NoTypeWarning(context.Node, typeArg);
                     continue;
                 }
                 if (typeArg.TypeKind == TypeKind.Interface)
                 {
-                    Errors.InterfaceUseError(context.Node, typeArg);
+                    // TODO: Errors.InterfaceUseError(context.Node, typeArg);
                     continue;
                 }
 
-                // TODO: move to member logic
                 // Check return type is valid
-                var returnType = context.SemanticModel.GetDeclaredSymbol(method)?.ReturnType;
-                if (returnType == null || !returnType.IsMatch(typeArg) && returnType.TypeKind != TypeKind.Interface)
+                var member = context.SemanticModel.GetDeclaredSymbol(method);
+                if (member?.ReturnType == null || (!member.ReturnType.IsMatch(typeArg) && member.ReturnType.TypeKind != TypeKind.Interface))
                 {
-                    Errors.InvalidReturnTypeError(method.ReturnType, method.Identifier.Text /* TODO: signature */, returnType?.ToDisplayString() ?? "Unknown");
+                    // TODO: Errors.InvalidReturnTypeError(method.ReturnType, method.Identifier.Text /* TODO: full signature */, member?.ReturnType?.ToDisplayString() ?? "Unknown");
                     continue;
                 }
 
                 // Register shim factory
-                var member = context.SemanticModel.GetDeclaredSymbol(method)!;
                 GetOrCreateFactory(factoryType)
                     .SetMemberType(member, typeArg);
             }
@@ -187,7 +204,7 @@ internal class ShimResolver : ISyntaxContextReceiver
     /// Ensure that all implicit shims in registered shims are resolved.
     /// </summary>
     /// <returns>All current shims.</returns>
-    public IList<IBinding> ResolveAllShims(CodeErrorReporter errors)
+    public IList<IBinding> ResolveAllShims()
     {
         var bindings = new List<IBinding>();
         var shimsDone = new List<IShimDefinition>();
@@ -196,7 +213,7 @@ internal class ShimResolver : ISyntaxContextReceiver
         {
             foreach (var shimType in newShims)
             {
-                shimType.Resolve(bindings, errors, this);
+                shimType.Resolve(bindings, this);
             }
             shimsDone.AddRange(newShims);
             newShims = _pool.Values.Except(shimsDone).ToArray();

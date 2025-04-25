@@ -18,19 +18,19 @@ internal class ShimProxyTarget(ITypeSymbol symbol, ShimTarget shimTarget, Target
         return new ShimMemberProxyBinding(shimMember, ShimTarget, proxyMember, targetMembers.FirstOrDefault());
     }
 
-    public override TargetMember[] GetMatchingMembers(ShimMember shimMember, CodeErrorReporter errors)
+    public override TargetMember[] GetMatchingMembers(ShimMember shimMember)
     {
         var proxyBehaviour = shimMember.Proxy?.Behaviour ?? ProxyBehaviour.Override;
         if (!targetMembers.Any() && proxyBehaviour == ProxyBehaviour.Override)
         {
             Diag.WriteOutput($"//// No member to override: {FullTypeName}.{shimMember.TargetName} for {shimMember.Type} {shimMember.Definition.FullTypeName}.{shimMember.Name}");
-            errors.NoMemberError(Symbol, shimMember.Symbol); // TODO: better error
+            // TODO: errors.NoMemberError(Symbol, shimMember.Symbol); // TODO: better error
             return [];
         }
         else if (targetMembers.Any() && proxyBehaviour == ProxyBehaviour.Add)
         {
             // TODO: Error that proxy is adding existing method
-            errors.CodeGenError(new Exception($"[ProxyBehaviour.{proxyBehaviour}] {Symbol}, {shimMember.Symbol}"));
+            // TODO: errors.CodeGenError(new Exception($"[ProxyBehaviour.{proxyBehaviour}] {Symbol}, {shimMember.Symbol}"));
             return [];
         }
 
@@ -40,7 +40,7 @@ internal class ShimProxyTarget(ITypeSymbol symbol, ShimTarget shimTarget, Target
         {
             // TODO: optional, as per 'IgnoreMissingMembers'
             Diag.WriteOutput($"//// No proxy match: {proxyType.ToFullName()}.{proxyTargetName ?? shimMember.Name} for {shimMember.Definition.FullTypeName}.{shimMember.Name} [ProxyBehaviour.{behaviour}]");
-            errors.NoMemberError(Symbol, shimMember.Symbol);
+            // TODO: errors.NoMemberError(Symbol, shimMember.Symbol);
             return [];
         }
 
