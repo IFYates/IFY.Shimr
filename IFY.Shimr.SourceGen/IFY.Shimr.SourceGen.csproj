@@ -37,6 +37,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Compile Include="..\IFY.Shimr\Extensions\ObjectExtensions.cs" Link="_Api\ObjectExtensions.cs" />
 		<Compile Include="..\IFY.Shimr\ConstructorShimAttribute.cs" Link="_Api\ConstructorShimAttribute.cs" />
 		<Compile Include="..\IFY.Shimr\GlobalUsings.cs" Link="GlobalUsings.cs" />
 		<Compile Include="..\IFY.Shimr\IShim.cs" Link="_Api\IShim.cs" />
