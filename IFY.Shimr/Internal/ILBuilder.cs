@@ -130,16 +130,37 @@ internal static class ILBuilder
             impl.Emit(OpCodes.Box, fromType);
         }
 
+        // Handle Task<T> and ValueTask<T> shimming
+        var isTask = resultType.IsGenericType && resultType.GetGenericTypeDefinition().FullName == "System.Threading.Tasks.Task`1";
+        var isValueTask = resultType.IsGenericType && resultType.GetGenericTypeDefinition().FullName == "System.Threading.Tasks.ValueTask`1";
+        if (isTask || isValueTask)
+        {
+            var targetType = resultType.GetGenericArguments()[0];
+            var helperType = typeof(IFY.Shimr.Internal.TaskShimHelpers);
+            var methodName = isTask ? nameof(TaskShimHelpers.ConvertTaskResult) : nameof(TaskShimHelpers.ConvertValueTaskResult);
+            var convertMethod = helperType.GetMethod(methodName, new[] { typeof(object), typeof(Type) });
+            // Box to object if needed
+            if (fromType.IsValueType)
+                impl.Emit(OpCodes.Box, fromType);
+            // Call helper
+            impl.Emit(OpCodes.Ldtoken, targetType);
+            impl.Emit(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle"));
+            impl.Emit(OpCodes.Call, convertMethod);
+            // Cast to Task<T> or ValueTask<T>
+            impl.Emit(OpCodes.Castclass, resultType);
+            return;
+        }
+
         var argType = typeof(object);
         var shimType = resultType;
         if (resultType.IsArrayType(out var resultElementType) && fromType.IsArrayType(out var fromElementType)
             && resultElementType != fromElementType)
         {
             argType = typeof(IEnumerable<object>); // Auto-shim collection
-            shimType = resultElementType;
+            shimType = resultElementType!;
         }
 
-        var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { shimType }, new[] { argType });
+        var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new Type[] { shimType! }, new Type[] { argType! });
         impl.Emit(OpCodes.Call, shimMethod);
     }
 
