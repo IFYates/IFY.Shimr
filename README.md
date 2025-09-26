@@ -1,3 +1,9 @@
+<div align="center">
+
+![Bea](bea-256.png)
+
+</div>
+
 # Shimr
 Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.
 
