@@ -184,10 +184,16 @@ internal class ShimBinding
         }
 
         // Can only override with an interface
-        if (implReturnType != null && !InterfaceMethod.ReturnType.IsEquivalentGenericMethodType(implReturnType)
-            && !InterfaceMethod.ReturnType.IsInterface && !InterfaceMethod.ReturnType.ResolveType().IsInterface)
+        var targetReturnType = InterfaceMethod.ReturnType;
+        if (targetReturnType.IsTaskType() && implReturnType?.IsTaskType() == true)
         {
-            throw new NotSupportedException($"Shimmed return type ({InterfaceMethod.ReturnType.FullName}) must be an interface, on member: {InterfaceMethod.DeclaringType.FullName}.{reflectMember.Name}");
+            targetReturnType = targetReturnType.GenericTypeArguments[0];
+            implReturnType = implReturnType.GenericTypeArguments[0];
+        }
+        if (implReturnType != null && !targetReturnType.IsEquivalentGenericMethodType(implReturnType)
+            && !targetReturnType.IsInterface && !targetReturnType.ResolveType().IsInterface)
+        {
+            throw new NotSupportedException($"Shimmed return type ({targetReturnType.FullName}) must be an interface, on member: {InterfaceMethod.DeclaringType.FullName}.{reflectMember.Name}");
         }
 
         if (proxiedBinding != null)

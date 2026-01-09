@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading.Tasks;
 
 namespace IFY.Shimr.Internal;
 
@@ -44,13 +45,13 @@ internal static class ILBuilder
             | MethodAttributes.HideBySig
             | MethodAttributes.SpecialName
             | MethodAttributes.RTSpecialName,
-            CallingConventions.Standard, new[] { instField.FieldType });
+            CallingConventions.Standard, [instField.FieldType]);
         constr.DefineParameter(1, ParameterAttributes.None, string.Empty);
         var impl = constr.GetILGenerator();
 
         // Call to base()
         impl.Emit(OpCodes.Ldarg_0); // this
-        impl.Emit(OpCodes.Call, typeof(object).GetConstructor(new Type[0]));
+        impl.Emit(OpCodes.Call, typeof(object).GetConstructor([]));
 
         // Set this._inst to the parameter
         impl.Emit(OpCodes.Ldarg_0); // this
@@ -78,7 +79,7 @@ internal static class ILBuilder
         var factory = tb.DefineMethod(name, MethodAttributes.Public
             | MethodAttributes.HideBySig
             | MethodAttributes.Virtual,
-            returnType, paramTypes?.ToArray() ?? Array.Empty<Type>());
+            returnType, paramTypes?.ToArray() ?? []);
         return factory.GetILGenerator();
     }
     public static MethodBuilder DefinePublicMethod(this TypeBuilder tb, MethodInfo method, out Type[] paramTypes)
@@ -131,36 +132,56 @@ internal static class ILBuilder
         }
 
         // Handle Task<T> and ValueTask<T> shimming
-        var isTask = resultType.IsGenericType && resultType.GetGenericTypeDefinition().FullName == "System.Threading.Tasks.Task`1";
-        var isValueTask = resultType.IsGenericType && resultType.GetGenericTypeDefinition().FullName == "System.Threading.Tasks.ValueTask`1";
-        if (isTask || isValueTask)
+        if (resultType.IsGenericType
+            && resultType.GetGenericTypeDefinition().FullName is "System.Threading.Tasks.Task`1" or "System.Threading.Tasks.ValueTask`1")
         {
             var targetType = resultType.GetGenericArguments()[0];
-            var helperType = typeof(IFY.Shimr.Internal.TaskShimHelpers);
-            var methodName = isTask ? nameof(TaskShimHelpers.ConvertTaskResult) : nameof(TaskShimHelpers.ConvertValueTaskResult);
-            var convertMethod = helperType.GetMethod(methodName, new[] { typeof(object), typeof(Type) });
-            // Box to object if needed
-            if (fromType.IsValueType)
-                impl.Emit(OpCodes.Box, fromType);
-            // Call helper
-            impl.Emit(OpCodes.Ldtoken, targetType);
-            impl.Emit(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle"));
-            impl.Emit(OpCodes.Call, convertMethod);
-            // Cast to Task<T> or ValueTask<T>
-            impl.Emit(OpCodes.Castclass, resultType);
+            
+            var resultProperty = fromType.GetProperty("Result")!;
+            if (resultType.IsValueType)
+            {
+                // Unbox ValueTask<T> and get Result from address
+                var localVar = impl.DeclareLocal(fromType);
+                impl.Emit(OpCodes.Unbox_Any, fromType);
+                impl.Emit(OpCodes.Stloc, localVar);
+                impl.Emit(OpCodes.Ldloca, localVar);
+                impl.Emit(OpCodes.Call, resultProperty.GetMethod!);
+            }
+            else
+            {
+                // Task<T>.Result
+                impl.Emit(OpCodes.Callvirt, resultProperty.GetMethod!);
+            }
+
+            // Shim the result to targetType
+            impl.EmitTypeShim(resultProperty.PropertyType, targetType);
+
+            if (resultType.IsValueType)
+            {
+                // new ValueTask<targetType>(targetType)
+                var valueTaskCtor = resultType.GetConstructor([targetType])!;
+                impl.Emit(OpCodes.Newobj, valueTaskCtor);
+            }
+            else
+            {
+                // Task<targetType>.FromResult(targetType)
+                var taskFromResult = typeof(Task).GetMethod(nameof(Task.FromResult))!.MakeGenericMethod(targetType);
+                impl.Emit(OpCodes.Call, taskFromResult);
+            }
             return;
         }
 
         var argType = typeof(object);
         var shimType = resultType;
-        if (resultType.IsArrayType(out var resultElementType) && fromType.IsArrayType(out var fromElementType)
+        if (resultType.IsArrayType(out var resultElementType)
+            && fromType.IsArrayType(out var fromElementType)
             && resultElementType != fromElementType)
         {
             argType = typeof(IEnumerable<object>); // Auto-shim collection
             shimType = resultElementType!;
         }
 
-        var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new Type[] { shimType! }, new Type[] { argType! });
+        var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), [shimType!], [argType!]);
         impl.Emit(OpCodes.Call, shimMethod);
     }
 
@@ -173,7 +194,7 @@ internal static class ILBuilder
 
         var valType = realType.IsArrayType(out _) ? typeof(IEnumerable<object>) : typeof(object);
         var resultType = realType.ResolveType();
-        var unshimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Unshim), new[] { resultType }, new[] { valType });
+        var unshimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Unshim), [resultType], [valType]);
         impl.Emit(OpCodes.Call, unshimMethod);
     }
 
@@ -202,9 +223,9 @@ internal static class ILBuilder
             // Build target type
             var resultType = constrInfo.DeclaringType.RebuildGenericType(genericParams);
             impl.Emit(OpCodes.Ldtoken, resultType);
-            impl.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle), new[] { typeof(RuntimeTypeHandle) }));
+            impl.Emit(OpCodes.Call, typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle), [typeof(RuntimeTypeHandle)]));
             impl.Ldloc(argsArr.LocalIndex);
-            impl.Emit(OpCodes.Call, typeof(Activator).GetMethod(nameof(Activator.CreateInstance), new[] { typeof(Type), typeof(object[]) }));
+            impl.Emit(OpCodes.Call, typeof(Activator).GetMethod(nameof(Activator.CreateInstance), [typeof(Type), typeof(object[])]));
         }
         else
         {
@@ -213,7 +234,7 @@ internal static class ILBuilder
         }
 
         // Shim
-        var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), new[] { factory.ReturnType }, new[] { typeof(object) });
+        var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), [factory.ReturnType], [typeof(object)]);
         impl.Emit(OpCodes.Call, shimMethod);
 
         impl.Emit(OpCodes.Ret);
@@ -344,7 +365,7 @@ internal static class ILBuilder
         var impl = tb.DefinePublicMethod(methodInfo, out _).GetILGenerator();
         impl.Emit(OpCodes.Ldarg_0); // this
 
-        var notImplementedConstr = typeof(T).GetConstructor(new Type[0]);
+        var notImplementedConstr = typeof(T).GetConstructor([]);
         impl.Emit(OpCodes.Newobj, notImplementedConstr);
         impl.Emit(OpCodes.Throw);
     }

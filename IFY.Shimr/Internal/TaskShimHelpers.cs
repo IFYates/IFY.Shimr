@@ -1,32 +1,33 @@
-using System;
+using System.Reflection;
 using System.Threading.Tasks;
-using System.Threading;
 
-namespace IFY.Shimr.Internal
+namespace IFY.Shimr.Internal;
+
+public static class TaskShimHelpers
 {
-    internal static class TaskShimHelpers
+    public static Task<T> ConvertTaskResult<T>(Task? task)
     {
-        public static object? ConvertTaskResult(Task task, Type targetType)
+        if (task == null)
         {
-            if (task == null) return null;
-            var resultProp = task.GetType().GetProperty("Result");
-            if (resultProp == null) return null;
-            var result = resultProp.GetValue(task);
-            if (result == null) return null;
-            // If targetType is assignable, just return
-            if (targetType.IsAssignableFrom(result.GetType())) return result;
-            // Try to shim
-            return ShimBuilder.Shim(targetType, result);
+            return null!;
         }
-        public static object? ConvertValueTaskResult(object valueTask, Type targetType)
+        var result = task.GetType().GetProperty(nameof(Task<>.Result)).GetValue(task);
+        var value = result == null ? null
+            : typeof(T).IsAssignableFrom(result.GetType()) ? result
+            : ShimBuilder.Shim(typeof(T), result);
+        return Task.FromResult((T)value!);
+    }
+
+    public static ValueTask<T> ConvertValueTaskResult<T>(ValueTask? task)
+    {
+        if (task == null)
         {
-            if (valueTask == null) return null;
-            var resultProp = valueTask.GetType().GetProperty("Result");
-            if (resultProp == null) return null;
-            var result = resultProp.GetValue(valueTask);
-            if (result == null) return null;
-            if (targetType.IsAssignableFrom(result.GetType())) return result;
-            return ShimBuilder.Shim(targetType, result);
+            return default;
         }
+        var result = task.GetType().GetProperty(nameof(ValueTask<>.Result)).GetValue(task);
+        var value = result == null ? null
+            : typeof(T).IsAssignableFrom(result.GetType()) ? result
+            : ShimBuilder.Shim(typeof(T), result);
+        return new((T)value!);
     }
 }
