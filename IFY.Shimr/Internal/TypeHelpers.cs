@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace IFY.Shimr.Internal;
 
@@ -221,6 +222,12 @@ internal static class TypeHelpers
             return true;
         }
         return type.IsIEnumerableGeneric(out elementType);
+    }
+
+    public static bool IsTaskType(this Type type)
+    {
+        return type.IsGenericType
+            && (type.GetGenericTypeDefinition() == typeof(Task<>) || type.GetGenericTypeDefinition() == typeof(ValueTask<>));
     }
 
     /// <summary>
