@@ -42,7 +42,7 @@ jobs:
       run: dotnet build --configuration $BUILD_CONFIG --no-restore
 
     - name: Publish package
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/master'
       uses: nanoufo/action-upload-artifacts-and-release-assets@v2
       with:
         path: ./src/**/IFY.Shimr.*.*nupkg
