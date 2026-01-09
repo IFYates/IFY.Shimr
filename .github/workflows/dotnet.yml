@@ -8,10 +8,13 @@ on:
     types: [opened, synchronize, reopened]
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     # Setup
@@ -39,13 +42,14 @@ jobs:
       run: dotnet build --configuration $BUILD_CONFIG --no-restore
 
     - name: Publish package
-      uses: nanoufo/action-upload-artifacts-and-release-assets@v1.4
+      if: github.ref == 'refs/heads/main'
+      uses: nanoufo/action-upload-artifacts-and-release-assets@v2
       with:
-        path: ./**/IFY.Shimr.*.*nupkg
+        path: ./src/**/IFY.Shimr.*.*nupkg
 
     # Test & coverage
     - name: Test and coverage
-      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net6.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --format lcov -o cover.lcov
+      run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net10.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude-by-file "**/.nuget/**" --format lcov -o cover.lcov
     - name: Report coverage to Codacy
       uses: codacy/codacy-coverage-reporter-action@v1.3.0
       with:
@@ -74,7 +78,7 @@ jobs:
     - name: Run Stryker.NET
       run: dotnet stryker --dashboard-api-key ${{ secrets.STRYKER_DASHBOARD }}
     - name: Upload mutation report
-      uses: actions/upload-artifact@v2.2.2
+      uses: actions/upload-artifact@v4
       with:
         name: mutation-report.html
         path: ./**/mutation-report.html
