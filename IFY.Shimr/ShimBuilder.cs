@@ -23,7 +23,7 @@ public static class ShimBuilder
         _ignoreMissingMembers.Clear();
     }
 
-    private static readonly List<Type> _ignoreMissingMembers = new();
+    private static readonly List<Type> _ignoreMissingMembers = [];
     private static ModuleBuilder _mod;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
@@ -36,7 +36,7 @@ public static class ShimBuilder
     /// <summary>
     /// Don't compile the type every time
     /// </summary>
-    private static readonly Dictionary<string, Type> _dynamicTypeCache = new();
+    private static readonly Dictionary<string, Type> _dynamicTypeCache = [];
     private static readonly object _sync = 1;
 
     #region Internal
@@ -52,7 +52,7 @@ public static class ShimBuilder
                 {
                     var tb = _mod.DefineType($"Shim_{className}", TypeAttributes.Public
                         | TypeAttributes.AutoClass
-                        | TypeAttributes.BeforeFieldInit, null, new[] { typeof(IShim), interfaceType });
+                        | TypeAttributes.BeforeFieldInit, null, [typeof(IShim), interfaceType]);
 
                     var instField = tb.DefineField("_inst", implType, FieldAttributes.Private);
 
@@ -107,7 +107,7 @@ public static class ShimBuilder
 
                     var tb = _mod.DefineType(className, TypeAttributes.Public
                         | TypeAttributes.AutoClass
-                        | TypeAttributes.BeforeFieldInit, null, new[] { interfaceType });
+                        | TypeAttributes.BeforeFieldInit, null, [interfaceType]);
 
                     // Proxy all methods (including events, properties, and indexers)
                     foreach (var interfaceMethod in interfaceType.GetMethods())
@@ -242,7 +242,7 @@ public static class ShimBuilder
         }
 
         var shimType = getShimType(interfaceType, inst.GetType());
-        var shim = Activator.CreateInstance(shimType, new[] { inst });
+        var shim = Activator.CreateInstance(shimType, [inst]);
         return shim;
     }
 

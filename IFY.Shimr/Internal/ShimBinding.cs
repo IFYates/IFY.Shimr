@@ -2,17 +2,12 @@
 
 namespace IFY.Shimr.Internal;
 
-internal class ShimBinding
+internal class ShimBinding(MethodInfo interfaceMethod)
 {
-    public MethodInfo InterfaceMethod { get; }
+    public MethodInfo InterfaceMethod { get; } = interfaceMethod;
     public MemberInfo? ImplementedMember { get; private set; }
     public MemberInfo? ProxyImplementationMember { get; internal set; }
     public bool IsProperty { get; private set; }
-
-    public ShimBinding(MethodInfo interfaceMethod)
-    {
-        InterfaceMethod = interfaceMethod;
-    }
 
     public bool Resolve(Type implType, bool isConstructor)
     {

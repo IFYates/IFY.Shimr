@@ -15,10 +15,17 @@ public class StaticShimAttribute : Attribute
     /// </summary>
     internal bool IsConstructor { get; set; }
 
-    protected StaticShimAttribute()
+    /// <summary>
+    /// Initializes a new instance of the StaticShimAttribute class.
+    /// </summary>
+    protected internal StaticShimAttribute()
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the StaticShimAttribute class.
+    /// </summary>
+    /// <param name="targetType">The type that this static shim targets.</param>
     public StaticShimAttribute(Type targetType)
     {
         TargetType = targetType;

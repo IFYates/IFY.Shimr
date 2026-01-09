@@ -9,6 +9,17 @@
             Mark a method as being a shim of a constructor.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.ConstructorShimAttribute.#ctor">
+            <summary>
+            Initializes a new instance of the ConstructorShimAttribute class.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ConstructorShimAttribute.#ctor(System.Type)">
+            <summary>
+            Initializes a new instance of the ConstructorShimAttribute class.
+            </summary>
+            <param name="targetType">The type that this constructor shim targets.</param>
+        </member>
         <member name="T:IFY.Shimr.Extensions.ObjectExtensions">
             <summary>
             Useful extension methods, in separate namespace to reduce pollution.
@@ -266,6 +277,24 @@
         <member name="T:IFY.Shimr.TypeShimAttribute">
             <summary>
             Mark signature type as being automatically shimmed from real implementation type
+            </summary>
+            <remarks>
+            Initializes a new instance of the TypeShimAttribute class with the specified real type.
+            </remarks>
+            <param name="realType">The actual type that this attribute is intended to represent. Cannot be null.</param>
+        </member>
+        <member name="M:IFY.Shimr.TypeShimAttribute.#ctor(System.Type)">
+            <summary>
+            Mark signature type as being automatically shimmed from real implementation type
+            </summary>
+            <remarks>
+            Initializes a new instance of the TypeShimAttribute class with the specified real type.
+            </remarks>
+            <param name="realType">The actual type that this attribute is intended to represent. Cannot be null.</param>
+        </member>
+        <member name="P:IFY.Shimr.TypeShimAttribute.RealType">
+            <summary>
+            Gets the underlying runtime type represented by this instance.
             </summary>
         </member>
     </members>
