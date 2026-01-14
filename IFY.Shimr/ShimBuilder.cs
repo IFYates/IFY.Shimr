@@ -1,6 +1,7 @@
 ﻿using IFY.Shimr.Internal;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading.Tasks;
 
 namespace IFY.Shimr;
 
@@ -61,8 +62,8 @@ public static class ShimBuilder
 
                     // Proxy all methods (including events, properties, and indexers)
                     var methods = interfaceType.GetMethods()
-                        .Union(interfaceType.GetInterfaces().SelectMany(i => i.GetMethods()))
-                        .Where(m => m.IsAbstract).ToArray();
+                        .Union(interfaceType.GetInterfaces().SelectMany(static i => i.GetMethods()))
+                        .Where(static m => m.IsAbstract).ToArray();
                     foreach (var interfaceMethod in methods)
                     {
                         // Don't try to implement IShim
@@ -200,6 +201,38 @@ public static class ShimBuilder
     // NOTE: Used internally
 
     /// <summary>
+    /// Converts the result of a completed task to a specified type using a shim operation.
+    /// </summary>
+    /// <remarks>This method is intended for advanced scenarios where dynamic type conversion of task results
+    /// is required. The conversion is performed after the input task completes. If the conversion fails, the returned
+    /// task will be faulted with the corresponding exception.</remarks>
+    /// <typeparam name="TSource">The type of the result produced by the input task.</typeparam>
+    /// <typeparam name="TResult">The type to which the result of the input task will be converted.</typeparam>
+    /// <param name="inst">The task whose result will be converted. Must be completed successfully before conversion.</param>
+    /// <returns>A task that represents the asynchronous conversion operation. The result of the returned task is the converted
+    /// value of type TResult.</returns>
+    public static async Task<TResult> Shim<TSource, TResult>(Task<TSource> inst)
+    {
+        return (TResult)Shim(typeof(TResult), await inst)!;
+    }
+
+    /// <summary>
+    /// Converts the result of a completed task to a specified type using a shim operation.
+    /// </summary>
+    /// <remarks>This method is intended for advanced scenarios where dynamic type conversion of task results
+    /// is required. The conversion is performed after the input task completes. If the conversion fails, the returned
+    /// task will be faulted with the corresponding exception.</remarks>
+    /// <typeparam name="TSource">The type of the result produced by the input task.</typeparam>
+    /// <typeparam name="TResult">The type to which the result of the input task will be converted.</typeparam>
+    /// <param name="inst">The task whose result will be converted. Must be completed successfully before conversion.</param>
+    /// <returns>A task that represents the asynchronous conversion operation. The result of the returned task is the converted
+    /// value of type TResult.</returns>
+    public static async ValueTask<TResult> Shim<TSource, TResult>(ValueTask<TSource> inst)
+    {
+        return (TResult)Shim(typeof(TResult), await inst)!;
+    }
+
+    /// <summary>
     /// Use a shim to make the given object look like the required type.
     /// Result will also implement <see cref="IShim"/>.
     /// </summary>
@@ -216,7 +249,7 @@ public static class ShimBuilder
     public static TInterface?[]? Shim<TInterface>(IEnumerable<object>? inst)
         where TInterface : class
     {
-        return inst?.Select(i => (TInterface?)Shim(typeof(TInterface), i)).ToArray();
+        return inst?.Select(static i => (TInterface?)Shim(typeof(TInterface), i)).ToArray();
     }
 
     /// <summary>

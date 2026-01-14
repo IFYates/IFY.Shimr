@@ -209,6 +209,32 @@
             Type <paramref name="interfaceType"/> must only implement methods decorated with <see cref="T:IFY.Shimr.StaticShimAttribute"/>.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.ShimBuilder.Shim``2(System.Threading.Tasks.Task{``0})">
+            <summary>
+            Converts the result of a completed task to a specified type using a shim operation.
+            </summary>
+            <remarks>This method is intended for advanced scenarios where dynamic type conversion of task results
+            is required. The conversion is performed after the input task completes. If the conversion fails, the returned
+            task will be faulted with the corresponding exception.</remarks>
+            <typeparam name="TSource">The type of the result produced by the input task.</typeparam>
+            <typeparam name="TResult">The type to which the result of the input task will be converted.</typeparam>
+            <param name="inst">The task whose result will be converted. Must be completed successfully before conversion.</param>
+            <returns>A task that represents the asynchronous conversion operation. The result of the returned task is the converted
+            value of type TResult.</returns>
+        </member>
+        <member name="M:IFY.Shimr.ShimBuilder.Shim``2(System.Threading.Tasks.ValueTask{``0})">
+            <summary>
+            Converts the result of a completed task to a specified type using a shim operation.
+            </summary>
+            <remarks>This method is intended for advanced scenarios where dynamic type conversion of task results
+            is required. The conversion is performed after the input task completes. If the conversion fails, the returned
+            task will be faulted with the corresponding exception.</remarks>
+            <typeparam name="TSource">The type of the result produced by the input task.</typeparam>
+            <typeparam name="TResult">The type to which the result of the input task will be converted.</typeparam>
+            <param name="inst">The task whose result will be converted. Must be completed successfully before conversion.</param>
+            <returns>A task that represents the asynchronous conversion operation. The result of the returned task is the converted
+            value of type TResult.</returns>
+        </member>
         <member name="M:IFY.Shimr.ShimBuilder.Shim``1(System.Object)">
             <summary>
             Use a shim to make the given object look like the required type.
@@ -243,6 +269,27 @@
             <summary>
             Mark a shim member as being a proxy to an implementation elsewhere.
             </summary>
+            <remarks>
+            Initializes a new instance of the ShimProxyAttribute class with the specified implementation type, name, and
+            proxy behavior.
+            </remarks>
+            <param name="implementationType">The type that provides the implementation to be proxied. Cannot be null.</param>
+            <param name="implementationName">The name used to identify the implementation. This value is used to distinguish between multiple implementations
+            of the same type.</param>
+            <param name="behaviour">The proxy behavior to apply. Determines how the proxy interacts with the implementation.</param>
+        </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type,System.String,IFY.Shimr.ProxyBehaviour)">
+            <summary>
+            Mark a shim member as being a proxy to an implementation elsewhere.
+            </summary>
+            <remarks>
+            Initializes a new instance of the ShimProxyAttribute class with the specified implementation type, name, and
+            proxy behavior.
+            </remarks>
+            <param name="implementationType">The type that provides the implementation to be proxied. Cannot be null.</param>
+            <param name="implementationName">The name used to identify the implementation. This value is used to distinguish between multiple implementations
+            of the same type.</param>
+            <param name="behaviour">The proxy behavior to apply. Determines how the proxy interacts with the implementation.</param>
         </member>
         <member name="P:IFY.Shimr.ShimProxyAttribute.ImplementationType">
             <summary>
@@ -259,6 +306,29 @@
             The behaviour of this proxy member.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type)">
+            <summary>
+            Initializes a new instance of the ShimProxyAttribute class with the specified implementation type and the
+            default proxy behavior.
+            </summary>
+            <param name="implementationType">The type that provides the implementation to be proxied. Cannot be null.</param>
+        </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type,IFY.Shimr.ProxyBehaviour)">
+            <summary>
+            Initializes a new instance of the ShimProxyAttribute class with the specified implementation type and proxy
+            behaviour.
+            </summary>
+            <param name="implementationType">The type that provides the implementation to be proxied. Cannot be null.</param>
+            <param name="behaviour">The proxy behaviour to apply to the implementation.</param>
+        </member>
+        <member name="M:IFY.Shimr.ShimProxyAttribute.#ctor(System.Type,System.String)">
+            <summary>
+            Initializes a new instance of the ShimProxyAttribute class with the specified implementation type and name,
+            using the default proxy behavior.
+            </summary>
+            <param name="implementationType">The type that provides the implementation to be proxied. Cannot be null.</param>
+            <param name="implementationName">The name used to identify the implementation. Cannot be null or empty.</param>
+        </member>
         <member name="T:IFY.Shimr.StaticShimAttribute">
             <summary>
             Mark individual properties/fields or methods as being static within another type, or the entire interface.
@@ -273,6 +343,17 @@
             <summary>
             True if this member calls a constructor on the target type.
             </summary>
+        </member>
+        <member name="M:IFY.Shimr.StaticShimAttribute.#ctor">
+            <summary>
+            Initializes a new instance of the StaticShimAttribute class.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.StaticShimAttribute.#ctor(System.Type)">
+            <summary>
+            Initializes a new instance of the StaticShimAttribute class.
+            </summary>
+            <param name="targetType">The type that this static shim targets.</param>
         </member>
         <member name="T:IFY.Shimr.TypeShimAttribute">
             <summary>

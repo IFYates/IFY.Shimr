@@ -1,11 +1,14 @@
 ﻿using System.Reflection;
 using System.Reflection.Emit;
-using System.Threading.Tasks;
 
 namespace IFY.Shimr.Internal;
 
 internal static class ILBuilder
 {
+    private const string NS_TASKS = "System.Threading.Tasks";
+    private const string T_TASK1 = "System.Threading.Tasks.Task`1";
+    private const string T_VALUETASK1 = "System.Threading.Tasks.ValueTask`1";
+
     private static bool resolveIfInstance(bool isStatic, ILGenerator impl, FieldInfo? instField)
     {
         if (isStatic)
@@ -126,49 +129,31 @@ internal static class ILBuilder
             return;
         }
 
+        // Handle Task<T> and ValueTask<T> shimming
+        if (fromType.IsGenericType && fromType.Namespace == NS_TASKS && fromType.GetGenericTypeDefinition().FullName is T_TASK1 or T_VALUETASK1
+            && resultType.IsGenericType && resultType.Namespace == NS_TASKS && resultType.GetGenericTypeDefinition().FullName is T_TASK1 or T_VALUETASK1)
+        {
+            // Find the appropriate ShimBuilder.Shim<TSource, TResult>(Task/ValueTask<TSource>) method
+            var method = typeof(ShimBuilder).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Where(m => m.Name == nameof(ShimBuilder.Shim)
+                    && m.IsGenericMethodDefinition
+                    && m.GetGenericArguments().Length == 2
+                    && m.GetParameters().Length == 1
+                    && m.GetParameters()[0].ParameterType.IsGenericType
+                    && m.GetParameters()[0].ParameterType.GetGenericTypeDefinition() == fromType.GetGenericTypeDefinition())
+                .Single();
+
+            // Invoke the method with the appropriate generic types
+            var sourceType = fromType.GetGenericArguments()[0];
+            var targetType = resultType.GetGenericArguments()[0];
+            var shimTaskMethod = method.MakeGenericMethod(sourceType, targetType);
+            impl.Emit(OpCodes.Call, shimTaskMethod);
+            return;
+        }
+
         if (fromType.IsValueType)
         {
             impl.Emit(OpCodes.Box, fromType);
-        }
-
-        // Handle Task<T> and ValueTask<T> shimming
-        if (resultType.IsGenericType
-            && resultType.GetGenericTypeDefinition().FullName is "System.Threading.Tasks.Task`1" or "System.Threading.Tasks.ValueTask`1")
-        {
-            var targetType = resultType.GetGenericArguments()[0];
-            
-            var resultProperty = fromType.GetProperty("Result")!;
-            if (resultType.IsValueType)
-            {
-                // Unbox ValueTask<T> and get Result from address
-                var localVar = impl.DeclareLocal(fromType);
-                impl.Emit(OpCodes.Unbox_Any, fromType);
-                impl.Emit(OpCodes.Stloc, localVar);
-                impl.Emit(OpCodes.Ldloca, localVar);
-                impl.Emit(OpCodes.Call, resultProperty.GetMethod!);
-            }
-            else
-            {
-                // Task<T>.Result
-                impl.Emit(OpCodes.Callvirt, resultProperty.GetMethod!);
-            }
-
-            // Shim the result to targetType
-            impl.EmitTypeShim(resultProperty.PropertyType, targetType);
-
-            if (resultType.IsValueType)
-            {
-                // new ValueTask<targetType>(targetType)
-                var valueTaskCtor = resultType.GetConstructor([targetType])!;
-                impl.Emit(OpCodes.Newobj, valueTaskCtor);
-            }
-            else
-            {
-                // Task<targetType>.FromResult(targetType)
-                var taskFromResult = typeof(Task).GetMethod(nameof(Task.FromResult))!.MakeGenericMethod(targetType);
-                impl.Emit(OpCodes.Call, taskFromResult);
-            }
-            return;
         }
 
         var argType = typeof(object);
