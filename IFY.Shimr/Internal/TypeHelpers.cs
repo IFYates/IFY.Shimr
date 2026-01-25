@@ -99,13 +99,16 @@ internal static class TypeHelpers
         }
         return constrs.SingleOrDefault();
     }
-    public static MethodInfo? GetMethod(this Type type, string name, Type[] parameterTypes, Type[] genericArgs)
-        => type.GetMethod(name, null, parameterTypes, genericArgs);
-    public static MethodInfo? GetMethod(this Type type, string name, Type? returnType, Type[] parameterTypes, Type[] genericArgs)
+    public static MethodInfo? GetMethod(this Type type, string name, Type[] parameterTypes, Type[] genericArgs, Type? declaringType)
+        => type.GetMethod(name, null, parameterTypes, genericArgs, declaringType);
+    public static MethodInfo? GetMethod(this Type type, string name, Type? returnType, Type[] parameterTypes, Type[] genericArgs, Type? declaringType)
     {
         // Find potentials
         var methods = type.GetMethods()
-            .Where(m => m.Name == name && m.GetParameters().Length == parameterTypes.Length && m.GetGenericArguments().Length == genericArgs.Length)
+            .Where(m => m.Name == name
+                && m.GetParameters().Length == parameterTypes.Length
+                && m.GetGenericArguments().Length == genericArgs.Length)
+            .Where(m => declaringType == null || m.DeclaringType == declaringType)
             .ToArray();
         if (methods.Length == 0)
         {

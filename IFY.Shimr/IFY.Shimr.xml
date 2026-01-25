@@ -157,19 +157,21 @@
         </member>
         <member name="M:IFY.Shimr.ShimAttribute.#ctor(System.Type)">
             <summary>
-            
+            Initializes a new instance of the <see cref="T:IFY.Shimr.ShimAttribute"/> class using the specified definition type.
             </summary>
+            <remarks>Use this constructor to associate a shim with a specific type, enabling customized behavior
+            at runtime. Passing a null value for <paramref name="definitionType"/> will result in an exception.</remarks>
             <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
         </member>
         <member name="M:IFY.Shimr.ShimAttribute.#ctor(System.String)">
             <summary>
-            
+            Initializes a new instance of the <see cref="T:IFY.Shimr.ShimAttribute"/> class using the specified member name.
             </summary>
             <param name="name">The name of the member in the target type.</param>
         </member>
         <member name="M:IFY.Shimr.ShimAttribute.#ctor(System.Type,System.String)">
             <summary>
-            
+            Initializes a new instance of the <see cref="T:IFY.Shimr.ShimAttribute"/> class using the specified definition type and member name.
             </summary>
             <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
             <param name="name">The name of the member in the target type.</param>

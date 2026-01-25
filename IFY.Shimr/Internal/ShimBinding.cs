@@ -161,13 +161,13 @@ internal class ShimBinding(MethodInfo interfaceMethod)
         if (ImplementedMember == null)
         {
             var genArgs = InterfaceMethod.GetGenericArguments();
-            var methodInfo = implType.GetMethod(implMemberName, InterfaceMethod.ReturnType, paramTypes, genArgs)
-                ?? implType.GetMethod(implMemberName, paramTypes, genArgs);
+            var methodInfo = implType.GetMethod(implMemberName, InterfaceMethod.ReturnType, paramTypes, genArgs, attr?.DefinitionType)
+                ?? implType.GetMethod(implMemberName, paramTypes, genArgs, attr?.DefinitionType);
             if (methodInfo == null && IsProperty && proxiedBinding != null)
             {
                 // Try again for proxy property to method override
                 addInstanceParam(InterfaceMethod.DeclaringType);
-                methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments());
+                methodInfo = implType.GetMethod(implMemberName, paramTypes, InterfaceMethod.GetGenericArguments(), attr?.DefinitionType);
             }
             else if (InterfaceMethod.IsSpecialName != methodInfo?.IsSpecialName)
             {

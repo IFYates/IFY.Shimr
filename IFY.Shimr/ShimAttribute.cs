@@ -17,15 +17,17 @@ public class ShimAttribute : Attribute
     public string? ImplementationName { get; }
 
     /// <summary>
-    /// 
+    /// Initializes a new instance of the <see cref="ShimAttribute"/> class using the specified definition type.
     /// </summary>
+    /// <remarks>Use this constructor to associate a shim with a specific type, enabling customized behavior
+    /// at runtime. Passing a null value for <paramref name="definitionType"/> will result in an exception.</remarks>
     /// <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
     public ShimAttribute(Type definitionType)
     {
         DefinitionType = definitionType;
     }
     /// <summary>
-    /// 
+    /// Initializes a new instance of the <see cref="ShimAttribute"/> class using the specified member name.
     /// </summary>
     /// <param name="name">The name of the member in the target type.</param>
     public ShimAttribute(string name)
@@ -33,7 +35,7 @@ public class ShimAttribute : Attribute
         ImplementationName = name;
     }
     /// <summary>
-    /// 
+    /// Initializes a new instance of the <see cref="ShimAttribute"/> class using the specified definition type and member name.
     /// </summary>
     /// <param name="definitionType">The type that defines the member, for when there's a conflict.</param>
     /// <param name="name">The name of the member in the target type.</param>
