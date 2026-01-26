@@ -196,7 +196,7 @@ namespace IFY.Shimr.Examples
             var inst = new IntervalAction(threadFactoryMock.Object);
 
             // Act
-            inst.Start(() => { }, TimeSpan.MinValue);
+            inst.Start(null!, TimeSpan.MinValue);
             inst.Interrupt();
 
             // Assert
@@ -265,8 +265,8 @@ namespace IFY.Shimr.Examples
             var inst = new IntervalAction(threadFactoryMock.Object);
 
             // Act
-            inst.Start(() => { }, TimeSpan.MinValue);
-            inst.Start(() => { }, TimeSpan.MinValue);
+            inst.Start(null!, TimeSpan.MinValue);
+            inst.Start(null!, TimeSpan.MinValue);
 
             // Assert
             threadMock.Verify(m => m.Start(), Times.Once);

@@ -47,10 +47,8 @@ namespace IFY.Shimr.Internal.Tests
             };
 
             // Act
-            Assert.ThrowsException<NullReferenceException>(() =>
-            {
-                tb.WrapMethod(null, binding, method);
-            });
+            Assert.ThrowsException<NullReferenceException>
+                (() => tb.WrapMethod(null, binding, method));
         }
 
         [TestMethod]

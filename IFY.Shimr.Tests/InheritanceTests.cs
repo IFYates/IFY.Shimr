@@ -80,18 +80,22 @@ namespace IFY.Shimr.Tests
 
         #endregion Issue 11
 
-        public interface IMethod1
+        public interface IBase
         {
             string Method();
         }
-        public class Method2 : IMethod1
+        public class Method2 : IBase
         {
             public int Method() => 1;
-            string IMethod1.Method() => "value";
+            string IBase.Method() => "value";
         }
         public class Method3 : Method2
         {
             new public byte Method() => 2;
+        }
+        public interface IMethodShim
+        {
+            [Shim(typeof(IBase))] string Method();
         }
 
         [TestMethod]
@@ -101,7 +105,7 @@ namespace IFY.Shimr.Tests
             Assert.AreEqual((byte)2, obj.Method());
             Assert.AreEqual(1, ((Method2)obj).Method());
 
-            var shim = obj.Shim<IMethod1>();
+            var shim = obj.Shim<IMethodShim>();
             Assert.AreEqual("value", shim.Method());
         }
     }

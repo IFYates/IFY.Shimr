@@ -43,10 +43,8 @@ public class TypeHelpersTests
     public void FindProperty__Different_property_type_Multiple_matches__Fail()
     {
         // Act
-        var ex = Assert.ThrowsException<AmbiguousMatchException>(() =>
-        {
-            _ = typeof(FindPropertyTestClass).FindProperty(nameof(FindPropertyTestClass.Value), typeof(int));
-        });
+        var ex = Assert.ThrowsException<AmbiguousMatchException>
+            (() => typeof(FindPropertyTestClass).FindProperty(nameof(FindPropertyTestClass.Value), typeof(int), null));
 
         // Assert
         Assert.AreEqual("Found more than 1 property called 'Value' in the hierarchy for type 'IFY.Shimr.Internal.Tests.TypeHelpersTests+FindPropertyTestClass'. Consider using ShimAttribute to specify the definition type of the property to shim.", ex.Message);
@@ -117,10 +115,8 @@ public class TypeHelpersTests
     public void GetConstructor__Multiple_constructors__Exception()
     {
         // Act
-        var ex = Assert.ThrowsException<AmbiguousMatchException>(() =>
-        {
-            typeof(TestClass3<int>).GetConstructor([typeof(int)], []);
-        });
+        var ex = Assert.ThrowsException<AmbiguousMatchException>
+            (() => typeof(TestClass3<int>).GetConstructor([typeof(int)], []));
 
         // Assert
         Assert.IsTrue(ex.Message.StartsWith("Found 2 constructors matching given criteria for type 'IFY.Shimr.Internal.Tests.TypeHelpersTests+TestClass3`1[["));
@@ -252,10 +248,8 @@ public class TypeHelpersTests
         var params2 = method2.GetParameters().Select(p => p.ParameterType).ToArray();
 
         // Act
-        var ex = Assert.ThrowsException<AmbiguousMatchException>(() =>
-        {
-            typeof(IMethods1).GetMethod(method2.Name, params2, genArgs2, null);
-        });
+        var ex = Assert.ThrowsException<AmbiguousMatchException>
+            (() => typeof(IMethods1).GetMethod(method2.Name, params2, genArgs2, null));
 
         Assert.AreEqual("Found 2 methods matching criteria for 'Method' in the hierarchy for type 'IFY.Shimr.Internal.Tests.TypeHelpersTests+IMethods1'. Consider using ShimAttribute to specify the definition type of the property to shim.", ex.Message);
     }

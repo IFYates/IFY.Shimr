@@ -138,7 +138,7 @@ internal class ShimBinding(MethodInfo interfaceMethod)
         if (IsProperty)
         {
             var propName = implMemberName[4..];
-            var propInfo = implType.FindProperty(propName, propertyType);
+            var propInfo = implType.FindProperty(propName, propertyType, attr?.DefinitionType);
 
             implReturnType = propInfo?.PropertyType;
             if (implReturnType == null)

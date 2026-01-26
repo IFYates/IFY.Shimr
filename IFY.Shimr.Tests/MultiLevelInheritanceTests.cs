@@ -1,7 +1,5 @@
 ﻿using IFY.Shimr.Extensions;
-using Microsoft.Data.SqlClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -136,10 +134,12 @@ public class MultiLevelInheritanceTests
 
     public class A
     {
+        public string Value { get; } = "A";
         public string GetData() => "from A";
     }
     public class B : A
     {
+        public new string Value { get; } = "B";
         public new string GetData() => "from B";
     }
 
@@ -156,6 +156,19 @@ public class MultiLevelInheritanceTests
         [Shim(typeof(B))] string GetData();
     }
 
+    public interface IValueProperty_NoAttribute
+    {
+        string Value { get; }
+    }
+    public interface IValueProperty_AttributeA
+    {
+        [Shim(typeof(A))] string Value { get; }
+    }
+    public interface IValueProperty_AttributeB
+    {
+        [Shim(typeof(B))] string Value { get; }
+    }
+
     [TestMethod]
     public void Has_hidden_method__No_attribute__AmbiguousMatch()
     {
@@ -166,9 +179,9 @@ public class MultiLevelInheritanceTests
     [TestMethod]
     public void Has_hidden_method__Typed_to_base_class__Uses_base_implementation()
     {
-        var obj = new B().Shim<IGetData_AttributeB>();
+        var obj = new B().Shim<IGetData_AttributeA>();
         var res = obj.GetData();
-        Assert.AreEqual("from B", res);
+        Assert.AreEqual("from A", res);
     }
 
     [TestMethod]
@@ -177,6 +190,29 @@ public class MultiLevelInheritanceTests
         var obj = new B().Shim<IGetData_AttributeB>();
         var res = obj.GetData();
         Assert.AreEqual("from B", res);
+    }
+
+    [TestMethod]
+    public void Has_hidden_property__No_attribute__AmbiguousMatch()
+    {
+        Assert.ThrowsException<AmbiguousMatchException>
+            (() => new B().Shim<IValueProperty_NoAttribute>());
+    }
+
+    [TestMethod]
+    public void Has_hidden_property__Typed_to_base_class__Uses_base_implementation()
+    {
+        var obj = new B().Shim<IValueProperty_AttributeA>();
+        var res = obj.Value;
+        Assert.AreEqual("A", res);
+    }
+
+    [TestMethod]
+    public void Has_hidden_property__Typed_to_subclass__Uses_new_implementation()
+    {
+        var obj = new B().Shim<IValueProperty_AttributeB>();
+        var res = obj.Value;
+        Assert.AreEqual("B", res);
     }
 
     #endregion Specify implementor tests
