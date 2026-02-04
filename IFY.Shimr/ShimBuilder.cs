@@ -1,4 +1,5 @@
-﻿using IFY.Shimr.Internal;
+﻿using IFY.Shimr.Extensions;
+using IFY.Shimr.Internal;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
@@ -291,9 +292,7 @@ public static class ShimBuilder
     /// </summary>
     public static T Unshim<T>(object shim)
     {
-        return shim is T obj
-            ? obj
-            : (T)((IShim)shim).Unshim();
+        return (T)(shim is IShim s ? s.Unshim() : shim);
     }
 
     /// <summary>
@@ -301,9 +300,7 @@ public static class ShimBuilder
     /// No type-safety checks. Must already be <typeparamref name="T"/> or be <see cref="IShim"/> of <typeparamref name="T"/>.
     /// </summary>
     public static T[] Unshim<T>(IEnumerable<object> shims)
-    {
-        return shims.Select(Unshim<T>).ToArray();
-    }
+        => shims.Unshim<T>().ToArray();
 
     #endregion Unshim
 }

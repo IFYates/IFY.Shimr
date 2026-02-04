@@ -54,7 +54,7 @@ public static class ObjectExtensions
     /// </summary>
     public static T Unshim<T>(this object shim)
     {
-        return shim is T obj ? obj : (T)((IShim)shim).Unshim();
+        return (T)(shim is IShim s ? s.Unshim() : shim);
     }
 
     /// <summary>
