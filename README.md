@@ -1,6 +1,6 @@
 <div align="center">
 
-![Bea](bea-256.png)
+![Bea](https://raw.githubusercontent.com/IFYates/IFY.Shimr/refs/heads/master/bea-256.png)
 
 </div>
 
