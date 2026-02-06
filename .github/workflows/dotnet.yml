@@ -45,7 +45,7 @@ jobs:
       if: github.ref == 'refs/heads/master'
       uses: nanoufo/action-upload-artifacts-and-release-assets@v2
       with:
-        path: /**/IFY.Shimr.*.*nupkg
+        path: ./**/IFY.Shimr.*.*nupkg
 
     # Test & coverage
     - name: Test and coverage
