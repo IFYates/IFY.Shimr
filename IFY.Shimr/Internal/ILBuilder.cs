@@ -218,9 +218,12 @@ internal static class ILBuilder
             impl.Emit(OpCodes.Newobj, constrInfo);
         }
 
-        // Shim
-        var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), [factory.ReturnType], [typeof(object)]);
-        impl.Emit(OpCodes.Call, shimMethod);
+        if (factory.ReturnType != constrInfo.DeclaringType)
+        {
+            // Shim
+            var shimMethod = typeof(ShimBuilder).BindStaticMethod(nameof(ShimBuilder.Shim), [factory.ReturnType], [typeof(object)]);
+            impl.Emit(OpCodes.Call, shimMethod);
+        }
 
         impl.Emit(OpCodes.Ret);
     }

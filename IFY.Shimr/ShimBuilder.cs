@@ -39,7 +39,6 @@ public static class ShimBuilder
     /// Don't compile the type every time
     /// </summary>
     private static readonly Dictionary<string, Type> _dynamicTypeCache = [];
-    private static readonly object _sync = 1;
 
     #region Internal
 
@@ -48,7 +47,7 @@ public static class ShimBuilder
         var className = $"{implType.Name}_{implType.GetHashCode()}_{interfaceType.Name}_{interfaceType.GetHashCode()}";
         if (!_dynamicTypeCache.ContainsKey(className))
         {
-            lock (_sync)
+            lock (interfaceType)
             {
                 if (!_dynamicTypeCache.ContainsKey(className))
                 {
@@ -64,7 +63,7 @@ public static class ShimBuilder
                     // Proxy all methods (including events, properties, and indexers)
                     var methods = interfaceType.GetMethods()
                         .Union(interfaceType.GetInterfaces().SelectMany(static i => i.GetMethods()))
-                        .Where(static m => m.IsAbstract).ToArray();
+                        .Where(static m => m.IsAbstract).ToArray(); // Ignore default interface methods
                     foreach (var interfaceMethod in methods)
                     {
                         // Don't try to implement IShim
@@ -96,7 +95,7 @@ public static class ShimBuilder
         var className = $"{interfaceType.Name}_{interfaceType.GetHashCode()}";
         if (!_dynamicTypeCache.ContainsKey(className))
         {
-            lock (_sync)
+            lock (interfaceType)
             {
                 if (!_dynamicTypeCache.ContainsKey(className))
                 {
@@ -112,7 +111,9 @@ public static class ShimBuilder
                         | TypeAttributes.BeforeFieldInit, null, [interfaceType]);
 
                     // Proxy all methods (including events, properties, and indexers)
-                    foreach (var interfaceMethod in interfaceType.GetMethods())
+                    var methods = interfaceType.GetMethods()
+                        .Where(static m => m.IsAbstract).ToArray(); // Ignore default interface methods
+                    foreach (var interfaceMethod in methods)
                     {
                         // Must define static source, if not at interface
                         var attr = interfaceMethod.GetAttribute<StaticShimAttribute>()
