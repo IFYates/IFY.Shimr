@@ -44,7 +44,7 @@ internal static class TypeHelpers
 
     public static bool IsMatch<T, U>(this IEnumerable<T> arr, IEnumerable<U> other, Func<T, U, bool> comparer)
     {
-        return Enumerable.Range(0, arr.Count()).All(i => comparer(arr.ElementAt(i), other.ElementAt(i)));
+        return arr.Select((x, i) => comparer(x, other.ElementAt(i))).All(r => r);
     }
 
     public static PropertyInfo? FindProperty(this Type implType, string propertyName, Type propertyType, Type? declarationType)
@@ -62,20 +62,6 @@ internal static class TypeHelpers
         {
             throw new AmbiguousMatchException($"Found more than 1 property called '{propertyName}' in the hierarchy for type '{implType.FullName}'. Consider using ShimAttribute to specify the definition type of the property to shim.");
         }
-
-        //// Support explicitly implemented interface members (non-public)
-        //propInfo = implType.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance)
-        //    .Where(p => p.Name.EndsWith("." + propertyName) && p.PropertyType.IsEquivalentType(propertyType)
-        //        && (declarationType == null || p.DeclaringType == declarationType))
-        //    .ToArray();
-        //if (propInfo.Length == 1)
-        //{
-        //    return propInfo[0];
-        //}
-        //if (propInfo.Length > 0)
-        //{
-        //    throw new AmbiguousMatchException($"Found more than 1 property called '{propertyName}' in the hierarchy for type '{implType.FullName}'. Consider using ShimAttribute to specify the definition type of the property to shim.");
-        //}
 
         // Fall-back
         try
@@ -132,18 +118,7 @@ internal static class TypeHelpers
             .ToArray();
         if (methods.Length == 0)
         {
-            //// Support explicitly implemented interface members (non-public)
-            //methods = type.GetMethods(BindingFlags.NonPublic | BindingFlags.Instance)
-            //    .Where(m => m.Name.EndsWith("." + name)
-            //        && m.GetParameters().Length == parameterTypes.Length
-            //        && m.GetGenericArguments().Length == genericArgs.Length)
-            //    .Where(m => declaringType == null || m.DeclaringType == declaringType)
-            //    .Where(m => returnType?.IsInterface == null || m.ReturnType.IsEquivalentType(returnType))
-            //    .ToArray();
-            //if (methods.Length == 0)
-            //{
             return null;
-            //}
         }
 
         // Compare parameters

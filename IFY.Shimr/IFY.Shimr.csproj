@@ -14,8 +14,8 @@
         <Authors>IFYates</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Version>2.1.4</Version>
-        <PackageProjectUrl>https://github.com/IFYates/Shimterface</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/IFYates/Shimterface</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/IFYates/Shimr</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/IFYates/Shimr</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
         <PackageReleaseNotes>[v2.1.4] Static shims support implemented interface members
 [v2.1.3] Improved handling of hidden members

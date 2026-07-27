@@ -41,7 +41,7 @@ public static class ObjectExtensions
     public static IEnumerable<TInterface?>? Shim<TInterface>(this IEnumerable<object>? inst)
         where TInterface : class
     {
-        return inst?.Select(i => (TInterface?)ShimBuilder.Shim(typeof(TInterface), i));
+        return inst?.Select(i => (TInterface?)ShimBuilder.Shim(typeof(TInterface), i)).ToArray();
     }
 
     #endregion Shim
@@ -63,7 +63,7 @@ public static class ObjectExtensions
     /// </summary>
     public static IEnumerable<T> Unshim<T>(this IEnumerable<object> shims)
     {
-        return shims.Select(Unshim<T>);
+        return [.. shims.Select(Unshim<T>)];
     }
 
     #endregion Unshim

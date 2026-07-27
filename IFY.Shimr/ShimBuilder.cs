@@ -271,6 +271,7 @@ public static class ShimBuilder
             throw new NotSupportedException($"Generic argument must be a direct interface: {interfaceType.FullName}");
         }
 
+        // If the instance already implements the requested interface, return it directly
         if (interfaceType.IsAssignableFrom(inst.GetType()))
         {
             return inst;
@@ -280,6 +281,34 @@ public static class ShimBuilder
         var shim = Activator.CreateInstance(shimType, [inst]);
         return shim;
     }
+
+    ///// <summary>
+    ///// Use a shim to make the given object look like the required type.
+    ///// Result will also implement <see cref="IShim"/>.
+    ///// </summary>
+    //public static object? Shim(object? inst, params Type[] interfaceTypes)
+    //{
+    //    if (inst == null)
+    //    {
+    //        return null;
+    //    }
+
+    //    // Run-time test that type is an interface
+    //    if (!interfaceTypes.All(t => t.IsInterface))
+    //    {
+    //        throw new NotSupportedException($"All arguments must be direct interfaces.");
+    //    }
+
+    //    // If the instance already implements all the requested interfaces, return it directly
+    //    if (interfaceTypes.All(t => t.IsAssignableFrom(inst.GetType())))
+    //    {
+    //        return inst;
+    //    }
+
+    //    var shimType = getShimType(interfaceTypes, inst.GetType());
+    //    var shim = Activator.CreateInstance(shimType, [inst]);
+    //    return shim;
+    //}
 
     #endregion Shim
 
