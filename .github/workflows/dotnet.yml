@@ -41,7 +41,7 @@ jobs:
     - name: Build
       run: dotnet build --configuration $BUILD_CONFIG --no-restore
       
-    - name: Stage packages
+    - name: Stage package
       if: github.ref == 'refs/heads/master'
       run: |
         mkdir -p ./staging/packages
