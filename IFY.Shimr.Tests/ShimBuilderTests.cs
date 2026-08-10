@@ -80,11 +80,11 @@ namespace IFY.Shimr.Tests
             // Act
             var ex = Assert.ThrowsException<NotSupportedException>(() =>
             {
-                ShimBuilder.Shim(typeof(object), new object());
+                ShimBuilder.Shim(new object(), typeof(object));
             });
 
             // Assert
-            Assert.AreEqual("Generic argument must be a direct interface: System.Object", ex.Message);
+            Assert.AreEqual("All shim targets must be direct interfaces.", ex.Message);
         }
 
         [TestMethod]
@@ -94,7 +94,7 @@ namespace IFY.Shimr.Tests
             var obj = new ShimClass();
 
             // Act
-            var shim = ShimBuilder.Shim(typeof(ITestShim), obj);
+            var shim = ShimBuilder.Shim(obj, typeof(ITestShim));
 
             // Assert
             Assert.AreSame(obj, shim);
@@ -191,7 +191,7 @@ namespace IFY.Shimr.Tests
             typeMock.SetupGet(m => m.MemberType)
                 .Returns(MemberTypes.TypeInfo);
             typeMock.Setup(m => m.GetCustomAttributes(typeof(StaticShimAttribute), false))
-                .Returns(new object[] { new StaticShimAttribute(typeof(object)) { IsConstructor = true } });
+                .Returns([new StaticShimAttribute(typeof(object)) { IsConstructor = true }]);
 
             // Act
             var ex = Assert.ThrowsException<NotSupportedException>(() =>

@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
@@ -12,21 +13,20 @@
         <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 
         <Authors>IFYates</Authors>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <Version>2.1.4</Version>
-        <PackageProjectUrl>https://github.com/IFYates/Shimterface</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/IFYates/Shimterface</RepositoryUrl>
+        <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/IFYates/Shimr</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/IFYates/Shimr</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <PackageReleaseNotes>[v2.1.4] Static shims support implemented interface members
-[v2.1.3] Improved handling of hidden members
-[v2.1.2] More deterministic handling of conflicting methods
-[v2.1.1] Improved performance of task shimming
-[v2.1.0] Support for Task&lt;&gt; and ValueTask&lt;&gt; shimming</PackageReleaseNotes>
         <Copyright>(c) IFYates</Copyright>
         <Description>Utility for creating a dynamic object facade/proxy to allow for using an object as an interface that it does not explicitly implement.</Description>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <DocumentationFile>IFY.Shimr.xml</DocumentationFile>
-    </PropertyGroup>
+	
+        <_ReleaseNotesFirstLine>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/../RELEASE_NOTES.txt').Substring(1, $([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/../RELEASE_NOTES.txt').IndexOf('
+'))))</_ReleaseNotesFirstLine>
+        <Version>$(_ReleaseNotesFirstLine.Trim())</Version>
+
+	</PropertyGroup>
     
     <ItemGroup>
       <None Remove="IFY.Shimr.xml" />
@@ -42,4 +42,14 @@
     <ItemGroup>
         <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
     </ItemGroup>
+
+	<Target Name="PreparePackageReleaseNotesFromFile" BeforeTargets="GenerateNuspec">
+		<ReadLinesFromFile File="../RELEASE_NOTES.txt">
+			<Output TaskParameter="Lines" ItemName="ReleaseNoteLines" />
+		</ReadLinesFromFile>
+		<PropertyGroup>
+			<PackageReleaseNotes>@(ReleaseNoteLines, '%0a')</PackageReleaseNotes>
+		</PropertyGroup>
+	</Target>
+	
 </Project>

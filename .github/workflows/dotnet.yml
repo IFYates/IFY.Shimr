@@ -18,10 +18,10 @@ jobs:
 
     steps:
     # Setup
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v6.0.1
 
     - name: Setup .NET 10
-      uses: actions/setup-dotnet@v1.7.2
+      uses: actions/setup-dotnet@v5.1.0
       with:
         dotnet-version: 10.0.x
 
@@ -31,7 +31,7 @@ jobs:
       run: dotnet tool restore
       
     - name: Set branch-based environment variables
-      uses: iamtheyammer/branch-env-vars@v1.1.2
+      uses: iamtheyammer/branch-env-vars@v1.2.2
       with:
         BUILD_CONFIG: |
           master:Release
@@ -40,13 +40,19 @@ jobs:
     # Build
     - name: Build
       run: dotnet build --configuration $BUILD_CONFIG --no-restore
-
+      
+    - name: Stage packages
+      if: github.ref == 'refs/heads/master'
+      run: |
+        mkdir -p ./staging/packages
+        find ./src -name 'IFY.Phorm.*.*nupkg' -exec cp {} ./staging/packages/ \;
     - name: Publish package
       if: github.ref == 'refs/heads/master'
-      uses: nanoufo/action-upload-artifacts-and-release-assets@v2
+      uses: actions/upload-artifact@v7
       with:
-        path: ./**/IFY.Shimr.*.*nupkg
-
+        name: packages
+        path: ./staging/packages/
+    
     # Test & coverage
     - name: Test and coverage
       run: dotnet coverlet ./IFY.Shimr.Tests/bin/$BUILD_CONFIG/net10.0/IFY.Shimr.Tests.dll --target "dotnet" --targetargs "test ./IFY.Shimr.Tests/IFY.Shimr.Tests.csproj --configuration $BUILD_CONFIG --no-build" --include-test-assembly --exclude-by-file "**/.nuget/**" --format lcov -o cover.lcov

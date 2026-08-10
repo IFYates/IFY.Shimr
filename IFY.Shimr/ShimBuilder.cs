@@ -42,18 +42,18 @@ public static class ShimBuilder
 
     #region Internal
 
-    private static Type getShimType(Type interfaceType, Type implType)
+    private static Type getShimType(Type[] interfaceTypes, Type implType)
     {
-        var className = $"{implType.Name}_{implType.GetHashCode()}_{interfaceType.Name}_{interfaceType.GetHashCode()}";
+        var className = $"{implType.Name}_{implType.GetHashCode()}_{string.Join("_", interfaceTypes.Select(t => $"{t.Name}_{t.GetHashCode()}"))}";
         if (!_dynamicTypeCache.ContainsKey(className))
         {
-            lock (interfaceType)
+            lock (implType)
             {
                 if (!_dynamicTypeCache.ContainsKey(className))
                 {
                     var tb = _mod.DefineType($"Shim_{className}", TypeAttributes.Public
                         | TypeAttributes.AutoClass
-                        | TypeAttributes.BeforeFieldInit, null, [typeof(IShim), interfaceType]);
+                        | TypeAttributes.BeforeFieldInit, null, [typeof(IShim), .. interfaceTypes]);
 
                     var instField = tb.DefineField("_inst", implType, FieldAttributes.Private);
 
@@ -61,8 +61,8 @@ public static class ShimBuilder
                     tb.AddUnshimMethod(instField);
 
                     // Proxy all methods (including events, properties, and indexers)
-                    var methods = interfaceType.GetMethods()
-                        .Union(interfaceType.GetInterfaces().SelectMany(static i => i.GetMethods()))
+                    var methods = interfaceTypes.SelectMany(interfaceType => interfaceType.GetMethods()
+                        .Union(interfaceType.GetInterfaces().SelectMany(static i => i.GetMethods())))
                         .Where(static m => m.IsAbstract).ToArray(); // Ignore default interface methods
                     foreach (var interfaceMethod in methods)
                     {
@@ -76,7 +76,7 @@ public static class ShimBuilder
                         var attr = interfaceMethod.GetAttribute<StaticShimAttribute>();
                         if (attr != null)
                         {
-                            throw new InvalidCastException($"Instance shim cannot implement static member: {interfaceType.FullName} {interfaceMethod.Name}");
+                            throw new InvalidCastException($"Instance shim cannot implement static member: {interfaceMethod.DeclaringType.FullName} {interfaceMethod.Name}");
                         }
 
                         shimMember(tb, instField, implType, interfaceMethod, false);
@@ -213,10 +213,7 @@ public static class ShimBuilder
     /// <param name="inst">The task whose result will be converted. Must be completed successfully before conversion.</param>
     /// <returns>A task that represents the asynchronous conversion operation. The result of the returned task is the converted
     /// value of type TResult.</returns>
-    public static async Task<TResult> Shim<TSource, TResult>(Task<TSource> inst)
-    {
-        return (TResult)Shim(typeof(TResult), await inst)!;
-    }
+    public static async Task<TResult> Shim<TSource, TResult>(Task<TSource> inst) => (TResult)Shim(await inst, typeof(TResult))!;
 
     /// <summary>
     /// Converts the result of a completed task to a specified type using a shim operation.
@@ -229,36 +226,34 @@ public static class ShimBuilder
     /// <param name="inst">The task whose result will be converted. Must be completed successfully before conversion.</param>
     /// <returns>A task that represents the asynchronous conversion operation. The result of the returned task is the converted
     /// value of type TResult.</returns>
-    public static async ValueTask<TResult> Shim<TSource, TResult>(ValueTask<TSource> inst)
-    {
-        return (TResult)Shim(typeof(TResult), await inst)!;
-    }
+    public static async ValueTask<TResult> Shim<TSource, TResult>(ValueTask<TSource> inst) => (TResult)Shim(await inst, typeof(TResult))!;
 
     /// <summary>
     /// Use a shim to make the given object look like the required type.
     /// Result will also implement <see cref="IShim"/>.
     /// </summary>
     public static TInterface? Shim<TInterface>(object? inst)
-        where TInterface : class
-    {
-        return (TInterface?)Shim(typeof(TInterface), inst);
-    }
+        where TInterface : class => (TInterface?)Shim(inst, typeof(TInterface));
 
     /// <summary>
     /// Use a shim to make the given objects look like the required type.
     /// Results will also implement <see cref="IShim"/>.
     /// </summary>
     public static TInterface?[]? Shim<TInterface>(IEnumerable<object>? inst)
-        where TInterface : class
-    {
-        return inst?.Select(static i => (TInterface?)Shim(typeof(TInterface), i)).ToArray();
-    }
+        where TInterface : class => inst?.Select(static i => (TInterface?)Shim(i, typeof(TInterface))).ToArray();
 
     /// <summary>
     /// Use a shim to make the given object look like the required type.
     /// Result will also implement <see cref="IShim"/>.
     /// </summary>
     public static object? Shim(Type interfaceType, object? inst)
+        => Shim(inst, interfaceType);
+
+    /// <summary>
+    /// Use a shim to make the given object look like the required interface types.
+    /// Result will also implement <see cref="IShim"/>.
+    /// </summary>
+    public static object? Shim(object? inst, params Type[] interfaceTypes)
     {
         if (inst == null)
         {
@@ -266,17 +261,18 @@ public static class ShimBuilder
         }
 
         // Run-time test that type is an interface
-        if (!interfaceType.IsInterface)
+        if (!interfaceTypes.All(t => t.IsInterface))
         {
-            throw new NotSupportedException($"Generic argument must be a direct interface: {interfaceType.FullName}");
+            throw new NotSupportedException($"All shim targets must be direct interfaces.");
         }
 
-        if (interfaceType.IsAssignableFrom(inst.GetType()))
+        // If the instance already implements all the requested interfaces, return it directly
+        if (interfaceTypes.All(t => t.IsAssignableFrom(inst.GetType())))
         {
             return inst;
         }
 
-        var shimType = getShimType(interfaceType, inst.GetType());
+        var shimType = getShimType(interfaceTypes, inst.GetType());
         var shim = Activator.CreateInstance(shimType, [inst]);
         return shim;
     }
