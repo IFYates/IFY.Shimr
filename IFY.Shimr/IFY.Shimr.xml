@@ -37,6 +37,34 @@
             Result will also implement <see cref="T:IFY.Shimr.IShim"/>.
             </summary>
         </member>
+        <member name="M:IFY.Shimr.Extensions.ObjectExtensions.Shim``2(System.Object)">
+            <summary>
+            Use a shim to make the given object look like the required types.
+            Secondary interfaces require casting to access their members.
+            Result will also implement <see cref="T:IFY.Shimr.IShim"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.Extensions.ObjectExtensions.Shim``3(System.Object)">
+            <summary>
+            Use a shim to make the given object look like the required types.
+            Secondary interfaces require casting to access their members.
+            Result will also implement <see cref="T:IFY.Shimr.IShim"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.Extensions.ObjectExtensions.Shim``4(System.Object)">
+            <summary>
+            Use a shim to make the given object look like the required types.
+            Secondary interfaces require casting to access their members.
+            Result will also implement <see cref="T:IFY.Shimr.IShim"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.Extensions.ObjectExtensions.Shim``5(System.Object)">
+            <summary>
+            Use a shim to make the given object look like the required types.
+            Secondary interfaces require casting to access their members.
+            Result will also implement <see cref="T:IFY.Shimr.IShim"/>.
+            </summary>
+        </member>
         <member name="M:IFY.Shimr.Extensions.ObjectExtensions.Shim``1(System.Collections.Generic.IEnumerable{System.Object})">
             <summary>
             Use a shim to make the given objects look like the required type.
@@ -252,6 +280,12 @@
         <member name="M:IFY.Shimr.ShimBuilder.Shim(System.Type,System.Object)">
             <summary>
             Use a shim to make the given object look like the required type.
+            Result will also implement <see cref="T:IFY.Shimr.IShim"/>.
+            </summary>
+        </member>
+        <member name="M:IFY.Shimr.ShimBuilder.Shim(System.Object,System.Type[])">
+            <summary>
+            Use a shim to make the given object look like the required interface types.
             Result will also implement <see cref="T:IFY.Shimr.IShim"/>.
             </summary>
         </member>
