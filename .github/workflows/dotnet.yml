@@ -45,7 +45,7 @@ jobs:
       if: github.ref == 'refs/heads/master'
       run: |
         mkdir -p ./staging/packages
-        find ./src -name 'IFY.Phorm.*.*nupkg' -exec cp {} ./staging/packages/ \;
+        find . -name 'IFY.Phorm.*.*nupkg' -exec cp {} ./staging/packages/ \;
     - name: Publish package
       if: github.ref == 'refs/heads/master'
       uses: actions/upload-artifact@v7
